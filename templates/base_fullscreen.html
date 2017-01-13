@@ -1,0 +1,14 @@
+<!--DOCTYPE html-->
+<html>
+	<head>
+		<title>{% block title %}{% endblock %}</title>
+		{% block style %}{% endblock %}
+	</head>
+
+	<body> 
+		{% block content %}{% endblock %}
+		
+		<script src="/static/js/artmonlineapi.js?v=0001"></script>
+		{% block javascript %}{% endblock %}
+	</body>
+</html>

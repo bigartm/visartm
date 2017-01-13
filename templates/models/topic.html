@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | {{topic}} {% endblock %}
+
+{% block content %}
+	<h1> Topic {{topic.title}} </h1>
+	<hr>
+	{% if is_low %}
+		<h3>Documents</h3>
+		{% for doc in documents %}
+			<a href = "/visual/document?dataset={{model.dataset.text_id}}&document={{doc.document.model_id}}" >{{doc.document.title}}</a>
+			<br>
+		{% endfor %}
+	{% else %}
+		<h3>Topics</h3>
+		{% for topic in topics %}
+			<a href = "/visual/topic?id={{topic.child.id}}" >{{topic.child}}</a>
+			<br>
+		{% endfor %}
+	{% endif %} 
+{% endblock %}
+
+{% block right %}
+<div> 
+	<h4>Information</h4>
+	Layer: {{topic.layer}}
+	<hr>
+	<h4>Related topics</h4>
+	{% for related_topic in related_topics%}
+		<a href="/visual/topic?id={{related_topic.topic2.id}}">{{related_topic.topic2}}</a> ({{related_topic.weight | floatformat:2}})
+		<br>
+	{% endfor %}
+	
+	<hr>
+	
+	<h4>Top terms</h4>
+	{% for top_term in top_terms%}  
+		<a href = "/visual/term?dataset={{model.dataset.text_id}}&term={{top_term.term.model_id}}" >{{top_term.term}}</a> ({{top_term.weight | floatformat:4}})
+		<br> 
+	{% endfor %}
+	
+		
+</div>
+
+
+{% endblock %}
+
+{% block additional_scripts %}
+<script src="/static/js/d3pie.min.js"></script>
+<script src="/static/js/pie.js"></script>
+{% endblock %}
+
+

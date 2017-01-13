@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}{{dataset}} | HTML tree {% endblock %}
+
+
+
+{% block content %}
+	<h1>Topics tree for dataset {{dataset}}</h1>
+	<hr>
+	{% autoescape off %}
+	{{tree}}
+	{% endautoescape %}
+{% endblock %}
+
+
+{% block right %}
+{% endblock %}
+
+
+{% block additional_scripts %}		
+{% endblock %}
+ 

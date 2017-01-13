@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Dataset overview{% endblock %}
+
+{% block content %}
+<h1>Dataset {{dataset.name}}</h1> 
+<h2>Documents</h2>
+{% for doc in documents %}
+    <a href = "/visual/document?id={{doc.id}}" > {{doc.title}}</a><br>
+{% endfor %}
+
+
+{% endblock %}
+
+
+{% block right %} 
+	<h4>Overview</h4>
+	Name: {{dataset.name}}<br>
+	Description: {{dataset.description}}<br>
+	Owner: {{dataset.owner}}<br>
+	Number of documents: {{dataset.docs_count}}<br>
+	Number of terms: {{dataset.terms_count}}<br>
+
+	
+	
+	{% if not user.is_anonymous %}
+		<a href = "/datasets/reload?dataset={{dataset.text_id}}">Reload</a>
+	{% endif %}
+	
+	<hr>
+	
+	<h4>Visualizations</h4>
+	
+	<a href = "/visual/html_tree?dataset={{dataset.text_id}}">HTML tree</a> <br>
+	<a href = "/visual/temporal_dots?dataset={{dataset.text_id}}">Temporal dots</a> <br>
+	<a href = "/visual/temporal_squares?dataset={{dataset.text_id}}&group_by=month">Temporal squares (by month)</a> <br>
+	<a href = "/visual/temporal_squares?dataset={{dataset.text_id}}&group_by=day">Temporal squares (by day)</a> <br>
+	<a href = "/visual/voronoi?dataset={{dataset.text_id}}">Voronoi diagram</a> <br>
+	<a href = "/visual/foamtree?dataset={{dataset.text_id}}">FoamTree</a> <br>
+	<a href = "/visual/circles?dataset={{dataset.text_id}}">Circles</a> <br>
+	<a href = "/visual/tsne?dataset={{dataset.text_id}}">t-SNE</a> <br>
+	
+	
+	<hr>
+	<h4>Models</h4>
+	{% for model in models %}
+		<input type="radio" name="cb_model" onClick = "useModel({{model.id}});" {% if model == active_model %}checked = "checked"{% endif %}/>
+		<a href = "/visual/model?model={{model.id}}" > {{model}}</a>
+		<br>
+	{% endfor %}
+	<br>
+	<a href = "/models/create?dataset={{dataset.text_id}}">Create new model...</a>
+	<br>
+	<a href = "/models/delete_all_models?dataset={{dataset.text_id}}">Clear</a>
+	
+{% endblock %}
+
+{% block javascript %}
+<script type = "text/javascript">
+	function useModel(id) { 
+		document.cookie = "model_{{dataset.id}}=" + id;
+	}
+</script>
+{% endblock %}

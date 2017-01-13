@@ -1,0 +1,35 @@
+body {
+    background-color: white;
+}
+
+.nolink{
+  cursor: pointer;
+  text-decoration: none;
+  color: black; 
+} 
+
+.nolink:hover{ 
+  text-decoration: none;
+  color: blue; 
+} 
+
+ 
+.tpc0 {
+    background-color:#eeeeee;
+}
+
+.tpc1 {
+    background-color:#ffdddd;
+}
+
+.tpc2 {
+    background-color:#ddffdd;
+}
+
+.tpc3 {
+    background-color:#ddddff;
+}
+
+.tpc4 {
+    background-color:#ffffdd;
+}

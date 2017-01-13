@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Term {{term.text}} {% endblock %}
+
+{% block content %}
+	<h1> {{term.text}} </h1> 
+	<hr>
+	<p>Dataset: {{term.dataset}}</p>
+	<p>Modality: {{term.modality}}</p>
+	<p>Suggested topic: suggested_topic</p>
+{% endblock %}
+ 
+
+{% block right %}
+
+<div> 
+	
+</div>
+
+{% endblock %}
+
+{% block additional_scripts %}
+<script src="/static/js/d3pie.min.js"></script> 
+{% endblock %}
+
+

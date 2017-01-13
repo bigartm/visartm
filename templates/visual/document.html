@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | {{document.title}} {% endblock %}
+
+{% block content %}
+	<h1> {{document.title}} </h1>  
+	<p>{{document.time}}</p>  
+	<p>{{document.snippet}}</p>  
+	<a href = {{document.url}}>Original</a>
+	<hr>
+	{% autoescape off %}
+		{% for paragraph in document_paragraphs %}
+			<p>
+				{{paragraph}}
+			</p>
+		{% endfor %}
+	{% endautoescape %}
+{% endblock %}
+ 
+
+{% block right %}
+	<div>
+		<h4>Topic distribution</h4>
+		<div id = "pieChart2" align = "center" ></div>
+		
+		{% for topic in topics %}
+		<span style="color:{{topic.color}};">∎</span>
+		<a href = "{{topic.url}}">{{topic.title}}</a>
+		</br>
+		{% endfor %}
+	</div>
+	<hr>
+	<div> 
+		<h4>Related documents</h4>
+		{% for rel_doc in related_documents %}
+			<a href = "/visual/document?dataset={{dataset.text_id}}&document={{rel_doc.model_id}}" >{{rel_doc.title}}</a>
+			<br>
+		{% endfor %}
+	</div>
+{% endblock %}
+
+{% block javascript %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="/static/js/d3.v3.min.js"></script>
+<script src="/static/js/d3pie.min.js"></script>
+ 
+<script type="text/javascript">
+	var styleSheets = window.document.styleSheets;
+	
+	var pie = new d3pie("pieChart2", {
+		"header": {
+			"title": {
+				"fontSize": 22,
+				"font": "verdana"
+			},
+			"subtitle": {
+				"color": "#999999",
+				"fontSize": 10,
+				"font": "verdana"
+			},
+			"titleSubtitlePadding": 12
+		},
+		"footer": {
+			"color": "#999999",
+			"fontSize": 11,
+			"font": "open sans",
+			"location": "bottom-center"
+		},
+		"size": {
+			"canvasHeight": 200,
+			"canvasWidth": 200,
+			"pieOuterRadius": "100%"
+		},
+		"data": {
+			"smallSegmentGrouping": {
+				"enabled": true,
+				"value": 5
+			},
+			"content": [
+				{% for topic in topics %}
+				{
+					"label": "{{topic.topic.title}}",
+					"value": {{topic.weight}},
+					"url": "{{topic.url}}",
+					"color" : "{{topic.color}}",
+				}, 
+				{% endfor %}
+			]
+		},
+		"labels": {
+			"outer": {
+				"format": "none",
+				"pieDistance": 32
+			},
+			"inner": {
+				"hideWhenLessThanPercentage": 5,
+			},
+			"mainLabel": {
+				"font": "verdana"
+			},
+			"percentage": {
+				"color": "#000000",
+				"font": "verdana",
+				"decimalPlaces": 1
+			},
+			"value": {
+				"color": "#e1e1e1",
+				"font": "verdana"
+			},
+			"lines": {
+				"enabled": true,
+				"color": "#cccccc"
+			},
+			"truncation": {
+				"enabled": true
+			}
+		},
+		"tooltips": { 
+		},
+		"effects": {
+			"load": {
+				"effect": "default",
+				"speed":500,
+			},
+			"pullOutSegmentOnClick": {
+				"effect": "none",
+				"speed": 400,
+				"size": 8
+			}
+		},
+		"callbacks": {
+			onClickSegment : function (obj) {
+				window.location.href = obj["data"]["url"];
+			}
+		},
+	});
+
+</script> 
+
+{% endblock %}
+
+

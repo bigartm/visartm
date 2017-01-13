@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}ARTM Online | Start page{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1> ARTM Online </h1>  
+  
+</div>
+	{% if not user.is_anonymous %}
+		<p>Hi, {{user}}!</p>
+	{% endif %}
+	<p>This is interactive topic modelling service based on BigARTM.</p>
+	<p>It enables you build topics models for big document corpora and visualize them.</p>
+  
+<img src = "http://bigartm.org/img/BigARTM-logo.svg" height = "80">
+<img src = "https://www.djangoproject.com/s/img/logos/django-logo-negative.svg" height = "40">
+<img src = "/static/img/d3-logo.svg" height = "80">
+{% endblock %}

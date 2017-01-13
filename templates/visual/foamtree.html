@@ -1,0 +1,35 @@
+{% extends 'base_fullscreen.html' %}
+{% block title %}{{dataset}} | FoamTree {% endblock %}
+
+
+{% block content %} 
+<div id="visualization" style="width: 100%; height: 100%; float:left;"></div>
+{% endblock %}
+
+{% block right %} 
+<h4> <a id = "doc_title"></a></h4>
+<i><p id = "doc_snippet"></p></i>
+<p id = "doc_text"></p>
+{% endblock %}
+
+{% block javascript %}
+<script src="http://svn.code.sf.net/p/mlalgorithms/code/Group374/Fedoryaka2016TopicModelVisualization/FancyTopicVisualizer/static/foamtree-3.4.3/carrotsearch.foamtree.js"></script>
+<script src="/static/js/artmonlineapi.js?v=0001"></script>
+
+<script>		
+	window.addEventListener("load", function() {
+		var foamtree = new CarrotSearchFoamTree({
+			id: "visualization",
+			dataObject: {% autoescape off %}{{root}}{% endautoescape %},
+			rolloutDuration : 0,
+			pullbackDuration : 0,
+			fadeDuration: 500,  
+			groupBorderWidth: 0,
+			onGroupClick: function (event) {
+				id = event.group.id;
+				if (id)window.open("/visual/document?id=" + id);
+			},
+		});
+	});	    
+</script>
+{% endblock %}

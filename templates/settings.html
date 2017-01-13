@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Setting{% endblock %}
+
+{% block content %}
+<h1>Settings</h1>
+<hr>
+<h3>User settings</h3>
+{{user}}
+<hr>
+<h3>Presentation</h3>  
+ <form>
+    <div class="form-group row">
+      <input type="checkbox" id="highlight_terms" onchange="settingUpdate('highlight_terms', 'checked')" />
+	  <label for="dataset" class="col-sm-2 col-form-label">Highlight terms</label>
+    </div> 
+	
+	<div class="form-group row">
+		<label for="dataset" class="col-sm-2 col-form-label">Color theme</label>
+		<div class="col-sm-2">
+			<select class="form-control" id="color_theme" onchange="settingUpdate('color_theme', 'value');location.reload();">
+			  {% for theme in themes %}
+				<option>{{theme}}</option>
+			  {% endfor %}
+			</select>
+		</div> 	
+	</div>
+</div> 
+
+{% endblock %}
+
+
+{% block javascript %}
+
+<script type="text/javascript">
+	document.getElementById("highlight_terms").checked = !(getCookie("highlight_terms") == "false");
+	document.getElementById("color_theme").value = getCookie("color_theme", "light");
+
+	
+	function getCookie(name, default_value) {
+	  var matches = document.cookie.match(new RegExp(
+		"(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+	  ));
+	  return matches ? decodeURIComponent(matches[1]) : default_value;
+	}
+	
+	function setCookie(name, value) {
+	  document.cookie = name + "=" + value;
+	}
+	
+	
+	
+
+	function settingUpdate(name, attribute) {
+		value = document.getElementById(name)[attribute];
+		console.log(value);
+		setCookie(name, value);
+	}
+</script>
+
+{% endblock %}
