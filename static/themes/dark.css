@@ -6,7 +6,7 @@ body {
 .nolink{
   cursor: pointer;
   text-decoration: none;
-  color: white; 
+ 
 } 
 
 .nolink:hover{ 
@@ -16,21 +16,21 @@ body {
 
  
 .tpc0 {
-    background-color:#111111;
+    color:#bbbbbb;
 }
 
 .tpc1 {
-    background-color:#aa0000;
+    color:#aa0000;
 }
 
 .tpc2 {
-    background-color:#00aa00;
+    color:#00aa00;
 }
 
 .tpc3 {
-    background-color:#0000aa;
+    color:#0000aa;
 }
 
 .tpc4 {
-    background-color:#aa0000;
+    color:#aa0000;
 }

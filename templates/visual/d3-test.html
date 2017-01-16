@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.active {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+</style>
+<svg width="960" height="500"></svg>
+<script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var svg = d3.select("svg");
+var group_cells = svg.append("g");
+  
+var cells_data = [1,2,3,4,5,6];  
+var shift_x = 0;
+
+group_cells.selectAll("rect")
+  .data(cells_data)
+  .enter().append("rect")
+    .attr("x", function(d, i) {return 50*d+shift_x})
+    .attr("y", function(d, i) {return 40*i})
+	.attr("width", 30)
+    .attr("height", 30) 
+     
+	.call(d3.drag() 
+        .on("drag", dragged) );
+ 
+
+function dragged(d) {
+	shift_x += d3.event.dx;
+	d3.selectAll("rect").attr("x", function(d, i) {return 50*d+shift_x});
+}
+ 
+
+</script>

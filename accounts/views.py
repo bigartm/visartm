@@ -3,6 +3,8 @@ from django.template import RequestContext, Context, loader
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from models.models import ArtmModel
+from datasets.models import Dataset
 
 def login_view(request):
 	if request.method == 'GET':
@@ -49,4 +51,19 @@ def signup(request):
 	return HttpResponse("Registration complete.<br><a href='/accounts/login'>To login page</a>.")
 
 def account_view(request, user_name):
-	return render(request, 'accounts/account.html', Context({"account": user_name})) 
+	account = User.objects.filter(username = user_name)[0]
+	
+	context = Context({"account": account,
+					   "datasets": Dataset.objects.filter(owner = account),
+					   "models": ArtmModel.objects.filter(author = account)})
+					   
+	return render(request, 'accounts/account.html', context) 
+	
+	
+	
+	
+	
+	
+	
+	
+	

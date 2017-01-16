@@ -3,5 +3,15 @@
 {% block title %}Artm Online | {{account}}{% endblock %}
 
 {% block content %}
-  <h1>Account {{account}}</h1>
+  <h1>Account {{account.username}}</h1>
+  <hr>
+  <h3>Models</h3>
+  {% for model in models %}
+	<p> <a href="/visual/model?model={{model.id}}">{{model.dataset}}/{{model}}</a></p>
+  {% endfor %} 
+  <hr>
+  <h3>Private datasets</h3>
+  {% for dataset in datasets %}
+		<p> <a href="/visual/dataset?dataset={{dataset.text_id}}">{{dataset}}</a></p>
+  {% endfor %} 
 {% endblock %}

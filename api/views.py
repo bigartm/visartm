@@ -13,27 +13,27 @@ def get_documents(request):
 	ids = request.GET["ids"].split(',')
 	full = "full" in request.GET
 	result = []
-	for id in ids:
-		try:
+	
+	for document in Document.objects.filter(id__in = ids): 
+		doc = {
+			"id": document.id,
+			"title": document.title,
+			"url": document.url,
+			"snippet": document.snippet,
+		}
+		
+		time = document.time
+		if not time is None:
+			doc["date"] = time.strftime("%x");
+			doc["time"] = time.strftime("%X");
+		
+		if full:
 			document = Document.objects.filter(id = int(id))[0]
-			doc = {
-				"id": document.id,
-				"title": document.title,
-				"date": document.time.strftime("%X"),
-				"time": document.time.strftime("%x"),
-				"url": document.url,
-				"snippet": document.snippet,
-			}
-			
-			if full:
-				document = Document.objects.filter(id = int(id))[0]
-				file_name = os.path.join(settings.DATA_DIR, "datasets", document.dataset.text_id, "documents", str(document.model_id) + ".txt")
-				with open(file_name, encoding = "utf-8") as f:
-					doc["text"] = f.read()
-			
-			result.append(doc)
-		except:
-			pass
+			file_name = os.path.join(settings.DATA_DIR, "datasets", document.dataset.text_id, "documents", str(document.model_id) + ".txt")
+			with open(file_name, encoding = "utf-8") as f:
+				doc["text"] = f.read()
+		
+		result.append(doc)
 			
 	response =  HttpResponse(json.dumps(result), content_type='application/json')  
 	_acao_response(response)

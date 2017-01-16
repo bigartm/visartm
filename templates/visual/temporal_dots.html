@@ -5,20 +5,16 @@
 
 
 {% block content %}
-<div id="picture">
+<div align="center" id = "picture_container"  >
+	<svg id="picture"></svg>
 </div>
-
 {% endblock %}
 
 
 {% block right %}
-
-<div>
-	<h2 id="title"> </h2> 
-	<p id="snippet"> </p> 
-	<p id="date"> </p> 			
-</div>
-
+<h4 id = "doc_title"></h4>
+<i><p id = "doc_snippet"></p></i>
+<p id = "doc_date"></p> 
 {% endblock %}
 
 {% block javascript %}
@@ -26,37 +22,29 @@
 <script src="/static/js/d3.v3.min.js"></script>  
 
 <script type="text/javascript">
+	var api = new ArtmApi();  
+	
+	var svgWidth = 0.7*window.innerWidth;
+	var svgHeight = window.innerHeight-100; 
 
-	dates = [
-		{% for month in monthes %}
-			{"X": {{month.X}}, "name": "{{month.name}}"},
-		{% endfor %}
-	]
+	document.getElementById('picture').setAttribute("width", svgWidth);
+	document.getElementById('picture').setAttribute("height", svgHeight);
 	
-	docs = [
-		{% for doc in documents %}
-			{"X": {{doc.X}}, "Y": {{doc.Y}}, "title": "{{doc.document}}", "url" : "{{doc.document.url}}", "snippet" : "{{doc.document.snippet}}"},
-		{% endfor %}
-	]
-	
-	topics = [
-		{% for topic in topics %}
-			{"Y": {{topic.Y}}, "name": "{{topic.topic}}"},
-		{% endfor %}
-	]
-	
-	//Width and height
-	var w = 1200;
-	var h = 440;
-	
-	var topic_label_width = 150;
+	{% autoescape off %}
+	{{data}}
+	{% endautoescape %}
 	 
+	
+	var topicLabelWidth = 150;
+	var margin = 10;
+	topicAreaWidth = svgWidth - topicLabelWidth - 2 * margin;
+	 
+	var topicHeight = svgHeight / topics.length;
+	
 	
 	//Create SVG element
 	var svg = d3.select("#picture")
-				.append("svg")
-				.attr("width", w)
-				.attr("height", h);
+				.append("svg");
 				
 	var g1 = svg.append("g");
 	var g2 = svg.append("g");
@@ -68,63 +56,53 @@
 		
 
 	circles.attr("cx", function(d, i) {
-				return topic_label_width+20*d["X"];
+				return topicLabelWidth + margin + topicAreaWidth * d["X"];
 		})
 		.attr("cy", function(d, i) {
-			return 40+20*d["Y"];
+			return topicHeight * (d["Y"]+0.5);
 		})
 		.attr("r", 3)
 		.on("mouseover", function(d, i) {
-			 d3.select(this)
+			d3.select(this)
 			   .attr("r", 5)
 			   .attr("fill", "red");
-			document.getElementById("title").innerHTML = d["title"];
-			document.getElementById("snippet").innerHTML = d["title"];
-			document.getElementById("date").innerHTML = getDate(d);
+			api.getDocument(d["id"], function(doc){ 
+				document.getElementById("doc_title").innerHTML = doc["title"];
+				document.getElementById("doc_snippet").innerHTML = doc["snippet"]; 
+				document.getElementById("doc_date").innerHTML = doc["time"] + " " + doc["date"]; 
+			});   
 			
 		})
 		.on("mouseout", function(d, i) {
-			 d3.select(this)
+			d3.select(this)
 			   .attr("r", 3)
-			   .attr("fill", "black");
+			   .attr("fill", THEME_textColor);
+			//doc_title.innerHTML = "";
+		//	doc_snippet.innerHTML = "";
+			//doc_date.innerHTML = "";
 		})
 		.on("click", function(d, i) {
-			window.open(d["url"],'_blank');
-		});
-		
-	var date_labels = g1.selectAll("text")
-		.data(dates)
-		.enter()
-		.append("text")
-		.attr("x", function(d) {
-			return topic_label_width+20*d["X"];
+			window.open("/visual/document?id=" + d["id"]);
 		})
-	   .attr("y", 20)
-	   .text(function(d,i) {
-			if (i%5 == 0) {
-			   return d["name"];
-			}  
-		});
-
+		.attr("fill", THEME_textColor);
+		
+ 
+		
 	var topic_labels = g2.selectAll('text')
 		.data(topics) 	 
 		.enter()
 		.append('text')
-		.attr("x", 0)
+		.attr("x", topicLabelWidth)
 		.attr("y", function(d) {
-			return 53+20*d["Y" ];
+			return 0.5 * topicHeight + 2 + topicHeight * d["Y" ];
 		})
 		.text(function(d, i) {
 			return d["name"];
-		});
-		
-		 
-	 
-	var monthes = ["Январь", "Февраль", "Март", "Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
-	function getDate(d) {
-		return monthes[parseInt(d["month"])-1] + " " + d["year"];
-	}
-	
+		})
+		.attr("font-size", 10)
+		.attr("fill", THEME_textColor)
+		.attr("text-anchor", "end");
+ 
 
 </script>
 		

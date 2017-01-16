@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>Dataset {{dataset.name}}</h1> 
-<h2>Documents</h2>
+<h3>Documents</h3>
 {% for doc in documents %}
     <a href = "/visual/document?id={{doc.id}}" > {{doc.title}}</a><br>
 {% endfor %}
@@ -28,6 +28,14 @@
 	{% endif %}
 	
 	<hr>
+	<h4>Seacrh documents</h4>
+	<form class="" role="search" method="GET" action="/visual/dataset">
+		 
+			<input type="text" name='search' class="" placeholder = "" value="{{search_query}}"></input>
+			<input type="hidden" name='dataset' value="{{dataset.text_id}}"> </input>
+		 
+	</form>
+	<hr>
 	
 	<h4>Visualizations</h4>
 	
@@ -45,7 +53,7 @@
 	<h4>Models</h4>
 	{% for model in models %}
 		<input type="radio" name="cb_model" onClick = "useModel({{model.id}});" {% if model == active_model %}checked = "checked"{% endif %}/>
-		<a href = "/visual/model?model={{model.id}}" > {{model}}</a>
+		<a href = "/visual/model?model={{model.id}}" onClick = "useModel({{model.id}});"> {{model}}</a>
 		<br>
 	{% endfor %}
 	<br>

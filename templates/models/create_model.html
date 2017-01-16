@@ -41,6 +41,7 @@
 				<ul class="nav nav-tabs">
 					<li class="active"><a id="home-tab" href="#bigartm-flat" data-toggle="tab" onclick="setMode('flat')">Flat</a></li>
 					<li class=""><a id="profile-tab" href="#bigartm-hier" data-toggle="tab" onclick="setMode('hier')">Hierarchical</a></li>
+					<li class=""><a id="profile-tab" href="#bigartm-script" data-toggle="tab" onclick="setMode('script')">Script</a></li> 
 					<li class=""><a id="profile-tab" href="#bigartm-custom" data-toggle="tab" onclick="setMode('custom')">Custom</a></li> 
 				</ul>
 				<p></p>
@@ -64,7 +65,7 @@
 					<div id="bigartm-hier" class="tab-pane fade">
 						<div class="form-group row">
 							<label class="col-sm-2 col-form-label">Number of layers</label>
-							<div class="col-sm-1">
+							<div class="col-sm-2">
 								<select class="form-control"  name="num_layers">
 									<option>2</option>
 									<option>3</option>
@@ -97,14 +98,28 @@
 						</div>			 
 					</div>
 					
+					<div id="bigartm-script" class="tab-pane fade">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Select script</label>
+							<div class="col-sm-2">
+								<select class="form-control"  name="script_name">
+									{% for script in scripts %}
+									<option>{{script}}</option>
+									{% endfor %}							
+								</select>
+							</div>
+						</div>  
+					</div> 
+					
 					<div id="bigartm-custom" class="tab-pane fade">
 						<label class="col-sm-2 col-form-label">Python script</label>
+						
 						<div class="col-sm-1">
 							<input type="file" name="python_script"/>
 						</div>
 					</div> 
 				</div>
-				<input type="hidden" name="mode" id="mode" value="hier" />
+				<input type="hidden" name="mode" id="mode" value="flat" />
 			</div>
 			  
 			

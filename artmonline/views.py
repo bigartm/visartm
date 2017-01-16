@@ -11,5 +11,8 @@ def settings_page(request):
 	themes = ["dark", "light"]
 	context = Context({'themes': themes, 
 						'user':request.user})
-	return HttpResponse(template.render(context))  
+	return render(request, 'settings.html', context)  
+	
+def	help_page(request):
+	return render(request, 'help.html')
 	

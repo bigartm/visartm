@@ -4,4 +4,123 @@
 
 {% block content %}
 <h1>Artm Online Documentation</h1>  
+<hr>
+<h2>Overview</h2>
+
+<p>ARTM Online is web service for topic modellling, based on <a href="bigartm.org">BigARTM</a> library.</p>
+
+<hr>
+<h2>Features</h2>
+<h4>Implemented</h4>
+<ul>
+	<li>General</li>
+	<ul>
+		<li>Datasets</li>
+		<li>Models</li>
+		<ul>
+			<li>Automatic hierarchical (web interface)</li>
+			<li>From user script</li>
+		</ul>
+	</ul>
+	<li>Local visualizations</li>
+	<ul>
+		<li>Documents</li>
+		<ul>
+			<li>Topic distribution</li>
+			<li>Words highlighting</li>
+			<li>Related documents</li>
+		</ul>
+		<li>Topics</li>
+		<ul>
+			<li>Top terms</li>
+			<li>Related topics</li>
+		</ul>
+		<li>Terms</li>
+	</ul>
+	<li>Global visualizations</li>
+	<ul>
+		<li>HTML tree</li>
+		<li>FoamTree</li>
+		<li>Circles</li>
+		<li>Temporal dots</li>
+		<li>Temporal cells</li>
+	</ul>
+	<li>Color themes</li>
+	<li>Accounts</li>
+	<li>API</li>
+	<ul>
+		<li>documents</li>
+	</ul>
+</ul>
+	
+<h4>In development</h4>
+<ul>
+	<li>Topics 'spectrum'</li>
+</ul>
+	
+<h4>Planned</h4>
+<ul>
+	<li>Console</li>
+	<li>Assesment mode</li>
+	<li>Waiting screen</li>
+	<li>Deploy!</li>
+	<li>Loading datasets</li>
+	<ul>
+		<li>Plain text in zip, preprocessing on server.</li>
+	</ul>
+</ul>
+
+<hr>
+<h2>Formats</h2>
+
+<h4>Dataset format</h4>
+<h5>Folder structure:</h5>
+<ul>
+	<li>[dataset_name]</li>
+	<ul>
+		<li>UCI</li>
+		<ul>
+			<li>vocab_raw.[dataset_name].txt</li>
+			<li>docword.[dataset_name].txt</li>
+		</ul>
+		<li>documents</li>
+		<ul>
+			<li>1.txt</li>
+			<li>3.txt</li>
+			<li>3.txt</li>
+			<li>...</li>
+			<li>[N].txt</li>
+		</ul>
+		<li>documents</li>
+		<ul>
+			<li>1.txt</li>
+			<li>3.txt</li>
+			<li>3.txt</li>
+			<li>...</li>
+			<li>[N].txt</li>
+		</ul>
+	</ul>
+</ul>
+
+<h5>File docword_raw</h5>
+<h5>File vocab</h5>
+
+
+<h4>Custom script format</h4>
+
+
+<hr>
+<h2>API refereence</h2>
+
+<h4><b>api/documents</b> - get documents.</h4>
+<p>Arguments<p>
+<ul>
+	<li><b>ids</b> - ids of documents, divided by comma.</p></li>
+	<li><b>light</b> - not send text.</p></li>
+</ul>
+<p>Return value<p>
+<ul>
+	<li>JSON list of documents</li>
+</ul>
+
 {% endblock %}

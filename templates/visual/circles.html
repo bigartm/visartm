@@ -46,8 +46,7 @@ div { margin:0; padding:0; overflow:hidden }
 {% block right %} 
 <h4> <a id = "doc_title"></a></h4>
 <i><p id = "doc_snippet"></p></i>
-<p id = "doc_text"></p>
- 
+<p id = "doc_text"></p> 
 {% endblock %}
 
 {% block javascript %}
@@ -55,7 +54,7 @@ div { margin:0; padding:0; overflow:hidden }
 <script src="/static/js/artmonlineapi.js?v=0001"></script>
 <script>
 
-api = new ArtmApi(); 
+var api = new ArtmApi(); 
 doc_title = document.getElementById("doc_title");
 
 var svg_width = 0.7*window.innerWidth;
@@ -118,7 +117,14 @@ root = {{root}};
 			//document.getElementById("doc_title").innerHTML = "";
 			//document.getElementById("doc_snippet").innerHTML = "";  
 		}
-	}) 
+	})
+	.call(d3.drag()
+        .on("drag", dragged) );
+		
+	function dragged(d) {
+	  shift_x +=d3.event.x;
+	  //d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+	}
 
   var text = g.selectAll("text")
     .data(nodes)

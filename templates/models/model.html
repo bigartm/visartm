@@ -6,7 +6,7 @@
 	<h1>Model {{model}}</h1>
 	
 	{% for layer in topics_layers %}
-		<h2>Level {{layer.i}} topics</h2>
+		<h3>Level {{layer.i}} topics</h3>
 		{% for topic in layer.topics %}
 			<a href = "/visual/topic?id={{topic.id}}" > {{topic}}</a><br>
 		{% endfor %}
@@ -17,8 +17,10 @@
 <h4>Properties</h4>
 	Dataset: <a href="/visual/dataset?dataset={{model.dataset.text_id}}">{{model.dataset}}</a>
 	<br>
-	Number of layers: {{model.layers_count}}
-	<br>
+	{% for layer in topics_layers %}
+		Layer {{layer.i}}: {{layer.topics_count}} topics
+		<br>
+	{% endfor %}
 	Author: <a href="/accounts/{{model.author}}">{{model.author}}</a>
 <hr>
 <h4>Options</h4>
@@ -27,7 +29,7 @@
 	<br>
 	<a href = "/models/reload_model?model={{model.id}}">Reload</a> 
 	<br>
-	<a href = "/models/reload_model?model={{model.id}}&light=1">Reload visualizations</a> 
+	<a href = "/models/reload_model?model={{model.id}}&light=1">Arrange topics</a> 
 	<br>
 	<a href = "/models/delete_model?model={{model.id}}">Delete</a>
   {% endif %}  

@@ -4,7 +4,8 @@ import os
 from django.conf import settings
 import json
 import logging
-import datetime
+from datetime import datetime
+import artm
 
 class Dataset(models.Model):
 	name = models.CharField('Name', max_length=50)
@@ -14,14 +15,17 @@ class Dataset(models.Model):
 	time_provided = models.BooleanField(null=False, default=True)
 	docs_count = models.IntegerField(default = 0)
 	terms_count = models.IntegerField(default = 0) 
+	creation_time = models.DateTimeField(null=False, default = datetime.now)
 	
 	def __str__(self):
 		return self.name 
 		
 	def reload(self): 	 
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
-		vocab_raw_file = os.path.join(dataset_path, "UCI", "vocab_raw." + self.text_id + ".txt")
-		vocab_file = os.path.join(dataset_path, "UCI", "vocab." + self.text_id + ".txt")
+		uci_folder = os.path.join(dataset_path, "UCI")
+		batches_folder = os.path.join(dataset_path, "batches")
+		vocab_raw_file = os.path.join(uci_folder, "vocab_raw." + self.text_id + ".txt")
+		vocab_file = os.path.join(uci_folder, "vocab." + self.text_id + ".txt")
 		
 		print("Loading dataset " + self.text_id + "...")
 		
@@ -32,8 +36,11 @@ class Dataset(models.Model):
 			model.dispose()
 		ArtmModel.objects.filter(dataset = self).delete()
 		
-		# Removing all terms
+		# Removing all terms, documents and modalities
 		Term.objects.filter(dataset = self).delete()
+		Document.objects.filter(dataset = self).delete()
+		Modality.objects.filter(dataset = self).delete()
+		
 		
 		# Vocabulary preprocessing (vocab_raw -> vocab) to make terms unique
 		print("Vocabulary preprocessing...")
@@ -108,7 +115,7 @@ class Dataset(models.Model):
 			
 			if "time" in doc_info:
 				lst = doc_info["time"]
-				doc.time = datetime.datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
+				doc.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
 			
 			doc.model_id = id
 			doc.dataset = self
@@ -118,9 +125,38 @@ class Dataset(models.Model):
 		self.docs_count = docs_count_
 		self.save()
 		
+		# Creating ARTM batches and dictionary
+		'''
+		print("Creating ARTM batches and dictionary...")
+		batch_vectorizer = artm.BatchVectorizer(data_path = uci_folder, 
+								data_format = "bow_uci", 
+								batch_size = 100,
+								collection_name = self.text_id,
+								target_folder = batches_folder)
+		
+		dictionary_file_name = os.path.join(batches_folder, "dict.txt")
+		dictionary = artm.Dictionary(name="dictionary")
+		dictionary.gather(batches_folder)
+		dictionary.save_text(dictionary_file_name)
+		'''
+		
 		print("Dataset " + self.text_id + " loaded.")
-		 
-
+		
+	def get_batches(self):
+		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
+		uci_folder = os.path.join(dataset_path, "UCI")
+		batches_folder = os.path.join(dataset_path, "batches")
+		
+		batch_vectorizer = artm.BatchVectorizer(data_path = uci_folder, 
+								data_format = "bow_uci", 
+								batch_size = 1000,
+								collection_name = self.text_id,
+								target_folder = batches_folder)
+								
+		dictionary = artm.Dictionary(name="dictionary")
+		dictionary.gather(batches_folder)
+		
+		return batch_vectorizer, dictionary
 class Document(models.Model):
 	title = models.TextField(null=False)
 	url = models.URLField(null=True)

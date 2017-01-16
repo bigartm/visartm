@@ -8,7 +8,7 @@
 	<body> 
 		{% block content %}{% endblock %}
 		
-		<script src="/static/js/artmonlineapi.js?v=0001"></script>
+		<script src="/static/js/artmonlineapi.js?version={% now 'U' %}"></script>
 		{% block javascript %}{% endblock %}
 	</body>
 </html>

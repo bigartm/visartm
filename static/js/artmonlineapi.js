@@ -18,9 +18,10 @@ class ArtmApi {
 	getDocuments(documentsIds, callback) {
 		var xhttp = new XMLHttpRequest();
 		var docs_count = documentsIds.length;
-		var query = "";
-		for (var i = 0; i < docs_count; ++i) {
-			query += documentsIds[i] + ",";
+		var query = documentsIds[0];
+		for (var i = 1; i < docs_count; ++i) {
+			query += "," + documentsIds[i];
+
 		} 
 		xhttp.onreadystatechange = function() {
 			if (this.readyState == 4 && this.status == 200) {
