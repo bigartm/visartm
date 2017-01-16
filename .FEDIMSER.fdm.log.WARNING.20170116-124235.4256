@@ -1,0 +1,12 @@
+Log file created at: 2017/01/16 12:42:35
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+W0116 12:42:35.276947 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaaa.batch
+W0116 12:42:35.566099 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaab.batch
+W0116 12:42:35.924039 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaac.batch
+W0116 12:42:36.240149 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaad.batch
+W0116 12:42:36.542526 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaae.batch
+W0116 12:42:36.815832 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaaf.batch
+W0116 12:42:37.082586 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaag.batch
+W0116 12:42:37.389400 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaah.batch
+W0116 12:42:37.617985 12964 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaai.batch

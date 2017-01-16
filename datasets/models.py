@@ -157,6 +157,8 @@ class Dataset(models.Model):
 		dictionary.gather(batches_folder)
 		
 		return batch_vectorizer, dictionary
+		
+		
 class Document(models.Model):
 	title = models.TextField(null=False)
 	url = models.URLField(null=True)

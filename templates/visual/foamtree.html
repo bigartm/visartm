@@ -20,7 +20,7 @@
 	window.addEventListener("load", function() {
 		var foamtree = new CarrotSearchFoamTree({
 			id: "visualization",
-			dataObject: {% autoescape off %}{{root}}{% endautoescape %},
+			dataObject: {% autoescape off %}{{data}}{% endautoescape %},
 			rolloutDuration : 0,
 			pullbackDuration : 0,
 			fadeDuration: 500,  

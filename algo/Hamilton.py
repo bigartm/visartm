@@ -64,7 +64,7 @@ class HamiltonPath:
             self.solve_annealing(self.N)
         print ("Quality after = ", self.path_weight())
         print ("Time:  %fs " % (time.time() - start_time) )
-        return self.get_inverse_permutation()
+        return self.path
         
     def solve_stupid_brute_force(self):
         ans = self.path_weight()        

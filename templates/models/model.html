@@ -29,7 +29,13 @@
 	<br>
 	<a href = "/models/reload_model?model={{model.id}}">Reload</a> 
 	<br>
-	<a href = "/models/reload_model?model={{model.id}}&light=1">Arrange topics</a> 
+	<a href = "/models/arrange_topics?model={{model.id}}&mode=alphabet">Arrange topics(alphabetically)</a> 
+	<br>
+	<a href = "/models/arrange_topics?model={{model.id}}&mode=hamilton">Arrange topics(Hamilton path)</a> 
+	<br>
+	<a href = "/models/arrange_topics?model={{model.id}}&mode=tsne">Arrange topics(t-SNE)</a> 
+	<br>
+	<a href = "/models/reset_visuals?model={{model.id}}">Reset visualizations</a> 
 	<br>
 	<a href = "/models/delete_model?model={{model.id}}">Delete</a>
   {% endif %}  

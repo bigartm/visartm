@@ -13,6 +13,8 @@ import artm
 from algo.Hamilton import HamiltonPath
 import re
 from shutil import rmtree
+from random import random
+from sklearn.manifold import TSNE
 
 class ArtmModel(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
@@ -133,7 +135,12 @@ class ArtmModel(models.Model):
 			
 		self.save()
 		
-		
+	def get_phi(self):
+		return np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "phi.npy"))
+	
+	def get_theta(self):
+		return np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "theta.npy"))
+	
 	def reload(self):
 		self.delete_visuals()
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
@@ -144,9 +151,9 @@ class ArtmModel(models.Model):
 		print ("Loading matrices...")
 		layers_count = self.layers_count
 			
-		theta = np.load(os.path.join(model_path, "theta.npy"))
+		theta = self.get_theta()
 		theta_t = theta.transpose()
-		phi = np.load(os.path.join(model_path, "phi.npy"))
+		phi = self.get_phi()
 		phi_t = phi.transpose()
 		if layers_count > 1:
 			psi = [0 for i in range(self.layers_count)]		
@@ -272,15 +279,15 @@ class ArtmModel(models.Model):
 		self.creation_time = datetime.now()
 		self.save()
 		print("Model " + str(self.id) + " reloaded.")
-		self.arrange_topics()
+		self.arrange_topics("hamilton")
 	
 	
 	# Only horizontal arranging
-	def arrange_topics(self):
+	def arrange_topics(self, mode = "alphabet"):
 		self.delete_visuals()
 		# Counting horizontal relations topic-topic
 		print("Counting horizontal relations topic-topic...")	
-		phi = np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "phi.npy"))
+		phi = self.get_phi()
 		phi_t = phi.transpose()
 		layers_count = self.layers_count
 		topics_count = [int(x) for x in self.topics_count.split()]
@@ -309,21 +316,27 @@ class ArtmModel(models.Model):
 					relation.save()
 		
 		
-		
 		# Building topics spectrum
-		print("Building topics spectrum...")
 		for layer_id in range (1, layers_count + 1):
-			hp = HamiltonPath(topic_distances[layer_id])
-			perm = hp.solve()
-			topics_titles = [(topics_index[layer_id][topic_id].title, topic_id) for topic_id in range(0, topics_count[layer_id])]
-			topics_titles.sort()
+			print("Building topics spectrum for layer %d, mode=%s..." % (layer_id, mode))
+			if mode == "alphabet":
+				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
+				idx = np.argsort(titles)
+			if mode == "hamilton":
+				hp = HamiltonPath(topic_distances[layer_id])
+				idx = hp.solve()
+			elif mode == "tsne": 
+				tsne_model = TSNE(n_components = 1, random_state=0, metric = "precomputed")
+				tsne_result = tsne_model.fit_transform(topic_distances[layer_id]).reshape(-1) 
+				idx = np.argsort(tsne_result)
+				
 			i = 0
 			for topic in topics_index[layer_id]:
-				topic.spectrum_index = perm[i]
+				topic = topics_index[layer_id][idx[i]]
+				topic.spectrum_index = i
 				topic.save()
 				i += 1
-	
- 		
+			
 	def dispose(self):
 		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
 		try:
@@ -359,6 +372,46 @@ class ArtmModel(models.Model):
 				answer.append({"label": child.title, "groups": self.build_foamtree(child)})
 		return answer
 		
+	def build_tsne(self):
+		print ("Buildig t-SNE visualization for model " + str(self.id) + "...") 
+		tsne_matrix_path = os.path.join(self.get_visual_folder(), "tsne_matrix.npy")
+		
+		try:
+			tsne_matrix = np.load(tsne_matrix_path)
+			print ("t-SNE matrix from cache.")
+		except:
+			theta_t = self.get_theta().transpose()
+			tsne_model = TSNE(n_components=2, random_state=0)
+			print ("Fitting t-SNE...")
+			tsne_matrix = tsne_model.fit_transform(theta_t)  
+			print ("t-SNE fit.")
+			np.save(tsne_matrix_path, tsne_matrix)
+		
+		answer = []
+		documents = Document.objects.filter(dataset = self.dataset).order_by("model_id")
+		documents_count = tsne_matrix.shape[0]
+		
+		border_0 = tsne_matrix[0].copy()
+		border_1 = tsne_matrix[0].copy()
+		
+		print(border_0)
+		for i in range(documents_count):
+			border_0[0] = min(border_0[0], tsne_matrix[i][0])
+			border_1[0] = max(border_1[0], tsne_matrix[i][0])
+			border_0[1] = min(border_0[1], tsne_matrix[i][1])
+			border_1[1] = max(border_1[1], tsne_matrix[i][1])
+		print("min",border_0)
+		print("max",border_1)
+		
+		
+		i = 0
+		for document in documents:
+			answer.append({"X": (tsne_matrix[i][0] - border_0[0]) / (border_1[0] - border_0[0]), 
+						   "Y": (tsne_matrix[i][1] - border_0[1]) / (border_1[1] - border_0[1]), 
+						   "id": document.id})
+			i += 1
+			
+		return "docs = " + json.dumps(answer) + ";\n"
 	
 	def get_visual(self, visual_name):
 		file_name = os.path.join(self.get_visual_folder(), visual_name)
@@ -375,6 +428,8 @@ class ArtmModel(models.Model):
 			result = json.dumps({"children": self.build_circles(root_topic)})
 		elif visual_name == "temporal_dots":
 			result = self.build_temporal_dots()
+		elif visual_name == "tsne":
+			result = self.build_tsne()
 			
 		with open(file_name, "w", encoding = 'utf-8') as f:
 			f.write(result)
@@ -403,11 +458,10 @@ class ArtmModel(models.Model):
 			os.makedirs(path) 
 		return path
 		
-	def delete_visuals(self):
-		path = os.path.join(settings.DATA_DIR, "models", str(self.id), "visual")
-		if os.path.exists(path): 
-				rmtree(path)
-				
+	def delete_visuals(self, mode = "all"):
+		if mode == "all":
+			rmtree(self.get_visual_folder()) 
+			
 	def get_temporal_cells(self, group_by): 		
 		file_name = os.path.join(self.get_visual_folder(), "temporal_cells_" + group_by + ".txt")
 		if os.path.exists(file_name):

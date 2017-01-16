@@ -22,13 +22,22 @@ def visual_model(request):
 @login_required
 def reload_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
-	if "light" in request.GET:
-		model.arrange_topics()
-		#model.build_visualizations()
-	else:
-		model.reload()
+	model.reload()
 	return HttpResponse("Reloaded. <a href ='/visual/model?model=" + str(model.id) + "'> Return to model</a>.") 
 
+@login_required
+def arrange_topics(request):
+	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+	model.arrange_topics(request.GET['mode'])
+	return HttpResponse("Rearranged. <a href ='/visual/model?model=" + str(model.id) + "'> Return to model</a>.") 
+
+@login_required
+def reset_visuals(request):
+	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+	model.delete_visuals()
+	return HttpResponse("Rsetted. <a href ='/visual/model?model=" + str(model.id) + "'> Return to model</a>.") 
+
+	
 @login_required
 def create_model(request):
 	if request.method == 'GET': 

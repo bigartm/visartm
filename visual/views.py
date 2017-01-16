@@ -213,16 +213,7 @@ def get_model(request, dataset):
 		pass
 				
 	return None
-	 
-def visual_temporal_dots(request):
-	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-	if not dataset.time_provided:
-		return HttpResponse("Dataset " + dataset.name + " has no time marks, so you cannot build temporal visualization.")
-	model = get_model(request, dataset)
-	context = Context({'dataset': dataset, 
-					    'data': model.get_visual("temporal_dots"),
-						'no_footer': True})
-	return render(request, 'visual/temporal_dots.html', context)
+	  
 	
 def visual_temporal_squares(request):
 	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
@@ -241,31 +232,21 @@ def visual_temporal_squares(request):
 		
 	return render(request, 'visual/temporal_squares.html', Context(context))
 
+	 
 	
-def visual_circles(request):
+def visual_global(request):
 	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
 	model = get_model(request, dataset)
-
+	type = request.GET['type']
+	
 	context = Context({'dataset': dataset,
 					   'model': model,
-					   'root': model.get_visual("circles"),
+					   'data': model.get_visual(type),
 					   'no_footer': True})
 					   
-	return render(request, 'visual/circles.html', context)
-	
-	
-def visual_tsne(request):
-	return HttpResponse("t-SNE not implemented.")
+	return render(request, "visual/" + type + ".html", context)
 
-def foamtree(request):
-	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-	model = get_model(request, dataset)
-		
-	context = Context({'dataset': dataset,
-					   'model': model,
-					   'root': model.get_visual("foamtree"),})
-					   
-	return render(request, 'visual/foamtree.html', context)	
+	
 	
 def visual_voronoi(request):
 	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]	

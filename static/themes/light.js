@@ -7,7 +7,7 @@ var THEME_pieColor4 = "#ffff00";
 var THEME_temporalSquares_EmptyColor = [255, 255, 255];
 var THEME_temporalSquares_ActiveColor = [50, 255, 50];
 var THEME_temporalSquares_TopColor = [255, 0, 0];
-var THEME_temporalSquares_BottomColorR = [0, 255, 0]; 
+var THEME_temporalSquares_BottomColor = [0, 255, 0]; 
 
 
 
