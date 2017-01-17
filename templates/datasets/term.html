@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Term {{term.text}} {% endblock %}
+
+{% block content %}
+	<h1> Term {{term.text}} </h1> 
+	<hr>
+	
+{% endblock %}
+ 
+ 
+{% block right %}
+	<h4>Information</h4>
+	Dataset: {{term.dataset}}<br>
+	Modality: {{term.modality}}<br>
+	index_id: {{term.index_id}}<br>
+	matrix_id: {{term.matrix_id}}<br>
+	token_value: {{term.token_value}}<br>
+	token_tf: {{term.token_tf}}<br>
+	token_df: {{term.token_df}}<br>
+{% endblock %}
+ 
+
+{% block additional_scripts %}
+<script src="/static/js/d3pie.min.js"></script> 
+{% endblock %}
+
+

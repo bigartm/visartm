@@ -24,7 +24,7 @@
 		<div id = "pieChart2" align = "center" ></div>
 		
 		{% for topic in topics %}
-		<span style="color:{{topic.color}};">∎</span>
+		<span id ="square{{topic.i}}">∎</span>
 		<a href = "{{topic.url}}">{{topic.title}}</a>
 		</br>
 		{% endfor %}
@@ -45,6 +45,15 @@
 <script src="/static/js/d3pie.min.js"></script>
  
 <script type="text/javascript">
+
+	try{
+		document.getElementById("square0").style.color = THEME_pieColor0;
+		document.getElementById("square1").style.color = THEME_pieColor1;
+		document.getElementById("square2").style.color = THEME_pieColor2;
+		document.getElementById("square3").style.color = THEME_pieColor3;
+		document.getElementById("square4").style.color = THEME_pieColor4;
+	} catch (e) {;}
+	
 	var styleSheets = window.document.styleSheets;
 	
 	var pie = new d3pie("pieChart2", {

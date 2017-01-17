@@ -10,11 +10,13 @@ import pandas as pd
 from scipy.spatial.distance import euclidean, cosine
 from scipy.stats import entropy 
 import artm
-from algo.Hamilton import HamiltonPath
+from algo.Hamilton import HamiltonPath 
 import re
 from shutil import rmtree
 from random import random
 from sklearn.manifold import TSNE
+import importlib.util
+from django.db import transaction
 
 class ArtmModel(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
@@ -75,37 +77,14 @@ class ArtmModel(models.Model):
 		if not os.path.exists(model_path):
 			os.makedirs(model_path)
 		
-		print ("Saving matrix theta...")
-		theta_file_name = os.path.join(model_path, "theta")
+		print ("Saving matrix theta...") 
 		theta_npy_file_name = os.path.join(model_path, "theta.npy") 
 		theta = artm_object.get_theta().sort_index(axis = 1).values		
 		np.save(theta_npy_file_name, theta)
 		
-		print("Saving matrix phi...")
-		phi_file_name = os.path.join(model_path, "phi")
+		print("Saving matrix phi...") 
 		phi_npy_file_name = os.path.join(model_path, "phi.npy")
-		phi_raw = artm_object.get_phi()
-		words_reverse_index = dict()
-		with open(vocab_file, "r", encoding = 'utf-8') as f:
-			vocab_lines = f.readlines()
-		words_count = len(vocab_lines)
-		total_topics_count = phi_raw.shape[1]
-		phi = np.zeros((words_count, total_topics_count))
-		word_id = 0
-		for line in vocab_lines:
-			word = line.split()[0]
-			try:
-				series = phi_raw.loc[word]
-				topic_id = 0
-				for weight in series:
-					phi[word_id][topic_id] = weight
-					topic_id +=1
-			except:
-				pass
-			word_id += 1
-			if word_id % 10000 == 0:
-				print (word_id)
-		np.save(phi_npy_file_name, phi)		
+		np.save(phi_npy_file_name, artm_object.get_phi().values)		
 		
 		
 		is_hierarchial = True
@@ -141,6 +120,7 @@ class ArtmModel(models.Model):
 	def get_theta(self):
 		return np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "theta.npy"))
 	
+	@transaction.atomic
 	def reload(self):
 		self.delete_visuals()
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
@@ -167,7 +147,7 @@ class ArtmModel(models.Model):
 		
 		# Building temporary index for terms
 		print("Building temporary index for words...")
-		terms_index = Term.objects.filter(dataset = self.dataset).order_by("model_id")
+		terms_index = Term.objects.filter(dataset = self.dataset).order_by("matrix_id") 
 		terms_id_index = [term.id for term in terms_index]
 		
 		# Removing existing topics and related objects
@@ -273,16 +253,26 @@ class ArtmModel(models.Model):
 			relation.model = self
 			relation.document = documents_index[doc_id]
 			relation.topic = topics_index[layers_count][topic_id]
+			topics_index[layers_count][topic_id].documents_count += 1
 			relation.save()
 			if doc_id % 1000 == 0:
 				print(doc_id) 
+		
+		for topic_id in range(topics_count[layers_count]):
+			topics_index[layers_count][topic_id].save()
+		
 		self.creation_time = datetime.now()
 		self.save()
+		
+		
+		
 		print("Model " + str(self.id) + " reloaded.")
-		self.arrange_topics("hamilton")
+		self.arrange_topics()
+	
 	
 	
 	# Only horizontal arranging
+	@transaction.atomic
 	def arrange_topics(self, mode = "alphabet"):
 		self.delete_visuals()
 		# Counting horizontal relations topic-topic
@@ -343,115 +333,26 @@ class ArtmModel(models.Model):
 			rmtree(model_path)
 		except:
 			pass
-			
-	def build_circles(self, topic):
-		answer = []
-		if topic.layer == self.layers_count:
-			relations = DocumentInTopic.objects.filter(topic = topic)
-			for relation in relations:
-				document = relation.document
-				answer.append({"id": document.id, "size":1})
-		else:
-			relations = TopicInTopic.objects.filter(parent = topic)
-			for relation in relations:
-				child = relation.child
-				answer.append({"name": child.title, "children": self.build_circles(child)})
-		return answer
+			 
+	def get_visual(self, params):
+		visual_name = params['type']
+		path = os.path.join(settings.VISAL_SCRIPTS_DIR, visual_name + ".py")
+		spec = importlib.util.spec_from_file_location("algo.visualizations." + visual_name, path)
+		visual_module = importlib.util.module_from_spec(spec)
+		spec.loader.exec_module(visual_module)
 		
-	def build_foamtree(self, topic):		
-		answer = []
-		if topic.layer == self.layers_count:
-			relations = DocumentInTopic.objects.filter(topic = topic)
-			for relation in relations:
-				document = relation.document
-				answer.append({"label": document.title, "id": document.id})
-		else:
-			relations = TopicInTopic.objects.filter(parent = topic)
-			for relation in relations:
-				child = relation.child
-				answer.append({"label": child.title, "groups": self.build_foamtree(child)})
-		return answer
-		
-	def build_tsne(self):
-		print ("Buildig t-SNE visualization for model " + str(self.id) + "...") 
-		tsne_matrix_path = os.path.join(self.get_visual_folder(), "tsne_matrix.npy")
-		
-		try:
-			tsne_matrix = np.load(tsne_matrix_path)
-			print ("t-SNE matrix from cache.")
-		except:
-			theta_t = self.get_theta().transpose()
-			tsne_model = TSNE(n_components=2, random_state=0)
-			print ("Fitting t-SNE...")
-			tsne_matrix = tsne_model.fit_transform(theta_t)  
-			print ("t-SNE fit.")
-			np.save(tsne_matrix_path, tsne_matrix)
-		
-		answer = []
-		documents = Document.objects.filter(dataset = self.dataset).order_by("model_id")
-		documents_count = tsne_matrix.shape[0]
-		
-		border_0 = tsne_matrix[0].copy()
-		border_1 = tsne_matrix[0].copy()
-		
-		print(border_0)
-		for i in range(documents_count):
-			border_0[0] = min(border_0[0], tsne_matrix[i][0])
-			border_1[0] = max(border_1[0], tsne_matrix[i][0])
-			border_0[1] = min(border_0[1], tsne_matrix[i][1])
-			border_1[1] = max(border_1[1], tsne_matrix[i][1])
-		print("min",border_0)
-		print("max",border_1)
-		
-		
-		i = 0
-		for document in documents:
-			answer.append({"X": (tsne_matrix[i][0] - border_0[0]) / (border_1[0] - border_0[0]), 
-						   "Y": (tsne_matrix[i][1] - border_0[1]) / (border_1[1] - border_0[1]), 
-						   "id": document.id})
-			i += 1
-			
-		return "docs = " + json.dumps(answer) + ";\n"
-	
-	def get_visual(self, visual_name):
-		file_name = os.path.join(self.get_visual_folder(), visual_name)
+		file_name = os.path.join(self.get_visual_folder(), visual_module.get_name(params) + ".txt")
 		if os.path.exists(file_name):
 			with open(file_name, "r") as f:
 				return f.read()
 		
-		root_topic = Topic.objects.filter(model = self, layer = 0)[0]
-		
-		result = ""
-		if visual_name == "foamtree":
-			result = json.dumps({"groups": self.build_foamtree(root_topic), "label": self.dataset.name})
-		elif visual_name == "circles":
-			result = json.dumps({"children": self.build_circles(root_topic)})
-		elif visual_name == "temporal_dots":
-			result = self.build_temporal_dots()
-		elif visual_name == "tsne":
-			result = self.build_tsne()
+		result = visual_module.visual(self, params)
 			
 		with open(file_name, "w", encoding = 'utf-8') as f:
 			f.write(result)
 		return result 	
 	
-	def date_hash(self, date, group_by):
-		if (group_by == "year"):
-			return date.year
-		if (group_by == "month"):
-			return date.month + 100 * date.year
-		elif (group_by == "day"):
-			return date.day + 100 * date.month + 10000 * date.year
-			
-	def date_name(self, date_hash, group_by):
-		if (group_by == "year"):
-			return str(date_hash)
-		if (group_by == "month"):
-			return str(date_hash % 100) + "/" + str(int(date_hash / 100)) 
-		elif (group_by == "day"):
-			return str(date_hash % 100) + "/" + str( int(date_hash / 100) % 100) + "/" + str(int(date_hash / 1000000))  
-	
-		
+	 
 	def get_visual_folder(self):
 		path = os.path.join(settings.DATA_DIR, "models", str(self.id), "visual")
 		if not os.path.exists(path): 
@@ -461,105 +362,7 @@ class ArtmModel(models.Model):
 	def delete_visuals(self, mode = "all"):
 		if mode == "all":
 			rmtree(self.get_visual_folder()) 
-			
-	def get_temporal_cells(self, group_by): 		
-		file_name = os.path.join(self.get_visual_folder(), "temporal_cells_" + group_by + ".txt")
-		if os.path.exists(file_name):
-			with open(file_name, "r") as f:
-				return f.read()
-				
-		doc_topics = DocumentInTopic.objects.filter(model = self)
-		topics = Topic.objects.filter(model = self, layer = self.layers_count).order_by("spectrum_index")
-		
-		dates_hashes = set()
-		for doc_topic in doc_topics:
-			dates_hashes.add(self.date_hash(doc_topic.document.time, group_by))
-		dates_hashes = list(dates_hashes)
-		dates_hashes.sort()
-		dates_send = []
-		dates_reverse_index = dict()
-		
-		i = 0 
-		for date_h in dates_hashes:
-			dates_reverse_index[date_h] = i 
-			dates_send.append({"X": i, "name": self.date_name(date_h, group_by)})
-			i += 1
-			
-		cells = dict()
-		
-		
-		
-		for doc_topic in doc_topics:
-			cell_xy = (dates_reverse_index[self.date_hash(doc_topic.document.time, group_by)], doc_topic.topic.spectrum_index)
-			if not cell_xy in cells:
-				cells[cell_xy] = []
-			cells[cell_xy].append(doc_topic.document.id)
-		
-		max_intense = 0
-		cells_send = []
-		for key, value in cells.items():
-			intense = len(value);
-			max_intense = max(max_intense, intense)
-			cells_send.append({"X" : key[0], "Y" : key[1], "intense": intense, "docs" : value})
-		
-		topics_send = [{"Y": topic.spectrum_index, "name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2])} for topic in topics]
-		
-		# in case of hierarchical model we want show tree
-		high_topics_send = []
-		lines_send = []
-		if self.layers_count > 1:
-			high_topics = Topic.objects.filter(model = self, layer = self.layers_count - 1)
-			high_topics_temp = []
-			for topic in high_topics:
-				children = TopicInTopic.objects.filter(parent = topic)
-				positions = [relation.child.spectrum_index for relation in children]
-				avg = sum(positions)/float(len(positions))
-				high_topics_temp.append({"mass_center_y":avg, "name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2]), "positions": positions})
-			high_topics_temp.sort(key = lambda x: x["mass_center_y"])
-			
-			i = 0
-			K = len(topics_send) / float(len(high_topics_temp))
-			for el in high_topics_temp:		
-				pos_y = K*(i+0.5)
-				high_topics_send.append({"Y": pos_y, "name" : el["name"]})
-				for j in el["positions"]:
-					lines_send.append({"from_y": pos_y, "to_y": j})
-				i += 1
-		
-		
-		result = "cells=" + json.dumps(cells_send) + ";\n" + \
-				"dates=" + json.dumps(dates_send) + ";\n" + \
-				"topics=" + json.dumps(topics_send) + ";\n" + \
-				"high_topics=" + json.dumps(high_topics_send) + ";\n" + \
-				"lines=" + json.dumps(lines_send) + ";\n" + \
-				"max_intense=" + str(max_intense) + ";\n"
-				 
-		with open(file_name, "w", encoding = 'utf-8') as f:
-			f.write(result)
-		return result
-	
-	def build_temporal_dots(self): 		 
-		documents = Document.objects.filter(dataset = self.dataset)
-		doc_topics = DocumentInTopic.objects.filter(model = self)		
-		min_time = documents[0].time
-		max_time = min_time
-		
-		for document in documents:
-			time = document.time
-			if time < min_time:
-				min_time = time
-			if time > max_time:
-				max_time = time
-		
-		period = (max_time - min_time).total_seconds()
-
-		documents_send = [{"X": (doc_topic.document.time - min_time).total_seconds() / period, 
-						   "Y": doc_topic.topic.spectrum_index,
-						   "id": doc_topic.document.id} for doc_topic in doc_topics]
-		topics = Topic.objects.filter(model = self, layer = self.layers_count).order_by("spectrum_index")
-		topics_send = [{"Y": topic.spectrum_index, "name": topic.title} for topic in topics]
-		return "docs=" + json.dumps(documents_send) + ";\ntopics=" + json.dumps(topics_send) + ";\n";
-				
+							
 				
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
@@ -568,9 +371,15 @@ class Topic(models.Model):
 	title_short = models.TextField(null=True) 
 	spectrum_index = models.IntegerField(null = True, default = 0) 
 	layer = models.IntegerField(default = 1) 
+	documents_count = models.IntegerField(default = 0)
 	
 	def __str__(self):
 		return self.title
+		
+	def rename(self, new_title):
+		self.title = new_title
+		self.title_short = new_title[0:30]
+		self.save()
 		
 class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

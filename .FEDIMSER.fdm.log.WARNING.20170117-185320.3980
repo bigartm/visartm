@@ -1,0 +1,17 @@
+Log file created at: 2017/01/17 18:53:20
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+W0117 18:53:20.855900  8928 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaaa.batch
+W0117 18:53:21.841053  8928 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaab.batch
+W0117 18:53:22.684296  8928 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaac.batch
+W0117 18:53:23.083824  8928 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaad.batch
+W0117 18:53:31.950587  8928 check_messages.h:833] Inconsistent fields size in ThetaMatrix: 3446 vs 0 vs 3446 vs 0;
+W0117 19:00:08.915566  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaaa.batch
+W0117 19:00:09.213614  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaab.batch
+W0117 19:00:09.511410  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaac.batch
+W0117 19:00:09.827245  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaad.batch
+W0117 19:00:10.100003  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaae.batch
+W0117 19:00:10.390271  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaaf.batch
+W0117 19:00:10.665977  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaag.batch
+W0117 19:00:10.968305  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaah.batch
+W0117 19:00:11.160791  6588 helpers.cc:208] File already exists: D:\artmonline\data\datasets\lenta\batches\aaaaai.batch

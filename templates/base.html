@@ -16,7 +16,7 @@
 <link href="/static/css/base.css?version={% now 'U' %}" rel="stylesheet">
 
 <!-- Bootstrap core CSS -->
-<link href="/static/css/bootstrap.min.css" rel="stylesheet">
+<link href="/static/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet">
 
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <link href="/static/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
@@ -56,7 +56,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="/">Artm Online</a>
+      <a class="navbar-brand" href="/">Artm Online<sup>α</sup></a>
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -107,8 +107,9 @@
 
 </body>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/jquery-1.11.3/jquery.min.js"></script>
+<script src="/static/js/d3.v4.min.js"></script>  
+<script src="/static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
 <script src="/static/js/artmonlineapi.js?version={% now 'U' %}"></script>
 {% block javascript %}
 {% endblock %}

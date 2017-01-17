@@ -165,10 +165,17 @@ def	visual_topic(request):
 		topics = TopicInTopic.objects.filter(parent = target_topic)
 		context['topics'] = topics
 		context['is_low'] = False
-		
-	template = loader.get_template('models/topic.html')
-	return HttpResponse(template.render(Context(context)))
+		 
+	return render(request, 'models/topic.html', Context(context))
 	
+@login_required
+def rename_topic(request):
+	topic = Topic.objects.filter(id = request.POST['id'])[0]
+	topic.rename(request.POST['new_title'])
+	return redirect("/visual/topic?id=" + request.POST['id'])	
+
+	
+# TODO: remove
 def get_model_json(request):
 	file_name = os.path.join(settings.DATA_DIR, "models", request.GET['model'], "hierarchy.json")
 	with open(file_name) as file: 

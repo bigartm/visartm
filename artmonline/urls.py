@@ -34,15 +34,16 @@ urlpatterns = [
 	
 	# Datasets	
 	url(r'^datasets/reload', datasets_views.datasets_reload),
+	url(r'^datasets/create', datasets_views.datasets_create),
     url(r'^datasets', datasets_views.datasets_list),
     url(r'^visual/dataset', datasets_views.visual_dataset),
+	url(r'^term', datasets_views.visual_term),	
 	
 	# Visualization
 	url(r'^visual/document', visual_views.visual_document),
 	url(r'^visual/doc_all_topics', visual_views.visual_document_all_topics),
-	url(r'^visual/term', visual_views.visual_term),	 
-	url(r'^visual/global', visual_views.visual_global),
-	url(r'^visual/temporal_squares', visual_views.visual_temporal_squares),
+ 
+	url(r'^visual/global', visual_views.visual_global), 
 	url(r'^visual/html_tree', visual_views.html_tree),  
 	
 	# Models and topics
@@ -55,6 +56,7 @@ urlpatterns = [
 	url(r'^models/delete_model', models_views.delete_model),
 	url(r'^models/delete_all_models', models_views.delete_all_models),
 	url(r'^models/json', models_views.get_model_json),
+	url(r'^topics/rename', models_views.rename_topic),
 	
 	# API
 	url(r'^api/documents', api_views.get_documents),	

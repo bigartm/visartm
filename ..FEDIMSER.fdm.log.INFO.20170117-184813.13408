@@ -1,0 +1,23 @@
+Log file created at: 2017/01/17 18:48:13
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0117 18:48:13.805138 11360 c_interface.cc:74] Logging enabled to .
+I0117 18:48:13.805640 11360 c_interface.cc:221] Creating MasterModel (id=1)...
+W0117 18:48:14.916118 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaaa.batch
+W0117 18:48:15.804955 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaab.batch
+W0117 18:48:16.679285 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaac.batch
+W0117 18:48:17.080847 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaad.batch
+I0117 18:48:17.117972 11360 c_interface.cc:318] Pass eca7576c-3b1e-454e-8b4e-a9d94792e14b to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0117 18:48:17.117972 11360 c_interface.cc:332] Pass GatherDictionaryArgs: dictionary_target_name=eca7576c-3b1e-454e-8b4e-a9d94792e14b, data_path=D:\artmonline\data\datasets\postnauka\batches, symmetric_cooc_values=0 to void (__cdecl artm::core::MasterComponent::*)(class artm::GatherDictionaryArgs const & __ptr64) __ptr64
+I0117 18:48:17.117972 11360 dictionary.cc:187] Found 4 batches in 'D:\artmonline\data\datasets\postnauka\batches' folder
+I0117 18:48:17.572656 11360 dictionary.cc:243] Find 73513 unique tokens in 3446 items
+I0117 18:48:17.760655 11360 c_interface.cc:221] Creating MasterModel (id=2)...
+I0117 18:48:17.760655 11360 c_interface.cc:318] Pass dictionary to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0117 18:48:17.760655 11360 c_interface.cc:332] Pass GatherDictionaryArgs: dictionary_target_name=dictionary, data_path=D:\artmonline\data\datasets\postnauka\batches, symmetric_cooc_values=0 to void (__cdecl artm::core::MasterComponent::*)(class artm::GatherDictionaryArgs const & __ptr64) __ptr64
+I0117 18:48:17.761157 11360 dictionary.cc:187] Found 4 batches in 'D:\artmonline\data\datasets\postnauka\batches' folder
+I0117 18:48:18.193306 11360 dictionary.cc:243] Find 73513 unique tokens in 3446 items
+I0117 18:48:18.409381 11360 c_interface.cc:180] ArtmCopyRequestedMessage is copying 2961386 bytes...
+I0117 18:49:27.879389  5236 c_interface.cc:318] Pass dictionary to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0117 18:49:27.891209  5236 c_interface.cc:283] Disposing MasterComponent (id=2)...
+I0117 18:49:27.891209  5236 c_interface.cc:318] Pass eca7576c-3b1e-454e-8b4e-a9d94792e14b to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0117 18:49:27.901769  5236 c_interface.cc:283] Disposing MasterComponent (id=1)...

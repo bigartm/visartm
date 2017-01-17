@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% block title %}{{dataset}} | Temporal cells {% endblock %}
+{% block style %}
+	<style type="text/css">
+
+	</style>
+{% endblock %}
+
+{% block content %}
+<div   style="margin-left:-25px;" id = "picture_container" width="100%" height="100%" >
+	<svg id="picture"></svg>
+</div>
+{% endblock %}
+
+{% block right %}		
+	<div>
+		<h4 id="label1"> </h4>  
+		<p id="label2"> </p>  
+		<p id="label3"> </p>  				
+	</div>
+	
+	<div id="docs_links">
+	</div>
+{% endblock %}
+
+{% block javascript %}  
+
+<script type="text/javascript">
+	
+	{% autoescape off %}
+	{{data}}
+	{% endautoescape %}
+	
+	var api = new ArtmApi(); 
+	var topics_count = topics.length; 
+	var dates_count = dates.length; 
+	
+	var topic_label_width = 150;
+	var date_label_width = 50;
+	var square_size = 18;
+	topic_labels_shift = 0;
+	
+	two_layered = false;
+	if (typeof high_topics !== 'undefined' && high_topics.length > 0) {
+		two_layered = true;
+		topic_labels_shift = 200;
+	} 
+	
+	/*
+	if (high_topics.length > 0) {
+		//topic_label_width  = 400;
+	}
+	*/
+	var svgWidth = 0.73 * window.innerWidth;
+	var svgHeight = square_size * topics_count + date_label_width; 
+
+	document.getElementById('picture').setAttribute("width", svgWidth);
+	document.getElementById('picture').setAttribute("height", svgHeight);
+	 
+	
+
+	
+	cells_content = [];
+	
+	//Create SVG element
+	var svg = d3.select("#picture")
+				.append("svg");
+				
+	var group_cells = svg.append("g");
+	var group_topic_labels = svg.append("g");
+	var group_high_topic_labels = svg.append("g");
+	var group_date_labels = svg.append("g");
+	var group_colorbar = svg.append("g");
+	var topics_count = topics.length;
+	 
+	var selected_cell; 
+	var shift_x = 0;
+ 
+
+	
+	group_cells.append("rect").
+		attr("x",-10000).
+		attr("y",-10000).
+		attr("width",20000).
+		attr("height",20000).
+		attr("fill", "transparent").
+		call(d3.drag().on("drag", dragged));
+	
+	var cells = group_cells.selectAll("rect")
+		.data(cells)
+		.enter()
+		.append("rect")
+		.attr("x", get_cell_x)
+		.attr("y", function(d, i) {
+			return square_size * d["Y"] + 1;
+		})
+		.attr("width", square_size - 2)
+		.attr("height", square_size - 2)	
+		.attr("stroke-width", 1)
+		.attr("fill", function(d, i) {
+			return get_color(d["intense"], d["Y"]);
+		})
+		.on("mouseover", function(d, i) {
+			//d3.select(this) 
+			//	.attr("stroke", THEME_textColor)
+				
+		})
+		.on("mouseout", function(d, i) { 
+			if (this != selected_cell) {
+				//d3.select(this) 
+				//	.attr("stroke", THEME_backgroundColor) 
+			}
+		})
+		.on("click", function(d, i) { 
+			d3.select(selected_cell) 
+				.attr("stroke-width", 0);
+			d3.select(this) 
+				.attr("stroke", "red")
+				.attr("stroke-width", 3);
+			selected_cell = this;
+			document.getElementById("label1").innerHTML = topics[d["Y"]].name;
+			document.getElementById("label2").innerHTML = dates[d["X"]]["name"];
+			document.getElementById("label3").innerHTML = "Documents: " + d["intense"];
+			
+			/*
+			if (docs_links) {
+				docs_links
+					.exit()
+					.remove();
+			}*/
+			
+			d3.select("#docs_links").selectAll("span")
+				.remove();
+			 
+			api.getDocuments(d["docs"], function(documents) {
+				var docs_links = d3.select("#docs_links").selectAll("span")
+					.data(documents)
+					.enter()
+					.append("span") 
+					.html(function(doc, i) {
+						return "<small><a href='/visual/document?id=" + doc["id"] + "'>" + doc["title"] + 
+							"</a>" /* +" (" + doc["date"] + ")" */ + "</small><br>";
+					})
+			}); 					
+		})
+		.call(d3.drag().on("drag", dragged));
+		 
+
+	
+
+	var date_labels = group_date_labels.selectAll("text")
+		.data(dates)
+		.enter()
+		.append("text")
+		.text(function(d,i) {
+			if (i%10 == 0) {
+			   return d["name"];
+			}  
+		})
+		.attr("fill", THEME_textColor)
+		.attr("text-anchor", "end")
+		.attr("x", get_label_x) 
+		.attr("y", function(d, i) { 
+			return 22 + square_size * topics_count; 
+		});
+		
+		
+
+	 
+	
+	if (two_layered) {
+		var high_topic_labels = group_high_topic_labels.selectAll('text')
+			.data(high_topics) 	 
+			.enter()
+			.append('text')
+			.attr("x", topic_label_width)
+			.attr("y", get_label_y)
+			.text(function(d, i) {
+				return d["name"]
+			})
+			.attr("fill", THEME_textColor)
+			.attr("text-anchor", "end");
+			
+		var connection_lines = group_high_topic_labels.selectAll('line')
+			.data(lines) 	 
+			.enter()
+			.append('line')
+			.attr("x1", 3 + topic_label_width)
+			.attr("y1", function(d) {
+				return 9 + square_size * d["from_y"];
+			})
+			.attr("x2", topic_labels_shift)
+			.attr("y2",  function(d) {
+				return 9 + square_size * d["to_y"];
+			})
+			.attr("stroke", THEME_textColor)
+			.attr("stroke-width", 2);
+			
+			
+	}
+	
+	
+	var topic_labels = group_topic_labels.selectAll('text')
+		.data(topics) 	 
+		.enter()
+		.append('text')
+		.attr("x", topic_labels_shift + topic_label_width - 3)
+		.attr("y", get_label_y)
+		.text(function(d, i) {
+			return d["name"];
+		})
+		.attr("fill", THEME_textColor)
+		.attr("text-anchor", "end");
+	
+	 
+	 
+	function get_cell_x(d, i){
+		x = topic_label_width+square_size * d["X"] + shift_x;
+		if (x < topic_labels_shift + topic_label_width) x = -1000;
+		return x;
+	}
+	
+	function get_label_x(d, i){
+		x = topic_label_width + square_size * d["X"] + shift_x;
+		if (x < topic_labels_shift + topic_label_width) x = -1000;
+		return x + 14;
+	}
+	
+	function get_label_y(d){
+		return 13 + square_size * d["Y"];
+	}
+	
+	function dragged(d) {
+		shift_x += d3.event.dx;
+		cells.attr("x", get_cell_x);
+		date_labels.attr("x", get_label_x);
+	}
+		 
+	 
+	
+	/*
+	//COLORBAR-----------
+	var color_space = [];
+	var colorbar_top = 100;
+	var colorbar_bottom = 300;
+	var step_height = (colorbar_bottom - colorbar_top)/(max_intense+1)+1;
+	var label_step = (max_intense / 10)>> 0;
+	
+	
+	for (i=0; i<=max_intense; ++i) {
+		color_space.push({"intense":i, "color":get_color(i)});
+	}
+	
+	var colorbar_items = group_colorbar.selectAll("rect")
+		.data(color_space)
+		.enter()
+		.append("rect")
+		.attr("x", function(d, i) {
+				return topic_label_width + square_size * dates_count ;
+		})
+		.attr("y", function(d, i) {
+			return colorbar_top + (colorbar_bottom - colorbar_top) * (d["intense"] / max_intense);
+		})
+		.attr("width", 5)
+		.attr("height", step_height)				
+		.attr("fill", function(d, i) {
+			return d["color"];
+		});
+		
+	var colorbar_labels = group_colorbar.selectAll("text")
+		.data(color_space)
+		.enter()
+		.append("text")
+		.attr("x", function(d, i) {
+				return topic_label_width + square_size * dates_count + 8 ;
+		})
+		.attr("y", function(d, i) {
+			return colorbar_top + (colorbar_bottom - colorbar_top) * (d["intense"] / max_intense) + step_height;
+		})
+		.text(function(d, i) {
+			if (i % label_step == 0) {
+			   return d["intense"];
+			}  
+		})				
+		.attr("fill", "white");
+		
+	//COLORBAR---------
+	 
+	var monthes = ["Январь", "Февраль", "Март", "Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+	function getDate(d) {
+		return monthes[parseInt(d["month"])-1] + " " + d["year"];
+	}
+	*/
+	function get_color(intense, y) {
+		ky = (y / topics_count);
+		kz = intense / max_intense;
+		{% if temporal_spectrum %}
+			R = THEME_temporalSquares_TopColor[0] * (1 - ky) + THEME_temporalSquares_BottomColor[0] * ky; 
+			G = THEME_temporalSquares_TopColor[1] * (1 - ky) + THEME_temporalSquares_BottomColor[1] * ky;  
+			B = THEME_temporalSquares_TopColor[2] * (1 - ky) + THEME_temporalSquares_BottomColor[2] * ky;  
+		{% else %}
+			R = THEME_temporalSquares_ActiveColor[0]; 
+			G = THEME_temporalSquares_ActiveColor[1]; 
+			B = THEME_temporalSquares_ActiveColor[2]; 
+		{% endif %}
+		return d3.rgb(R * kz + THEME_temporalSquares_EmptyColor[0] * (1 - kz),
+					  G * kz + THEME_temporalSquares_EmptyColor[1] * (1 - kz),
+					  B * kz + THEME_temporalSquares_EmptyColor[2] * (1 - kz));
+	} 
+	
+
+</script>
+{% endblock %}

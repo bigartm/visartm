@@ -16,7 +16,7 @@ batch_vectorizer = artm.BatchVectorizer(data_path = uci_patch,
 dictionary = artm.Dictionary(name="dictionary")
 dictionary.gather(batches_folder)
 
-model = artm.ARTM(num_document_passes=10)
+model = artm.ARTM(num_document_passes=10, num_topics=5)
 model.cache_theta=True
 model.initialize(dictionary)
 model.fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = 10)

@@ -1,0 +1,7 @@
+Log file created at: 2017/01/17 18:48:14
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+W0117 18:48:14.916118 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaaa.batch
+W0117 18:48:15.804955 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaab.batch
+W0117 18:48:16.679285 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaac.batch
+W0117 18:48:17.080847 11360 helpers.cc:208] File already exists: D:\artmonline\data\datasets\postnauka\batches\aaaaad.batch

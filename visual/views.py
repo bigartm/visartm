@@ -36,18 +36,14 @@ def visual_document(request):
 	if not model is None:
 		topics_count = [int(x) for x in model.topics_count.split()]
 		target_layer = model.layers_count
-		model_folder = os.path.join(settings.DATA_DIR, "models", str(model.id))
-		phi_file_name = os.path.join(model_folder, "phi.npy")
-		theta_file_name = os.path.join(model_folder, "theta.npy")
-		phi = np.load(phi_file_name)
-		theta = np.load(theta_file_name)
+		#model_folder = os.path.join(settings.DATA_DIR, "models", str(model.id))
+		phi = model.get_phi()
+		theta = model.get_theta()
 		theta_t = theta.transpose()
 		documents_count = dataset.docs_count
 			 
 
-		topics_hl_count = 4
-		# TODO: from CSS
-		colors = ["grey","#ff0000", "#00ff00", "#0000ff", "#ffff00"]
+		topics_hl_count = 4 
 		hl_topics = [0 for i in range(0, topics_count[target_layer])]
 	
 	# Topics distribution in document (actually, column form Theta)
@@ -69,15 +65,15 @@ def visual_document(request):
 			if weight < 0.05:
 				break
 			idx +=1
-			color = colors[0]
+			#color = colors[0]
 			if idx <= topics_hl_count:
 				topic = topics_index[topic_id]
-				color = colors[idx]
+				#color = colors[idx]
 				hl_topics[topic.id_model] = idx
 				other_weight -= weight
 				topics.append({
 					"i" : idx,
-					"color" : color, 
+					#"color" : color, 
 					"title": topic.title, 
 					"weight": weight, 
 					#"weight_text": "{0:.1f}%".format(100 * weight)
@@ -86,7 +82,7 @@ def visual_document(request):
 		
 		topics.append({
 				"i" : 0,
-				"color" : colors[0], 
+				#"color" : colors[0], 
 				"title": "Other", 
 				"weight": other_weight, 
 				#"weight_text": "{0:.1f}%".format(100 * other_weight),
@@ -98,9 +94,11 @@ def visual_document(request):
 	# Word highlight
 	if highlight_terms:
 		if not model is None:
+			index_to_matrix = dataset.get_index_to_matrix()
 			phi_layer = phi[:, shift : shift + topics_count[target_layer]]
+			theta_t_layer = theta_t[document_matrix_id, shift : shift + topics_count[target_layer]]
 		lines_count = len(lines)
-		terms_index = [[] for i in range(0,lines_count)]
+		entries_index = [[] for i in range(0,lines_count)]
 		word_index_file_name = os.path.join(settings.DATA_DIR, "datasets", dataset.text_id, "word_index", str(document.model_id) + ".txt")
 		with open(word_index_file_name, 'r', encoding = 'utf-8') as f:
 			for word_index_line in f.readlines():
@@ -108,23 +106,24 @@ def visual_document(request):
 				line = int(word_info[0]) - 1
 				start_pos = int(word_info[1])
 				length = int(word_info[2])
-				word_id = int(word_info[3])			
+				term_index_id = int(word_info[3])			
 				if model is None:
-					terms_index[line].append((start_pos, length, word_id, 0)) 
+					entries_index[line].append((start_pos, length, term_index_id, 0)) 
 				else:
-					topic_id = np.argmax(phi_layer[word_id - 1])			
-					terms_index[line].append((start_pos, length, word_id, hl_topics[topic_id])) 
+					term_matrix_id = index_to_matrix[term_index_id]
+					topic_id = np.argmax(phi_layer[term_matrix_id] * theta_t_layer)			
+					entries_index[line].append((start_pos, length, term_index_id, hl_topics[topic_id])) 
 		
 		for i in range(0, lines_count):
 			old_line = lines[i]
 			new_line = ""
 			cur_pos = 0
 			old_line_length = len(old_line)
-			for (start_pos, length, term_id, class_id) in terms_index[i]:
+			for (start_pos, length, term_index_id, class_id) in entries_index[i]:
 				if (cur_pos < start_pos):
 					new_line += old_line[cur_pos : start_pos]
 					cur_pos = start_pos
-				new_line += "<a href = '/visual/term?dataset=" + dataset.text_id + "&term=" + str(term_id) + "' class = 'nolink tpc" + str(class_id) + "'>"
+				new_line += "<a href = '/term?ds=" + str(dataset.id) + "&iid=" + str(term_index_id) + "' class = 'nolink tpc" + str(class_id) + "'>"
 				new_line += old_line[cur_pos : cur_pos + length]
 				new_line += "</a>"
 				cur_pos += length
@@ -183,18 +182,7 @@ def visual_document_all_topics(request):
 					   'topics': [{"weight": 100*i[0], "topic": i[1]} for i in topics_list]})
 					   
 	return render(request, 'visual/document_all_topics.html', context) 
-	
-def visual_term(request):
-	try:
-		target_dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-	except:
-		return redirect("/")
-		
-	term = Term.objects.filter(dataset = target_dataset, model_id = request.GET['term'])[0]
-	template = loader.get_template('visual/term.html')
-	context = Context({'dataset': target_dataset,
-					   'term': term, })
-	return HttpResponse(template.render(context)) 
+
 
 # from cookies
 def get_model(request, dataset):
@@ -241,7 +229,7 @@ def visual_global(request):
 	
 	context = Context({'dataset': dataset,
 					   'model': model,
-					   'data': model.get_visual(type),
+					   'data': model.get_visual(request.GET),
 					   'no_footer': True})
 					   
 	return render(request, "visual/" + type + ".html", context)
