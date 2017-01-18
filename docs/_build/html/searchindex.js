@@ -1,0 +1,1 @@
+Search.setIndex({envversion:50,filenames:["index","overview"],objects:{},objnames:{},objtypes:{},terms:{content:0,djigurda:1,hui:1,index:0,modul:0,page:0,pizda:1,search:0},titles:["Welcome to artmonline-docs&#8217;s documentation!","Overview"],titleterms:{artmonlin:0,doc:0,document:0,indice:0,overview:1,tabl:0,welcom:0}})
