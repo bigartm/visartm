@@ -1,4 +1,4 @@
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
 from datasets.models import Dataset, Document, Term
@@ -6,6 +6,9 @@ from models.models import ArtmModel
 from visual.views import get_model
 import os
 from django.conf import settings
+import artmonline.views as general_views
+from threading import Thread
+from datetime import datetime
  
 def datasets_list(request): 
 	current_user = request.user
@@ -19,13 +22,15 @@ def datasets_list(request):
 	
 	
 def	datasets_reload(request):	
-	try:
-		dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-	except:
-		return redirect("/")
-		
-	dataset.reload()
-	return HttpResponse("Reloaded. <a href ='/dataset?dataset=" + dataset.text_id + "'> Return to dataset</a>.") 
+	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
+	dataset.status = 1
+	dataset.creation_time = datetime.now()
+	dataset.save()	
+	
+	t = Thread(target = Dataset.reload, args = (dataset, ), daemon = True)
+	t.start()
+	
+	return redirect("/dataset?dataset=" + dataset.text_id) 
 	
 	
 def	datasets_create(request):	
@@ -58,17 +63,23 @@ def	datasets_create(request):
 	dataset.language = request.POST['lang']
 	if not dataset.check_can_load():
 		return HttpResponse(dataset.error_message)
-	
+	dataset.status = 1
+	dataset.creation_time = datetime.now()
 	dataset.save()	
-	dataset.reload()
 	
-	return HttpResponse("Dataset created. <a href='/dataset?dataset=" + dataset.text_id + "'>Go to dataset.</a>")
+	t = Thread(target = Dataset.reload, args = (dataset, ), daemon = True)
+	t.start()
+	
+	return redirect("/dataset?dataset=" + dataset.text_id) 
 	
 	
 def visual_dataset(request):  
-	target_dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
+	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
 	
-	docs = Document.objects.filter(dataset = target_dataset)
+	if dataset.status != 0:
+		return general_views.wait(request, "Dataset is being reloaded. Please wait.", dataset.creation_time)
+	
+	docs = Document.objects.filter(dataset = dataset)
 	
 	search_query = ""
 	if "search" in request.GET:
@@ -77,13 +88,13 @@ def visual_dataset(request):
 		
 		
 	docs = docs[:100]
-	models = ArtmModel.objects.filter(dataset = target_dataset)
+	models = ArtmModel.objects.filter(dataset = dataset)
 	
 	
-	context = Context({'dataset': target_dataset,
+	context = Context({'dataset': dataset,
 					   'documents' : docs,
 					   'models' : models,
-					   'active_model' : get_model(request, target_dataset),
+					   'active_model' : get_model(request, dataset),
 					   'search_query' : search_query,
 					   })
 					   

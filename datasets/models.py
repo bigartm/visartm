@@ -31,8 +31,7 @@ class Dataset(models.Model):
 		return self.name 
 		
 	@transaction.atomic
-	def reload(self): 	 
-		self.status = 0
+	def reload(self): 	
 		print("Loading dataset " + self.text_id + "...")
 		
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
@@ -201,9 +200,9 @@ class Dataset(models.Model):
 					 
 		print(self.documents_count)
 		self.creation_time = datetime.now()
-		self.save() 
-		self.status = 1
-		 
+		self.status = 0
+		self.save() 		
+		
 		print("Dataset " + self.text_id + " loaded.")
 		
 	def get_batches(self):

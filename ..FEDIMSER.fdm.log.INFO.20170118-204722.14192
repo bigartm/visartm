@@ -1,0 +1,15 @@
+Log file created at: 2017/01/18 20:47:22
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0118 20:47:22.853158 12336 c_interface.cc:74] Logging enabled to .
+I0118 20:47:22.853158 12336 c_interface.cc:221] Creating MasterModel (id=1)...
+I0118 20:47:25.461483 12336 c_interface.cc:318] Pass b4c957f1-6b56-44bf-b60f-5448622d967e to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0118 20:47:25.461483 12336 c_interface.cc:332] Pass GatherDictionaryArgs: dictionary_target_name=b4c957f1-6b56-44bf-b60f-5448622d967e, data_path=D:\artmonline\data\datasets\postnauka\batches, symmetric_cooc_values=0 to void (__cdecl artm::core::MasterComponent::*)(class artm::GatherDictionaryArgs const & __ptr64) __ptr64
+I0118 20:47:25.461483 12336 dictionary.cc:187] Found 4 batches in 'D:\artmonline\data\datasets\postnauka\batches' folder
+I0118 20:47:25.820901 12336 dictionary.cc:243] Find 73513 unique tokens in 3446 items
+I0118 20:47:25.961536 12336 c_interface.cc:221] Creating MasterModel (id=2)...
+I0118 20:47:25.961536 12336 c_interface.cc:318] Pass dictionary to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0118 20:47:25.961536 12336 c_interface.cc:332] Pass GatherDictionaryArgs: dictionary_target_name=dictionary, data_path=D:\artmonline\data\datasets\postnauka\batches, symmetric_cooc_values=0 to void (__cdecl artm::core::MasterComponent::*)(class artm::GatherDictionaryArgs const & __ptr64) __ptr64
+I0118 20:47:25.961536 12336 dictionary.cc:187] Found 4 batches in 'D:\artmonline\data\datasets\postnauka\batches' folder
+I0118 20:47:26.320919 12336 dictionary.cc:243] Find 73513 unique tokens in 3446 items
+I0118 20:47:26.508437 12336 c_interface.cc:180] ArtmCopyRequestedMessage is copying 2961386 bytes...

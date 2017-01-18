@@ -22,14 +22,54 @@ class ArtmModel(models.Model):
 	name = models.TextField(null=True)
 	author = models.ForeignKey(User, null=True)
 	layers_count = models.IntegerField(default = 1) 
-	topics_count = models.TextField(null = True)
+	topics_count = models.TextField(null = False, default = "")
 	status = models.IntegerField(null = False, default = 0) 
+	error_message = models.TextField(null=True)
 	
 	def __str__(self):
 		if self.name == '':
 			return self.creation_time.strftime("%d.%m.%Y %H:%M")
 		else: 
 			return self.name		
+	
+	def create_generic(self, POST):
+		mode = POST['mode']
+		try:
+			if mode == 'flat': 
+				iter_count = int(POST.getlist('iter_count')[0])
+				self.layers_count = 1
+				self.topics_count = "1 " + POST.getlist('num_topics')[0]
+				self.save()
+				artm_object = self.create_simple(iter_count = iter_count)
+			elif mode == "hier":
+				self.layers_count = int(POST['num_layers'])
+				iter_count = int(POST.getlist('iter_count')[1]) 
+				self.topics_count = "1 " + ' '.join([POST.getlist('num_topics')[i + 1] for i in range(model.layers_count)])
+				self.save()
+				artm_object = self.create_simple(iter_count = iter_count)
+			elif mode == "script":
+				script_file_name = os.path.join(settings.DATA_DIR, "scripts", POST['script_name'])
+				with open(script_file_name) as f:
+					code = compile(f.read(), script_file_name, "exec")		
+				batch_vectorizer, dictionary = dataset.get_batches()
+				local_vars = {"batch_vectorizer": batch_vectorizer, "dictionary": dictionary}  
+				print("Running custom sript...")		
+				exec(code, local_vars)
+				print("Custom script finished.")
+				artm_object = local_vars["model"]
+			elif mode == "custom":
+				raise Exception("You cannot upload scripts.")
+			elif mode == "matrices":
+				raise Exception("Matrices are not implemented yet.")
+			else:
+				raise Exception('Unknown mode.')
+				
+			self.save_matrices(artm_object)
+			self.reload()
+		except:
+			self.error_message = traceback.format_exc()
+			self.status = 2
+			self.save()
 	
 	def create_simple(self, iter_count):
 		print("Creating simple model...")
@@ -119,8 +159,7 @@ class ArtmModel(models.Model):
 		return np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "theta.npy"))
 	
 	@transaction.atomic
-	def reload(self): 
-		self.status = 0
+	def reload(self):  
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
 		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
 		print ("Reloading model " + str(self.id) + "...")
@@ -266,21 +305,15 @@ class ArtmModel(models.Model):
 			topics_index[layers_count][topic_id].save()
 		
 		self.creation_time = datetime.now()
-		self.save()
-		
-		
-		
-		print("Model " + str(self.id) + " reloaded.")
 		self.arrange_topics()
-		self.status = 1
-	
-	
+		self.status = 0
+		self.save()
+		print("Model " + str(self.id) + " reloaded.")
+		 
 	
 	# Only horizontal arranging
 	@transaction.atomic
 	def arrange_topics(self, mode = "alphabet"):
-		self.status = 0
-		
 		# Counting horizontal relations topic-topic
 		print("Counting horizontal relations topic-topic...")	
 		phi = self.get_phi()
@@ -333,8 +366,10 @@ class ArtmModel(models.Model):
 				topic.spectrum_index = i
 				topic.save()
 				i += 1
-		self.status = 1
-			
+		self.status = 0
+		self.save()
+		
+	
 	def dispose(self):
 		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
 		try:

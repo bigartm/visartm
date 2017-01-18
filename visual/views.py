@@ -257,12 +257,11 @@ def visual_global(request):
 		visualization.status = 0
 		visualization.save()
 		   
-		t = Thread(target = GlobalVisualization.render, args = (visualization,))
-		t.daemon = True
+		t = Thread(target = GlobalVisualization.render, args = (visualization,), daemon = True)
 		t.start()
 	
 	if visualization.status == 0:
-		return general_views.wait(request, "Pending...", visualization.start_time) 
+		return general_views.wait(request, "Pending...", visualization.start_time, period = "3") 
 	elif visualization.status == 2:
 		return general_views.message(request, "Error during rendering.<br>" + visualization.error_message.replace('\n', "<br>") +   \
 				"<br><br><a href='/visual/global?type=" + visual_name + \

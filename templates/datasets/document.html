@@ -4,6 +4,7 @@
 
 {% block content %}
 	<h1> {{document.title}} </h1>  
+	{{document.snippet}}
 
 	<ul class="nav nav-tabs">
 	{% if lines %}
@@ -31,9 +32,11 @@
 {% block right %}
 	<div>
 		<h4>Meta</h4>
-		<p>{{document.time}}</p>  
-		<p>{{document.snippet}}</p>  
+		Time: {{document.time}}<br>  
 		<a href = {{document.url}}>Original</a>
+		<br>
+		iid: {{document.index_id}}
+		
 	</div>
 	<hr>
 	<div>

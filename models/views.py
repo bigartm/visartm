@@ -9,12 +9,23 @@ import artmonline.views as general_views
 import traceback
 from django.conf import settings
 import os
+from threading import Thread
+from datetime import datetime
 
 
 def visual_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+		
 	if model.status != 0:
-		return general_views.wait(request, "Model is not ready. Please wait.", model.creation_time)
+		if model.status == 1:
+			return general_views.wait(request, "Model is not ready. Please wait.", model.creation_time)
+		if model.status == 2:
+			return general_views.message(request, 
+				"Model is bad. Error occured.<br>" + 
+				model.error_message.replace('\n',"<br>") +
+				"<a href = '/models/delete_model?model=" + 
+				str(self.id) + "'>Delete this model</a>" )
+		
 	topics_count = model.topics_count.split()
 	topics = Topic.objects.filter(model = model)
 	topics_layers = [{"i": i + 1, "topics_count": topics_count[i+1], \
@@ -27,15 +38,29 @@ def visual_model(request):
 def reload_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
 	if model.status != 0:
-		return general_views.message(request, "Model is blocked.")
-	model.reload()
-	return general_views.message(request, "Reloaded. <a href ='/visual/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
+		return general_views.message(request, "Model is locked.")
+	model.creation_time = datetime.now()
+	model.status = 1
+	model.save()
+	
+	t = Thread(target = ArtmModel.reload, args = (model, ), daemon = True)
+	t.start()
+	
+	return redirect("/visual/model?model=" + str(model.id))
 
 @login_required
 def arrange_topics(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
-	model.arrange_topics(request.GET['mode'])
-	return general_views.message(request, "Rearranged. <a href ='/visual/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
+	if model.status != 0:
+		return general_views.message(request, "Model is locked.")
+	model.creation_time = datetime.now()
+	model.status = 1
+	model.save()
+	
+	t = Thread(target = ArtmModel.arrange_topics, args = (model, request.GET['mode'],), daemon = True)
+	t.start()
+	
+	return redirect("/visual/model?model=" + str(model.id))
 
 @login_required
 def reset_visuals(request):
@@ -60,68 +85,21 @@ def create_model(request):
 						   'scripts': scripts})
 		return render(request, 'models/create_model.html', context)
 	
-	dataset_name = request.POST['dataset']
-	word_modality = request.POST['word_modality']
-	model_name = request.POST['model_name']
-	
-	mode = request.POST['mode']
-	
-	try:
-		dataset = Dataset.objects.filter(text_id = dataset_name)[0]
-	except: 
-		return HttpResponse("Dataset " + dataset_name + " does not exist.")
-	print(request.POST)
-	
+	#print(request.POST)
+	dataset = Dataset.objects.filter(text_id = request.POST['dataset'] )[0]
 	model = ArtmModel()
 	model.dataset = dataset
-	model.name = model_name
-	model.main_modality = Modality.objects.filter(dataset = dataset, name = word_modality)[0]
+	model.name = request.POST['model_name']
+	model.main_modality = Modality.objects.filter(dataset = dataset, name = request.POST['word_modality'])[0]
 	model.author = request.user
+	model.creation_time = datetime.now()
+	model.status = 1
 	model.save()
 	
-	#THREAD !!!
-	try:
-		if mode == 'flat': 
-			iter_count = int(request.POST.getlist('iter_count')[0])
-			model.layers_count = 1
-			model.topics_count = "1 " + request.POST.getlist('num_topics')[0]
-			model.save()
-			artm_object = model.create_simple(iter_count = iter_count)
-		elif mode == "hier":
-			model.layers_count = int(request.POST['num_layers'])
-			iter_count = int(request.POST.getlist('iter_count')[1]) 
-			model.topics_count = "1 " + ' '.join([request.POST.getlist('num_topics')[i + 1] for i in range(model.layers_count)])
-			model.save()
-			artm_object = model.create_simple(iter_count = iter_count)
-		elif mode == "script":
-			script_file_name = os.path.join(settings.DATA_DIR, "scripts", request.POST['script_name'])
-			with open(script_file_name) as f:
-				code = compile(f.read(), script_file_name, "exec")		
-			batch_vectorizer, dictionary = dataset.get_batches()
-			local_vars = {"batch_vectorizer": batch_vectorizer, "dictionary": dictionary}  
-			print("Running custom sript...")		
-			exec(code, local_vars)
-			print("Custom script finished.")
-			artm_object = local_vars["model"]
-		elif mode == "custom":
-			raise Exception("You cannot upload scripts.")
-		elif mode == "matrices":
-			raise Exception("Matrices are not implemented yet.")
-		else:
-			raise Exception('Unknown mode.')
-			
-		model.save_matrices(artm_object)
-		model.reload()
-		return redirect("/visual/model?model=" + str(model.id))
-	except:
-		try:
-			model.dispose()
-		except:
-			print("Error while disposing model.")
-		ArtmModel.objects.filter(id = model.id).delete() 
-		return general_views.message(request, "<h1>Error:</h1>" + traceback.format_exc().replace('\n',"<br>"))
+	t = Thread(target = ArtmModel.create_generic, args = (model, request.POST, ), daemon = True)
+	t.start()
 	
-	
+	return redirect("/visual/model?model=" + str(model.id))
 	
 @login_required
 def delete_model(request):
