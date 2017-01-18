@@ -13,15 +13,4 @@ Contents:
    
    overview
    for_researchers
-   visualizations
-   formats
-
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+ 
