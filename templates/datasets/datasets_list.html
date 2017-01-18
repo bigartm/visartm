@@ -6,7 +6,7 @@
 	<h1>Datasets</h1>
 	{% for entry in entries %}
 		<p> 
-			 <a href="/visual/dataset?dataset={{entry.text_id}}">{{ entry.name }}</a> - {{ entry.description }}
+			 <a href="/dataset?dataset={{entry.text_id}}">{{ entry.name }}</a> - {{ entry.description }}
 		</p>
 	{% endfor %}
 {% endblock %}

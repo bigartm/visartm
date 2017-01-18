@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}ARTM Online{% endblock %}
+
+{% block content %}
+<div>
+{% autoescape off %}{{message}}{% endautoescape %}
+</div>
+{% endblock %}

@@ -49,7 +49,9 @@ div { margin:0; padding:0; overflow:hidden }
 <p id = "doc_text"></p> 
 {% endblock %}
 
+
 {% block javascript %} 
+<script src="/static/js/d3.v4.min.js"></script> 
 <script>
 
 var api = new ArtmApi(); 
@@ -115,14 +117,14 @@ root = {{data}};
 			//document.getElementById("doc_title").innerHTML = "";
 			//document.getElementById("doc_snippet").innerHTML = "";  
 		}
-	})
-	.call(d3.drag()
-        .on("drag", dragged) );
+	});
+	//.call(d3.drag().on("drag", dragged) );
 		
+		/*
 	function dragged(d) {
-	  shift_x +=d3.event.x;
+	  //shift_x +=d3.event.x;
 	  //d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
-	}
+	}*/
 
   var text = g.selectAll("text")
     .data(nodes)

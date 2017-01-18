@@ -9,47 +9,59 @@ import artm
 import numpy as np
 from django.db import transaction
 from shutil import rmtree
+import struct 
 
 class Dataset(models.Model):
 	name = models.CharField('Name', max_length=50)
 	text_id = models.TextField(unique=True, null=False)
 	description = models.TextField('Description') 
 	owner = models.ForeignKey(User, null=True, blank=True, default = None)
-	time_provided = models.BooleanField(null=False, default=True)
-	docs_count = models.IntegerField(default = 0)
+	time_provided = models.BooleanField(null=False, default = False)
+	text_provided = models.BooleanField(null=False, default = False)
+	word_index_provided = models.BooleanField(null=False, default = False)
+	uci_provided = models.BooleanField(null=False, default = False)
+	json_provided = models.BooleanField(null=False, default = False)
+	documents_count = models.IntegerField(default = 0)
 	terms_count = models.IntegerField(default = 0) 
 	creation_time = models.DateTimeField(null=False, default = datetime.now)
 	language = models.CharField(max_length = 20, default = 'undefined') 
+	status = models.IntegerField(null = False, default = 0) 
 	
 	def __str__(self):
 		return self.name 
 		
 	@transaction.atomic
 	def reload(self): 	 
+		self.status = 0
 		print("Loading dataset " + self.text_id + "...")
 		
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
 		uci_folder = os.path.join(dataset_path, "UCI")
 		vocab_file = os.path.join(uci_folder, "vocab." + self.text_id + ".txt")
 		
+		 
 		
-		
-		# Checking 
-		term_count = np.zeros(1000000).astype(int)
-		print("Checking...")
+		print("Reading UCI bag of words...")
 		docword_file = os.path.join(uci_folder, "docword." + self.text_id + ".txt")
-		documents_count = 0
 		with open(docword_file, "r") as f:
 			lines = f.readlines()
 		
-		documents_count = int(lines[0]) 
+		self.documents_count = int(lines[0]) 
+		self.terms_count = int(lines[1])
+		terms_counter = np.zeros(self.documents_count + 1).astype(int)
+		bags = [bytes() for i in range(1 + self.documents_count)]
 		for line in lines[3:]:
 			parsed = line.split()
-			term_count[int(parsed[0])] += int(parsed[2])  
+			doc_id = int(parsed[0]) 
+			term_index_id = int(parsed[1])
+			term_count = int(parsed[2]) 
+			terms_counter[doc_id] += term_count
+			bags[doc_id] += struct.pack('I', term_index_id) + struct.pack('H', term_count)
 		
-		for i in range (1, documents_count + 1):
-			if term_count[i] == 0:
-				raise ValueError("Document " + str(i) + " has no terms.")
+		print("Checking for empty documents.")
+		for i in range (1, self.documents_count + 1):
+			if terms_counter[i] == 0:
+				raise ValueError("Error! Document " + str(i) + " has no terms.")
 		print("Check OK.")
 		
 		
@@ -70,6 +82,7 @@ class Dataset(models.Model):
 		print("Reading UCI vocabulary...")
 		terms_index = dict()
 		modalities_index = dict()
+		modality_name = "@default_class"
 		i = 1
 		with open(vocab_file, "r", encoding = 'utf-8') as f:
 			for line in f:
@@ -78,7 +91,10 @@ class Dataset(models.Model):
 				term.dataset = self
 				term.text = parsed[0]
 				term.index_id = i
-				modality_name = parsed[1]
+				try:
+					modality_name = parsed[1]
+				except:
+					pass
 				terms_index[parsed[0] + "$#" + modality_name] = term
 				if modality_name in modalities_index:
 					term.modality = modalities_index[modality_name]
@@ -134,38 +150,59 @@ class Dataset(models.Model):
 		index_to_matrix_file_name = os.path.join(dataset_path, "itm.npy")
 		np.save(index_to_matrix_file_name, index_to_matrix)
 		
-		#Loading documents
+		
 		print("Loading documents...")
 		Document.objects.filter(dataset = self).delete()
-		docs_info_file = os.path.join(dataset_path, "documents.json")
 		
-		with open(docs_info_file) as f:
-			docs_info = json.load(f)
-			
-		docs_count_ = 0
-		for id, doc_info in docs_info.items():
+		if self.json_provided:
+			docs_info_file = os.path.join(dataset_path, "documents.json")
+			with open(docs_info_file) as f:
+				docs_info = json.load(f)
+				
+		for id in range(1, self.documents_count + 1):
 			doc = Document()
-			doc.title = doc_info["title"]
+			doc.title = "document " + str(id)
 			
-			if "snippet" in doc_info:
-				doc.snippet = doc_info["snippet"]
+			if self.json_provided:
+				if id in docs_info:
+					doc_info = docs_info[id]
+				elif str(id) in docs_info:
+					doc_info = docs_info[str(id)]
+				else:
+					doc_info = None
+				
+				if doc_info == None:
+					print("Warning! No meta data in documents.json for document " + str(id) + ".")
+				else:
+					if 'title' in doc_info:
+						doc.title = doc_info["title"]
+					
+					if "snippet" in doc_info:
+						doc.snippet = doc_info["snippet"]
+					
+					if "url" in doc_info:
+						doc.url = doc_info["url"]
+					
+					if self.time_provided:
+						if "time" in doc_info:
+							lst = doc_info["time"]
+							doc.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
+						else:
+							print("Warning! Time isn't provided at least for document " + id + ", but you promised that it will be.")
+							self.time_provided = False
 			
-			if "url" in doc_info:
-				doc.url = doc_info["url"]
-			
-			if "time" in doc_info:
-				lst = doc_info["time"]
-				doc.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
-			
-			doc.model_id = id
+			doc.index_id = id
 			doc.dataset = self
-			doc.save()
-			docs_count_ += 1
-			if docs_count_ % 1000 == 0:
-				print(docs_count_)
+			doc.bag_of_words = bags[id]
+			doc.save() 
 			
-		self.docs_count = docs_count_
+			if id % 1000 == 0:
+				print(id)
+					 
+		print(self.documents_count)
+		self.creation_time = datetime.now()
 		self.save() 
+		self.status = 1
 		 
 		print("Dataset " + self.text_id + " loaded.")
 		
@@ -182,16 +219,23 @@ class Dataset(models.Model):
 	def get_index_to_matrix(self):
 		return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "itm.npy"))
 		
+	def check_can_load(self):
+		if not self.uci_provided:
+			self.error_message = "Cannot load without UCI vocabulary and docword files."
+			return False
+		return True
+	
 class Document(models.Model):
 	title = models.TextField(null=False)
 	url = models.URLField(null=True)
 	snippet = models.TextField(null=True)
 	time = models.DateTimeField(null=True)
-	model_id = models.IntegerField(null = False)
+	index_id = models.IntegerField(null = False)
 	dataset = models.ForeignKey(Dataset, null = False)
+	bag_of_words = models.BinaryField(null=False, default = bytes())
 	
 	class Meta:
-		unique_together = (("dataset", "model_id"))
+		unique_together = (("dataset", "index_id"))
 	
 	def __str__(self):
 		return self.title
@@ -211,6 +255,7 @@ class Term(models.Model):
 	token_value = models.FloatField(default=0)
 	token_tf = models.IntegerField(default=0)
 	token_df = models.IntegerField(default=0)
+	
 	
 	def __str__(self):
 		return self.text

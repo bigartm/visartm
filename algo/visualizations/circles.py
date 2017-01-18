@@ -1,9 +1,6 @@
 from models.models import Topic, DocumentInTopic, TopicInTopic
 import json
 
-def get_name(params):
-	return "circles"
-
 def visual(model, params):
 	print("CIRCLES CALLED")
 	root_topic = Topic.objects.filter(model = model, layer = 0)[0]

@@ -21,6 +21,20 @@
     </div> 
 	
 	<div class="form-group row">
+      <label for="dataset" class="col-sm-2 col-form-label">Cut in BOW</label>
+		<div class="col-sm-2">
+			<select class="form-control" id="cut_bow" onchange="settingUpdate('cut_bow', 'value');">
+				<option>0</option>
+				<option>1</option>
+				<option>2</option>
+				<option>3</option>
+				<option>4</option>
+			</select>
+		</div> 	
+	</div>
+    </div> 
+	
+	<div class="form-group row">
 		<label for="dataset" class="col-sm-2 col-form-label">Color theme</label>
 		<div class="col-sm-2">
 			<select class="form-control" id="color_theme" onchange="settingUpdate('color_theme', 'value');location.reload();">
@@ -30,6 +44,8 @@
 			</select>
 		</div> 	
 	</div>
+	
+	<a href = "/admin">Server administration</a>
 </div> 
 
 {% endblock %}
@@ -41,7 +57,7 @@
 	document.getElementById("highlight_terms").checked = !(getCookie("highlight_terms") == "false");
 	document.getElementById("temporal_spectrum").checked = !(getCookie("temporal_spectrum") == "false");
 	document.getElementById("color_theme").value = getCookie("color_theme", "light");
-	
+	document.getElementById("cut_bow").value = getCookie("cut_bow", "1");
 
 	
 	function getCookie(name, default_value) {

@@ -1,9 +1,6 @@
 from datasets.models import Document
 from models.models import Topic, DocumentInTopic
-import json
-
-def get_name(params):
-	return "temporaldots"
+import json 
 
 def visual(model, params): 		 
 	documents = Document.objects.filter(dataset = model.dataset)

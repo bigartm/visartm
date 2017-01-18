@@ -4,21 +4,38 @@
 
 {% block content %}
 	<h1> {{document.title}} </h1>  
-	<p>{{document.time}}</p>  
-	<p>{{document.snippet}}</p>  
-	<a href = {{document.url}}>Original</a>
-	<hr>
-	{% autoescape off %}
-		{% for paragraph in document_paragraphs %}
+
+	<ul class="nav nav-tabs">
+	{% if lines %}
+		<li class="active"><a>Text</a></li> 
+		<li><a id="profile-tab" href="#" onclick="window.location.replace('/visual/document?id={{document.id}}&mode=bow')">Bag of words</a></li>
+	{% else %}
+		<li><a id="home-tab" href="#" onclick="window.location.replace('/visual/document?id={{document.id}}')">Text</a></li> 
+		<li  class="active"><a>Bag of words</a></li>
+	{% endif %}
+</ul> 
+	{% if lines %}
+		{% autoescape off %}
+		{% for paragraph in lines %}
 			<p>
 				{{paragraph}}
 			</p>
 		{% endfor %}
-	{% endautoescape %}
+		{% endautoescape %}
+	{% elif bow %}
+		{% autoescape off %}{{bow}}{% endautoescape %}
+	{% endif %}
 {% endblock %}
  
 
 {% block right %}
+	<div>
+		<h4>Meta</h4>
+		<p>{{document.time}}</p>  
+		<p>{{document.snippet}}</p>  
+		<a href = {{document.url}}>Original</a>
+	</div>
+	<hr>
 	<div>
 		<h4>Topic distribution</h4>
 		<div id = "pieChart2" align = "center" ></div>
@@ -33,7 +50,7 @@
 	<div> 
 		<h4>Related documents</h4>
 		{% for rel_doc in related_documents %}
-			<a href = "/visual/document?dataset={{dataset.text_id}}&document={{rel_doc.model_id}}" >{{rel_doc.title}}</a>
+			<a href = "/visual/document?id={{rel_doc.id}}" >{{rel_doc.title}}</a>
 			<br>
 		{% endfor %}
 	</div>

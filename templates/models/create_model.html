@@ -17,7 +17,7 @@
 	
 			<div class="form-group row">
 				<label class="col-sm-2 col-form-label">Model name</label>
-				<div class="col-sm-2">
+				<div class="col-sm-3">
 					<input class="form-control" name="model_name" placeholder="New model" value = ""></input>
 				</div>
 			</div> 
@@ -25,7 +25,7 @@
 	
 			<div class="form-group row">
 				<label  class="col-sm-2 col-form-label">Main modality</label>
-				<div class="col-sm-2">
+				<div class="col-sm-3">
 					<select class="form-control"  name="word_modality">
 					  {% for modality in modalities %}
 						<option>{{modality}}</option>
@@ -43,6 +43,7 @@
 					<li class=""><a id="profile-tab" href="#bigartm-hier" data-toggle="tab" onclick="setMode('hier')">Hierarchical</a></li>
 					<li class=""><a id="profile-tab" href="#bigartm-script" data-toggle="tab" onclick="setMode('script')">Script</a></li> 
 					<li class=""><a id="profile-tab" href="#bigartm-custom" data-toggle="tab" onclick="setMode('custom')">Custom</a></li> 
+					<li class=""><a id="profile-tab" href="#bigartm-matrices" data-toggle="tab" onclick="setMode('matrices')">From matrices</a></li> 	
 				</ul>
 				<p></p>
 				<div class="tab-content">
@@ -108,6 +109,13 @@
 									{% endfor %}							
 								</select>
 							</div>
+						</div>  
+					</div> 
+					
+					<div id="bigartm-matrices" class="tab-pane fade">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Select phi, theta</label>
+							 
 						</div>  
 					</div> 
 					

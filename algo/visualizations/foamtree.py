@@ -1,14 +1,9 @@
 from models.models import Topic, DocumentInTopic, TopicInTopic
 import json
-
-def get_name(params):
-	if "light" in params:
-		return "foamtree_light"
-	return "foamtree"
 		
 def visual(model, params):
 	root_topic = Topic.objects.filter(model = model, layer = 0)[0]
-	if "light" in params:
+	if len(params) > 1 and params[1] == "light":
 		groups = build_foamtree_light(model, root_topic)
 	else:
 		groups = build_foamtree(model, root_topic)

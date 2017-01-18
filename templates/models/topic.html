@@ -8,7 +8,7 @@
 	{% if is_low %}
 		<h3>Documents</h3>
 		{% for doc in documents %}
-			<a href = "/visual/document?dataset={{model.dataset.text_id}}&document={{doc.document.model_id}}" >{{doc.document.title}}</a>
+			<a href = "/visual/document?dataset={{model.dataset.text_id}}&iid={{doc.document.index_id}}" >{{doc.document.title}}</a>
 			<br>
 		{% endfor %}
 	{% else %}
@@ -23,8 +23,9 @@
 {% block right %}
 <div> 
 	<h4>Information</h4>
-	Layer: {{topic.layer}}
-	<br>
+	Dataset: <a href="/dataset?dataset={{model.dataset.text_id}}">{{model.dataset}}</a><br>
+	Model: <a href="/visual/model?model={{model.id}}">{{model}}</a><br>
+	Layer: {{topic.layer}}<br>
 	Documents: {{topic.documents_count}}	
 	<form class="" role="search" method="POST" action="/topics/rename">
 		Rename: <input type="text" name='new_title' class="" placeholder = "" value="{{topic.title}}"></input>
@@ -43,7 +44,7 @@
 	
 	<h4>Top terms</h4>
 	{% for top_term in top_terms%}  
-		<a href = "/visual/term?dataset={{model.dataset.text_id}}&term={{top_term.term.model_id}}" >{{top_term.term}}</a> ({{top_term.weight | floatformat:4}})
+		<a href = "/term?ds={{model.dataset.id}}&iid={{top_term.term.index_id}}" >{{top_term.term}}</a> ({{top_term.weight | floatformat:4}})
 		<br> 
 	{% endfor %}
 	

@@ -2,11 +2,8 @@ from models.models import Topic, DocumentInTopic, TopicInTopic
 import re
 import json
 
-def get_name(params):
-	return "temporalcells" + params['group_by']
-
 def visual(model, params): 		
-	group_by = params['group_by']
+	group_by = params[1]
 	doc_topics = DocumentInTopic.objects.filter(model = model)
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")
 	

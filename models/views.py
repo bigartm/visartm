@@ -3,7 +3,9 @@ from datasets.models import Dataset, Modality
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
 from models.models import ArtmModel, Topic, DocumentInTopic, TopTerm, TopicRelated, TopicInTopic
+from visual.models import GlobalVisualization
 from django.contrib.auth.decorators import login_required, permission_required
+import artmonline.views as general_views
 import traceback
 from django.conf import settings
 import os
@@ -11,6 +13,8 @@ import os
 
 def visual_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+	if model.status != 0:
+		return general_views.wait(request, "Model is not ready. Please wait.", model.creation_time)
 	topics_count = model.topics_count.split()
 	topics = Topic.objects.filter(model = model)
 	topics_layers = [{"i": i + 1, "topics_count": topics_count[i+1], \
@@ -22,20 +26,22 @@ def visual_model(request):
 @login_required
 def reload_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+	if model.status != 0:
+		return general_views.message(request, "Model is blocked.")
 	model.reload()
-	return HttpResponse("Reloaded. <a href ='/visual/model?model=" + str(model.id) + "'> Return to model</a>.") 
+	return general_views.message(request, "Reloaded. <a href ='/visual/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
 @login_required
 def arrange_topics(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
 	model.arrange_topics(request.GET['mode'])
-	return HttpResponse("Rearranged. <a href ='/visual/model?model=" + str(model.id) + "'> Return to model</a>.") 
+	return general_views.message(request, "Rearranged. <a href ='/visual/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
 @login_required
 def reset_visuals(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
-	model.delete_visuals()
-	return HttpResponse("Rsetted. <a href ='/visual/model?model=" + str(model.id) + "'> Return to model</a>.") 
+	GlobalVisualization.objects.filter(model = model).delete()
+	return general_views.message(request, "Resetted. <a href ='/visual/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
 	
 @login_required
@@ -73,46 +79,48 @@ def create_model(request):
 	model.author = request.user
 	model.save()
 	
-	#try:
-	if mode == 'flat': 
-		iter_count = int(request.POST.getlist('iter_count')[0])
-		model.layers_count = 1
-		model.topics_count = "1 " + request.POST.getlist('num_topics')[0]
-		model.save()
-		artm_object = model.create_simple(iter_count = iter_count)
-	elif mode == "hier":
-		model.layers_count = int(request.POST['num_layers'])
-		iter_count = int(request.POST.getlist('iter_count')[1]) 
-		model.topics_count = "1 " + ' '.join([request.POST.getlist('num_topics')[i + 1] for i in range(model.layers_count)])
-		model.save()
-		artm_object = model.create_simple(iter_count = iter_count)
-	elif mode == "script":
-		script_file_name = os.path.join(settings.DATA_DIR, "scripts", request.POST['script_name'])
-		with open(script_file_name) as f:
-			code = compile(f.read(), script_file_name, "exec")		
-		batch_vectorizer, dictionary = dataset.get_batches()
-		local_vars = {"batch_vectorizer": batch_vectorizer, "dictionary": dictionary}  
-		print("Running custom sript...")		
-		exec(code, local_vars)
-		print("Custom script finished.")
-		artm_object = local_vars["model"]
-	elif mode == "custom":
-		raise Exception("You cannot upload scripts.")
-	else:
-		raise Exception('Unknown mode.')
-		
-	model.save_matrices(artm_object)
-	model.reload()
-	return HttpResponse("Model created with " + str(model.layers_count) + " layers. <a href='/visual/model?model=" + str(model.id) + "'>View model.</a>")
-	'''
+	#THREAD !!!
+	try:
+		if mode == 'flat': 
+			iter_count = int(request.POST.getlist('iter_count')[0])
+			model.layers_count = 1
+			model.topics_count = "1 " + request.POST.getlist('num_topics')[0]
+			model.save()
+			artm_object = model.create_simple(iter_count = iter_count)
+		elif mode == "hier":
+			model.layers_count = int(request.POST['num_layers'])
+			iter_count = int(request.POST.getlist('iter_count')[1]) 
+			model.topics_count = "1 " + ' '.join([request.POST.getlist('num_topics')[i + 1] for i in range(model.layers_count)])
+			model.save()
+			artm_object = model.create_simple(iter_count = iter_count)
+		elif mode == "script":
+			script_file_name = os.path.join(settings.DATA_DIR, "scripts", request.POST['script_name'])
+			with open(script_file_name) as f:
+				code = compile(f.read(), script_file_name, "exec")		
+			batch_vectorizer, dictionary = dataset.get_batches()
+			local_vars = {"batch_vectorizer": batch_vectorizer, "dictionary": dictionary}  
+			print("Running custom sript...")		
+			exec(code, local_vars)
+			print("Custom script finished.")
+			artm_object = local_vars["model"]
+		elif mode == "custom":
+			raise Exception("You cannot upload scripts.")
+		elif mode == "matrices":
+			raise Exception("Matrices are not implemented yet.")
+		else:
+			raise Exception('Unknown mode.')
+			
+		model.save_matrices(artm_object)
+		model.reload()
+		return redirect("/visual/model?model=" + str(model.id))
 	except:
 		try:
 			model.dispose()
 		except:
 			print("Error while disposing model.")
 		ArtmModel.objects.filter(id = model.id).delete() 
-		return HttpResponse("<p>Error:<br></p>" + "<p>" + traceback.format_exc() + "</p>")
-	'''
+		return general_views.message(request, "<h1>Error:</h1>" + traceback.format_exc().replace('\n',"<br>"))
+	
 	
 	
 @login_required
@@ -122,11 +130,12 @@ def delete_model(request):
 	if 'sure' in request.GET and request.GET['sure'] == 'yes': 
 		model.dispose()
 		ArtmModel.objects.filter(id = request.GET['model']).delete()
-		return HttpResponse("Model was deleted. <a href ='/visual/dataset?dataset=" + dataset_name + "'> Return to dataset</a>.")
+		return general_views.message(request, "Model was deleted. <a href ='/dataset?dataset=" + dataset_name + "'> Return to dataset</a>.")
 	else:
-		return HttpResponse("Are you sure that you want delete model " + str(model) + " permanently?<br>" + 
-							"<a href = '/models/delete_model?model=" + str(model.id) + "&sure=yes'>Yes</a><br>" +
-							"<a href = '/visual/dataset?dataset=" + dataset_name + "'>No</a>")
+		return general_views.message(request,
+			"Are you sure that you want delete model " + str(model) + " permanently?<br>" + 
+			"<a href = '/models/delete_model?model=" + str(model.id) + "&sure=yes'>Yes</a><br>" +
+			"<a href = '/dataset?dataset=" + dataset_name + "'>No</a>")
 	
 
 @login_required
@@ -137,17 +146,16 @@ def delete_all_models(request):
 		for model in models:
 			model.dispose()
 		models.delete()
-		return HttpResponse("All models were deleted. <a href ='/visual/dataset?dataset=" + dataset.text_id + "'> Return to dataset</a>.")
+		return general_views.message(request, "All models were deleted. <a href ='/dataset?dataset=" + 
+					dataset.text_id + "'>Return to dataset</a>.")
 	else:
-		return HttpResponse("Are you sure that you want delete ALL models for dataset " + str(dataset) + " permanently?<br>" + 
-							"<a href = '/models/delete_all_models?dataset=" + dataset.text_id + "&sure=yes'>Yes</a><br>" +
-							"<a href = '/visual/dataset?dataset=" + dataset.text_id + "'>No</a>")	
+		return general_views.message(request, 
+				"Are you sure that you want delete ALL models for dataset " + str(dataset) + " permanently?<br>" + 
+				"<a href = '/models/delete_all_models?dataset=" + dataset.text_id + "&sure=yes'>Yes</a><br>" +
+				"<a href = '/dataset?dataset=" + dataset.text_id + "'>No</a>")	
 							
 def	visual_topic(request):
-	try:
-		target_topic = Topic.objects.filter(id = request.GET['id'])[0]
-	except:
-		return HttpResponseNotFound("<h1>Topic doesnt't exist</h1>")
+	target_topic = Topic.objects.filter(id = request.GET['id'])[0]
 	
 	model = target_topic.model
 	main_modality = target_topic.model.main_modality
@@ -173,10 +181,3 @@ def rename_topic(request):
 	topic = Topic.objects.filter(id = request.POST['id'])[0]
 	topic.rename(request.POST['new_title'])
 	return redirect("/visual/topic?id=" + request.POST['id'])	
-
-	
-# TODO: remove
-def get_model_json(request):
-	file_name = os.path.join(settings.DATA_DIR, "models", request.GET['model'], "hierarchy.json")
-	with open(file_name) as file: 
-		return HttpResponse(file.read(), content_type = 'application/json')  

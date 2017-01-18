@@ -15,7 +15,7 @@
 
 {% block right %}
 <h4>Properties</h4>
-	Dataset: <a href="/visual/dataset?dataset={{model.dataset.text_id}}">{{model.dataset}}</a>
+	Dataset: <a href="/dataset?dataset={{model.dataset.text_id}}">{{model.dataset}}</a>
 	<br>
 	{% for layer in topics_layers %}
 		Layer {{layer.i}}: {{layer.topics_count}} topics

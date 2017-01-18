@@ -25,6 +25,7 @@
 
 {% block javascript %}  
 
+<script src="/static/js/d3.v3.min.js"></script>  
 <script type="text/javascript">
 	
 	{% autoescape off %}
@@ -75,16 +76,20 @@
 	 
 	var selected_cell; 
 	var shift_x = 0;
- 
-
 	
-	group_cells.append("rect").
-		attr("x",-10000).
-		attr("y",-10000).
-		attr("width",20000).
-		attr("height",20000).
-		attr("fill", "transparent").
-		call(d3.drag().on("drag", dragged));
+	var drag = d3.behavior.drag()
+		.origin(function(d) { return d; })
+		.on("dragstart", function(d){d3.event.sourceEvent.stopPropagation();})
+		.on("drag", dragged)
+		.on("dragend", function(d){});
+
+	group_cells.append("rect")
+		.attr("x",-10000)
+		.attr("y",-10000)
+		.attr("width",20000)
+		.attr("height",20000)
+		.attr("fill", "transparent")
+		.call(drag);
 	
 	var cells = group_cells.selectAll("rect")
 		.data(cells)
@@ -99,7 +104,7 @@
 		.attr("stroke-width", 1)
 		.attr("fill", function(d, i) {
 			return get_color(d["intense"], d["Y"]);
-		})
+		}) 
 		.on("mouseover", function(d, i) {
 			//d3.select(this) 
 			//	.attr("stroke", THEME_textColor)
@@ -111,39 +116,8 @@
 				//	.attr("stroke", THEME_backgroundColor) 
 			}
 		})
-		.on("click", function(d, i) { 
-			d3.select(selected_cell) 
-				.attr("stroke-width", 0);
-			d3.select(this) 
-				.attr("stroke", "red")
-				.attr("stroke-width", 3);
-			selected_cell = this;
-			document.getElementById("label1").innerHTML = topics[d["Y"]].name;
-			document.getElementById("label2").innerHTML = dates[d["X"]]["name"];
-			document.getElementById("label3").innerHTML = "Documents: " + d["intense"];
-			
-			/*
-			if (docs_links) {
-				docs_links
-					.exit()
-					.remove();
-			}*/
-			
-			d3.select("#docs_links").selectAll("span")
-				.remove();
-			 
-			api.getDocuments(d["docs"], function(documents) {
-				var docs_links = d3.select("#docs_links").selectAll("span")
-					.data(documents)
-					.enter()
-					.append("span") 
-					.html(function(doc, i) {
-						return "<small><a href='/visual/document?id=" + doc["id"] + "'>" + doc["title"] + 
-							"</a>" /* +" (" + doc["date"] + ")" */ + "</small><br>";
-					})
-			}); 					
-		})
-		.call(d3.drag().on("drag", dragged));
+		.on("click", clicked)
+		.call(drag);
 		 
 
 	
@@ -181,7 +155,7 @@
 			.attr("fill", THEME_textColor)
 			.attr("text-anchor", "end");
 			
-		var connection_lines = group_high_topic_labels.selectAll('line')
+	var connection_lines = group_high_topic_labels.selectAll('line')
 			.data(lines) 	 
 			.enter()
 			.append('line')
@@ -228,14 +202,46 @@
 	
 	function get_label_y(d){
 		return 13 + square_size * d["Y"];
-	}
+	} 
 	
 	function dragged(d) {
 		shift_x += d3.event.dx;
 		cells.attr("x", get_cell_x);
 		date_labels.attr("x", get_label_x);
 	}
-		 
+		 	
+	function clicked(d, i) {  
+			d3.select(selected_cell) 
+				.attr("stroke-width", 0);
+			d3.select(this) 
+				.attr("stroke", "red")
+				.attr("stroke-width", 3);
+			selected_cell = this;
+			document.getElementById("label1").innerHTML = topics[d["Y"]].name;
+			document.getElementById("label2").innerHTML = dates[d["X"]]["name"];
+			document.getElementById("label3").innerHTML = "Documents: " + d["intense"];
+			
+			/*
+			if (docs_links) {
+				docs_links
+					.exit()
+					.remove();
+			}*/
+			
+			d3.select("#docs_links").selectAll("span")
+				.remove();
+			 
+			api.getDocuments(d["docs"], function(documents) {
+				var docs_links = d3.select("#docs_links").selectAll("span")
+					.data(documents)
+					.enter()
+					.append("span") 
+					.html(function(doc, i) {
+						return "<small><a href='/visual/document?id=" + doc["id"] + "'>" + doc["title"] + 
+							"</a>" /* +" (" + doc["date"] + ")" */ + "</small><br>";
+					})
+			}); 					
+		}
 	 
 	
 	/*

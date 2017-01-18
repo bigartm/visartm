@@ -25,18 +25,44 @@ def	datasets_reload(request):
 		return redirect("/")
 		
 	dataset.reload()
-	return HttpResponse("Reloaded. <a href ='/visual/dataset?dataset=" + dataset.text_id + "'> Return to dataset</a>.") 
+	return HttpResponse("Reloaded. <a href ='/dataset?dataset=" + dataset.text_id + "'> Return to dataset</a>.") 
 	
 	
 def	datasets_create(request):	
-	existing_datasets = [dataset.text_id for dataset in Dataset.objects.all()]
-	folders = os.listdir(os.path.join(settings.DATA_DIR, "datasets"))
-	unreg = [i for i in folders if not i in existing_datasets]
+	if request.method == 'GET': 
+		existing_datasets = [dataset.text_id for dataset in Dataset.objects.all()]
+		folders = os.listdir(os.path.join(settings.DATA_DIR, "datasets"))
+		unreg = [i for i in folders if not i in existing_datasets]
+		
+		languages = ['undefined', 'russian', 'english'] 
+		context = Context({"languages": languages,
+						   "unreg": unreg})
+		return render(request, "datasets/create_dataset.html", context) 
 	
-	languages = ['undefined', 'russian', 'english'] 
-	context = Context({"languages": languages,
-					   "unreg": unreg})
-	return render(request, "datasets/create_dataset.html", context) 
+	print(request.POST)
+	dataset = Dataset()
+	dataset.name = request.POST['unreg_name']
+	dataset.text_id = dataset.name
+	dataset.description = request.POST['description']
+	dataset.owner = request.user
+	if 'time_provided' in request.POST:
+		dataset.time_provided = True
+	if 'text_provided' in request.POST:
+		dataset.text_provided = True
+	if 'word_index_provided' in request.POST:
+		dataset.word_index_provided = True
+	if 'uci_provided' in request.POST:
+		dataset.uci_provided = True
+	if 'json_provided' in request.POST:
+		dataset.json_provided = True
+	dataset.language = request.POST['lang']
+	if not dataset.check_can_load():
+		return HttpResponse(dataset.error_message)
+	
+	dataset.save()	
+	dataset.reload()
+	
+	return HttpResponse("Dataset created. <a href='/dataset?dataset=" + dataset.text_id + "'>Go to dataset.</a>")
 	
 	
 def visual_dataset(request):  

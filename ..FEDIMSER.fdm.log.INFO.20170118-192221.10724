@@ -1,0 +1,19 @@
+Log file created at: 2017/01/18 19:22:21
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0118 19:22:21.706342  3200 c_interface.cc:74] Logging enabled to .
+I0118 19:22:21.706342  3200 c_interface.cc:221] Creating MasterModel (id=1)...
+I0118 19:22:24.806555  3200 c_interface.cc:318] Pass 3626300a-6272-49ba-85fa-ed5f3ba8987f to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0118 19:22:24.806555  3200 c_interface.cc:332] Pass GatherDictionaryArgs: dictionary_target_name=3626300a-6272-49ba-85fa-ed5f3ba8987f, data_path=D:\artmonline\data\datasets\postnauka\batches, symmetric_cooc_values=0 to void (__cdecl artm::core::MasterComponent::*)(class artm::GatherDictionaryArgs const & __ptr64) __ptr64
+I0118 19:22:24.806555  3200 dictionary.cc:187] Found 4 batches in 'D:\artmonline\data\datasets\postnauka\batches' folder
+I0118 19:22:25.243752  3200 dictionary.cc:243] Find 73513 unique tokens in 3446 items
+I0118 19:22:25.396121  3200 c_interface.cc:221] Creating MasterModel (id=2)...
+I0118 19:22:25.396121  3200 c_interface.cc:318] Pass dictionary to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0118 19:22:25.396121  3200 c_interface.cc:332] Pass GatherDictionaryArgs: dictionary_target_name=dictionary, data_path=D:\artmonline\data\datasets\postnauka\batches, symmetric_cooc_values=0 to void (__cdecl artm::core::MasterComponent::*)(class artm::GatherDictionaryArgs const & __ptr64) __ptr64
+I0118 19:22:25.396121  3200 dictionary.cc:187] Found 4 batches in 'D:\artmonline\data\datasets\postnauka\batches' folder
+I0118 19:22:25.815265  3200 dictionary.cc:243] Find 73513 unique tokens in 3446 items
+I0118 19:22:26.004896  3200 c_interface.cc:180] ArtmCopyRequestedMessage is copying 2961386 bytes...
+I0118 19:23:12.450484  3200 c_interface.cc:318] Pass 3626300a-6272-49ba-85fa-ed5f3ba8987f to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0118 19:23:12.462518  3200 c_interface.cc:283] Disposing MasterComponent (id=1)...
+I0118 19:23:12.462518  3200 c_interface.cc:318] Pass dictionary to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0118 19:23:12.477561  3200 c_interface.cc:283] Disposing MasterComponent (id=2)...

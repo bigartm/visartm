@@ -1,12 +1,19 @@
 body {
-    background-color: black;
-	color: white;
+    background-color: #222222;
+	color: #eeeeee;
+}
+
+a{
+	color: #ddddff;
+}
+
+a:hover{
+	color: #bbbbff;
 }
 
 .nolink{
   cursor: pointer;
   text-decoration: none;
- 
 } 
 
 .nolink:hover{ 

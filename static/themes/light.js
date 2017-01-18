@@ -13,3 +13,4 @@ var THEME_temporalSquares_BottomColor = [0, 255, 0];
 
 var THEME_textColor = "black";
 var THEME_backgroundColor = "white";
+var THEME_activeColor = "red";

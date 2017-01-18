@@ -11,7 +11,7 @@
  
 {% block right %}
 	<h4>Information</h4>
-	Dataset: {{term.dataset}}<br>
+	Dataset: <a href ="/dataset?dataset={{term.dataset.text_id}}">{{term.dataset}}</a><br>
 	Modality: {{term.modality}}<br>
 	index_id: {{term.index_id}}<br>
 	matrix_id: {{term.matrix_id}}<br>

@@ -10,13 +10,10 @@ import pandas as pd
 from scipy.spatial.distance import euclidean, cosine
 from scipy.stats import entropy 
 import artm
-from algo.Hamilton import HamiltonPath 
 import re
-from shutil import rmtree
-from random import random
-from sklearn.manifold import TSNE
-import importlib.util
+from shutil import rmtree 
 from django.db import transaction
+
 
 class ArtmModel(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
@@ -26,8 +23,7 @@ class ArtmModel(models.Model):
 	author = models.ForeignKey(User, null=True)
 	layers_count = models.IntegerField(default = 1) 
 	topics_count = models.TextField(null = True)
-	status = models.TextField(null = True)
-	status_code = models.IntegerField(null = False, default = 0) 
+	status = models.IntegerField(null = False, default = 0) 
 	
 	def __str__(self):
 		if self.name == '':
@@ -36,6 +32,7 @@ class ArtmModel(models.Model):
 			return self.name		
 	
 	def create_simple(self, iter_count):
+		print("Creating simple model...")
 		layers_count = self.layers_count
 		out_folder = os.path.join(settings.DATA_DIR, "models", str(self.id)) 
 		num_topics = [int(x) for x in self.topics_count.split()]
@@ -79,7 +76,8 @@ class ArtmModel(models.Model):
 		
 		print ("Saving matrix theta...") 
 		theta_npy_file_name = os.path.join(model_path, "theta.npy") 
-		theta = artm_object.get_theta().sort_index(axis = 1).values		
+		theta_raw = artm_object.get_theta()
+		theta = theta_raw.sort_index(axis = 1).values		
 		np.save(theta_npy_file_name, theta)
 		
 		print("Saving matrix phi...") 
@@ -121,8 +119,8 @@ class ArtmModel(models.Model):
 		return np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "theta.npy"))
 	
 	@transaction.atomic
-	def reload(self):
-		self.delete_visuals()
+	def reload(self): 
+		self.status = 0
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
 		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
 		print ("Reloading model " + str(self.id) + "...")
@@ -141,7 +139,7 @@ class ArtmModel(models.Model):
 				psi[i] = np.load(os.path.join(model_path, "psi"+ str(i) + ".npy"))
 		
 		terms_count = self.dataset.terms_count
-		documents_count = self.dataset.docs_count		
+		documents_count = self.dataset.documents_count		
 		topics_count = [int(x) for x in self.topics_count.split()]
 		total_topics_count = sum(topics_count)-1
 		
@@ -151,9 +149,12 @@ class ArtmModel(models.Model):
 		terms_id_index = [term.id for term in terms_index]
 		
 		# Removing existing topics and related objects
+		from visual.models import GlobalVisualization
 		Topic.objects.filter(model = self).delete()
 		TopTerm.objects.filter(model = self).delete()
 		TopicInTopic.objects.filter(model = self).delete()
+		GlobalVisualization.objects.filter(model = self).delete()
+		
 		
 		
 		# Creating topics, loading top terms, topic labeling
@@ -237,7 +238,9 @@ class ArtmModel(models.Model):
 		
 		
 		# Loading temporary reference for documents
-		documents_index = Document.objects.filter(dataset = self.dataset).order_by("model_id")
+		documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
+		print("DC", documents_count)
+		print("LDI", len(documents_index))
 		
 		
 		#Extracting documents in topics
@@ -245,6 +248,7 @@ class ArtmModel(models.Model):
 		DocumentInTopic.objects.filter(model = self).delete()
 		
 		theta_t_low = theta_t[:, total_topics_count - topics_count[layers_count] : total_topics_count]
+		
 		
 		for doc_id in range(0, documents_count):
 			distr = theta_t_low[doc_id]
@@ -268,13 +272,15 @@ class ArtmModel(models.Model):
 		
 		print("Model " + str(self.id) + " reloaded.")
 		self.arrange_topics()
+		self.status = 1
 	
 	
 	
 	# Only horizontal arranging
 	@transaction.atomic
 	def arrange_topics(self, mode = "alphabet"):
-		self.delete_visuals()
+		self.status = 0
+		
 		# Counting horizontal relations topic-topic
 		print("Counting horizontal relations topic-topic...")	
 		phi = self.get_phi()
@@ -313,19 +319,21 @@ class ArtmModel(models.Model):
 				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
 				idx = np.argsort(titles)
 			if mode == "hamilton":
+				from algo.Hamilton import HamiltonPath 
 				hp = HamiltonPath(topic_distances[layer_id])
 				idx = hp.solve()
 			elif mode == "tsne": 
+				from sklearn.manifold import TSNE
 				tsne_model = TSNE(n_components = 1, random_state=0, metric = "precomputed")
 				tsne_result = tsne_model.fit_transform(topic_distances[layer_id]).reshape(-1) 
 				idx = np.argsort(tsne_result)
-				
 			i = 0
 			for topic in topics_index[layer_id]:
 				topic = topics_index[layer_id][idx[i]]
 				topic.spectrum_index = i
 				topic.save()
 				i += 1
+		self.status = 1
 			
 	def dispose(self):
 		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
@@ -333,36 +341,12 @@ class ArtmModel(models.Model):
 			rmtree(model_path)
 		except:
 			pass
-			 
-	def get_visual(self, params):
-		visual_name = params['type']
-		path = os.path.join(settings.VISAL_SCRIPTS_DIR, visual_name + ".py")
-		spec = importlib.util.spec_from_file_location("algo.visualizations." + visual_name, path)
-		visual_module = importlib.util.module_from_spec(spec)
-		spec.loader.exec_module(visual_module)
-		
-		file_name = os.path.join(self.get_visual_folder(), visual_module.get_name(params) + ".txt")
-		if os.path.exists(file_name):
-			with open(file_name, "r") as f:
-				return f.read()
-		
-		result = visual_module.visual(self, params)
-			
-		with open(file_name, "w", encoding = 'utf-8') as f:
-			f.write(result)
-		return result 	
-	
 	 
 	def get_visual_folder(self):
 		path = os.path.join(settings.DATA_DIR, "models", str(self.id), "visual")
 		if not os.path.exists(path): 
 			os.makedirs(path) 
-		return path
-		
-	def delete_visuals(self, mode = "all"):
-		if mode == "all":
-			rmtree(self.get_visual_folder()) 
-							
+		return path							
 				
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
@@ -403,16 +387,6 @@ class TopicRelated(models.Model):
 	weight = models.FloatField()
 	def __str__(self):
 		return str(self.topic2) + "{0:.1f}%".format(100 * self.weight)		
-
-'''
-class DocumentInDocument(models.Model):
-	model = models.ForeignKey(ArtmModel, null = False)
-	document1 = models.ForeignKey(Document, null = False, related_name = 'fk1')
-	document2 = models.ForeignKey(Document, null = False, related_name = 'fk2')
-	weight = models.FloatField()
-	def __str__(self):
-		return str(self.document2) + "{0:.1f}%".format(100 * self.weight)		
-'''
 
 class TopicInTerm(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

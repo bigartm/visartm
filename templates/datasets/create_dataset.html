@@ -1,152 +1,73 @@
 {% extends 'base.html' %}
 
-{% block title %}Create new model{% endblock %}
+{% block title %}Create new dataset{% endblock %}
 {% block header %}{% endblock %}
 
 {% block content %}
 	<h1>Create new dataset</h1>
 	<hr>
-	Langes:
-	{% for language in languages %}
-		Lang:{{language}}
-	{% endfor %}
-	
-	<br>
-	Unreg
-	{% for x in unreg %}
-		Unreg:{{x}}
-	{% endfor %}
-	
 	<div class="container">
-		<form method = "post">
-			<h3>General settings</h3>
+		<form method = "post">			  
+			<div class="container">
+				 
 			<div class="form-group row">
-				<label for="dataset" class="col-sm-2 col-form-label">Dataset</label>
-				<div class="col-sm-2">{{dataset}}</div>
-				<input type="hidden" name="dataset" value="{{dataset.text_id}}" />
-			</div> 
-	
-			<div class="form-group row">
-				<label class="col-sm-2 col-form-label">Model name</label>
+				<label class="col-sm-2 col-form-label">Dataset name</label>
 				<div class="col-sm-2">
-					<input class="form-control" name="model_name" placeholder="New model" value = ""></input>
-				</div>
-			</div> 
-	
-	
-			<div class="form-group row">
-				<label  class="col-sm-2 col-form-label">Main modality</label>
-				<div class="col-sm-2">
-					<select class="form-control"  name="word_modality">
-					  {% for modality in modalities %}
-						<option>{{modality}}</option>
-					  {% endfor %}
+					<select class="form-control"  name="unreg_name">
+						{% for x in unreg %}
+							<option>{{x}}</option>
+						{% endfor %}								
 					</select>
 				</div>
+			</div> 			
+			
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Language</label>
+				<div class="col-sm-2">
+					<select class="form-control"  name="lang">
+						{% for lang in languages %}
+							<option>{{lang}}</option>
+						{% endfor %}				
+					</select>
+				</div>
+			</div> 	
+			
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Description</label>
+				<textarea name="description" cols="40" rows="5"></textarea>
+			</div> 	
+			
+			<div class="form-group row">
+				<input type="checkbox" name = "uci_provided"/>
+				<label class="col-sm-2 col-form-label">UCI vocab and docword provided</label>
+			</div>
+			
+			<div class="form-group row">
+				<input type="checkbox" name = "json_provided"/>
+				<label class="col-sm-2 col-form-label">documents.json provided</label>
+			</div>
+			
+			<div class="form-group row">
+				<input type="checkbox" name = "text_provided"/>
+				<label class="col-sm-2 col-form-label">Text provided</label>
+			</div>
+			
+			<div class="form-group row">
+				<input type="checkbox" name = "word_index_provided"/>
+				<label class="col-sm-2 col-form-label">Word index provided</label>
 			</div> 
 			
-			<hr>
-			<h3>BigARTM Model</h3>
-			
-			<div class="container">
-				<ul class="nav nav-tabs">
-					<li class="active"><a id="home-tab" href="#bigartm-flat" data-toggle="tab" onclick="setMode('flat')">Flat</a></li>
-					<li class=""><a id="profile-tab" href="#bigartm-hier" data-toggle="tab" onclick="setMode('hier')">Hierarchical</a></li>
-					<li class=""><a id="profile-tab" href="#bigartm-script" data-toggle="tab" onclick="setMode('script')">Script</a></li> 
-					<li class=""><a id="profile-tab" href="#bigartm-custom" data-toggle="tab" onclick="setMode('custom')">Custom</a></li> 
-				</ul>
-				<p></p>
-				<div class="tab-content">
-					<div id="bigartm-flat" class="tab-pane fade active in">
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Number of topics</label>
-							<div class="col-sm-1">
-								<input type="number" name="num_topics" value="10" />
-							</div>
-						</div> 				
-					
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Number of iterations</label>
-							<div class="col-sm-1">
-								<input type="number" name="iter_count" value="10" />
-							</div>
-						</div> 
-					</div>
-					
-					<div id="bigartm-hier" class="tab-pane fade">
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Number of layers</label>
-							<div class="col-sm-2">
-								<select class="form-control"  name="num_layers">
-									<option>2</option>
-									<option>3</option>
-									<option>4</option>									
-								</select>
-							</div>
-						</div> 			
-						
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Number of iterations</label>
-							<div class="col-sm-1"><input type="number" name="iter_count" value="10" /></div>
-						</div>						
-						
-						<h4>Number of topics</h4>
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">First layer</label>
-							<div class="col-sm-1"><input type="number" name="num_topics" value="10" /></div>
-						</div>
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Second layer</label>
-							<div class="col-sm-1"><input type="number" name="num_topics" value="30" /></div>
-						</div>
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Third layer</label>
-							<div class="col-sm-1"><input type="number" name="num_topics" value="90" /></div>
-						</div>
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Fourth layer</label>
-							<div class="col-sm-1"><input type="number" name="num_topics" value="200" /></div>
-						</div>			 
-					</div>
-					
-					<div id="bigartm-script" class="tab-pane fade">
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Select script</label>
-							<div class="col-sm-2">
-								<select class="form-control"  name="script_name">
-									{% for script in scripts %}
-									<option>{{script}}</option>
-									{% endfor %}							
-								</select>
-							</div>
-						</div>  
-					</div> 
-					
-					<div id="bigartm-custom" class="tab-pane fade">
-						<label class="col-sm-2 col-form-label">Python script</label>
-						
-						<div class="col-sm-1">
-							<input type="file" name="python_script"/>
-						</div>
-					</div> 
-				</div>
-				<input type="hidden" name="mode" id="mode" value="flat" />
+			<div class="form-group row">
+				<input type="checkbox" name = "time_provided"/>
+				<label class="col-sm-2 col-form-label">Time provided</label>
 			</div>
-			  
-			
-			
-			<hr>
-			<h3>Postprocessing</h3>
-			
-			<hr>
-			<h3>Visualizations</h3>
-			<hr>
-			
+						 
 			<div class="form-group row">
 			  <div class="offset-sm-2 col-sm-10">
 				<button type="submit" class="btn btn-primary">Create</button>
 			  </div>
-			</div>
+			</div> 
+ 			
 			{% csrf_token %}
 		</form>
 	</div>

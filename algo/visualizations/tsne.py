@@ -4,9 +4,6 @@ import json
 import os
 from sklearn.manifold import TSNE
 
-def get_name(params):
-	return "tsne"
-
 def visual(model, params):
 	print ("Buildig t-SNE visualization for model " + str(model.id) + "...") 
 	tsne_matrix_path = os.path.join(model.get_visual_folder(), "tsne_matrix.npy")
@@ -23,7 +20,7 @@ def visual(model, params):
 		np.save(tsne_matrix_path, tsne_matrix)
 	
 	answer = []
-	documents = Document.objects.filter(dataset = model.dataset).order_by("model_id")
+	documents = Document.objects.filter(dataset = model.dataset).order_by("index_id")
 	documents_count = tsne_matrix.shape[0]
 	
 	border_0 = tsne_matrix[0].copy()
