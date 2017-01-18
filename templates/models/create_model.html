@@ -44,6 +44,7 @@
 					<li class=""><a id="profile-tab" href="#bigartm-script" data-toggle="tab" onclick="setMode('script')">Script</a></li> 
 					<li class=""><a id="profile-tab" href="#bigartm-custom" data-toggle="tab" onclick="setMode('custom')">Custom</a></li> 
 					<li class=""><a id="profile-tab" href="#bigartm-matrices" data-toggle="tab" onclick="setMode('matrices')">From matrices</a></li> 	
+					<li class=""><a id="profile-tab" href="#bigartm-empty" data-toggle="tab" onclick="setMode('empty')">Empty</a></li> 
 				</ul>
 				<p></p>
 				<div class="tab-content">
@@ -114,8 +115,14 @@
 					
 					<div id="bigartm-matrices" class="tab-pane fade">
 						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Select phi, theta</label>
-							 
+							<label class="col-sm-2 col-form-label">Select folder</label>
+							<div class="col-sm-3">
+								<select class="form-control"  name="matrices_folder">
+									{% for x in unreg %}
+									<option>{{x}}</option>
+									{% endfor %}							
+								</select>
+							</div>
 						</div>  
 					</div> 
 					
@@ -125,6 +132,11 @@
 						<div class="col-sm-1">
 							<input type="file" name="python_script"/>
 						</div>
+					</div> 
+					
+					<div id="bigartm-empty" class="tab-pane fade">
+						<label class="col-sm-2 col-form-label">Just press create!</label>
+						
 					</div> 
 				</div>
 				<input type="hidden" name="mode" id="mode" value="flat" />

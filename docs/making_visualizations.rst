@@ -1,4 +1,0 @@
-Making visualizations
-===========================================
-
-MAKING VISUALIZATIONS

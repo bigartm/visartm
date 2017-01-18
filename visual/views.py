@@ -261,7 +261,7 @@ def visual_global(request):
 		t.start()
 	
 	if visualization.status == 0:
-		return general_views.wait(request, "Pending...", visualization.start_time, period = "3") 
+		return general_views.wait(request, "Pending...", visualization.start_time) 
 	elif visualization.status == 2:
 		return general_views.message(request, "Error during rendering.<br>" + visualization.error_message.replace('\n', "<br>") +   \
 				"<br><br><a href='/visual/global?type=" + visual_name + \

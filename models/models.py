@@ -13,11 +13,13 @@ import artm
 import re
 from shutil import rmtree 
 from django.db import transaction
+import traceback
 
 
 class ArtmModel(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
 	creation_time = models.DateTimeField(null=False, default = datetime.now)
+	text_id = models.TextField(null=False, default = "")
 	main_modality = models.ForeignKey(Modality, null = True)
 	name = models.TextField(null=True)
 	author = models.ForeignKey(User, null=True)
@@ -34,6 +36,9 @@ class ArtmModel(models.Model):
 	
 	def create_generic(self, POST):
 		mode = POST['mode']
+		self.log("Creating model, mode=" + mode)
+		self.text_id = str(self.id) 
+		
 		try:
 			if mode == 'flat': 
 				iter_count = int(POST.getlist('iter_count')[0])
@@ -41,12 +46,14 @@ class ArtmModel(models.Model):
 				self.topics_count = "1 " + POST.getlist('num_topics')[0]
 				self.save()
 				artm_object = self.create_simple(iter_count = iter_count)
+				self.save_matrices(artm_object)
 			elif mode == "hier":
 				self.layers_count = int(POST['num_layers'])
 				iter_count = int(POST.getlist('iter_count')[1]) 
-				self.topics_count = "1 " + ' '.join([POST.getlist('num_topics')[i + 1] for i in range(model.layers_count)])
+				self.topics_count = "1 " + ' '.join([POST.getlist('num_topics')[i + 1] for i in range(self.layers_count)])
 				self.save()
 				artm_object = self.create_simple(iter_count = iter_count)
+				self.save_matrices(artm_object)
 			elif mode == "script":
 				script_file_name = os.path.join(settings.DATA_DIR, "scripts", POST['script_name'])
 				with open(script_file_name) as f:
@@ -57,14 +64,19 @@ class ArtmModel(models.Model):
 				exec(code, local_vars)
 				print("Custom script finished.")
 				artm_object = local_vars["model"]
+				self.save_matrices(artm_object)
 			elif mode == "custom":
 				raise Exception("You cannot upload scripts.")
 			elif mode == "matrices":
-				raise Exception("Matrices are not implemented yet.")
+				self.text_id = POST["matrices_folder"]
+			elif mode == "empty":
+				folder = self.get_folder()
+				self.status = 3
+				self.save()
+				return
 			else:
-				raise Exception('Unknown mode.')
+				raise Exception('Unknown mode: ' + mode)
 				
-			self.save_matrices(artm_object)
 			self.reload()
 		except:
 			self.error_message = traceback.format_exc()
@@ -72,12 +84,9 @@ class ArtmModel(models.Model):
 			self.save()
 	
 	def create_simple(self, iter_count):
-		print("Creating simple model...")
-		layers_count = self.layers_count
-		out_folder = os.path.join(settings.DATA_DIR, "models", str(self.id)) 
+		self.log("Creating simple model...")
+		layers_count = self.layers_count 
 		num_topics = [int(x) for x in self.topics_count.split()]
-		if not os.path.exists(out_folder):
-			os.makedirs(out_folder)
 		
 		batch_vectorizer, dictionary = self.dataset.get_batches()
 		
@@ -88,9 +97,9 @@ class ArtmModel(models.Model):
 		layers[0] = model.add_level(num_topics = num_topics[1],
                             topic_names=[str(t) for t in range(num_topics[1])] )
 		layers[0].initialize(dictionary=dictionary)
-		print("Layer 0 initialized.")
+		self.log("Layer 0 initialized.")
 		layers[0].fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = iter_count)   
-		print("Layer 0 fitted.")
+		self.log("Layer 0 fitted.")
 		
 		for layer_id in range(1, layers_count):
 			layers[layer_id] = model.add_level(
@@ -103,28 +112,21 @@ class ArtmModel(models.Model):
 			layers[layer_id].fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = iter_count)  
 			print("Layer " + str(layer_id) + " fitted.")
 			
-		print("Model built.")
+		self.log("Model built.")
 		return model
 		
 	
 	def save_matrices(self, artm_object):
-		print ("Saving matrices for model " + str(self.id) + "...")
-		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
-		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
-		if not os.path.exists(model_path):
-			os.makedirs(model_path)
+		self.log ("Saving matrices for model " + str(self.id) + "...")
+		# vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
+		model_path = self.get_folder() 
 		
-		print ("Saving matrix theta...") 
-		theta_npy_file_name = os.path.join(model_path, "theta.npy") 
-		theta_raw = artm_object.get_theta()
-		theta = theta_raw.sort_index(axis = 1).values		
-		np.save(theta_npy_file_name, theta)
+		self.log ("Saving matrix theta...") 
+		artm_object.get_theta().to_pickle(os.path.join(model_path, "theta"))
 		
-		print("Saving matrix phi...") 
-		phi_npy_file_name = os.path.join(model_path, "phi.npy")
-		np.save(phi_npy_file_name, artm_object.get_phi().values)		
-		
-		
+		self.log("Saving matrix phi...") 
+		artm_object.get_phi().to_pickle(os.path.join(model_path, "phi"))
+		 
 		is_hierarchial = True
 		try:
 			layers = artm_object._levels
@@ -134,48 +136,44 @@ class ArtmModel(models.Model):
 		if is_hierarchial and len(layers) == 1:
 			is_hierarchial = False
 		
-		
 		if is_hierarchial: 
 			print("Saving matrices psi...")
-			self.layers_count = len(layers)  			
-			self.topics_count = "1"
 			for layer_id in range(1, self.layers_count): 
-				psi_file_name = os.path.join(model_path, "psi" + str(layer_id) + ".npy")
-				psi = layers[layer_id].get_psi().values
-				np.save(psi_file_name, psi)
-				if layer_id == 1:
-					self.topics_count += " " + str(psi.shape[1])
-				self.topics_count += " " + str(psi.shape[0])
-		else:
-			self.topics_count = "1 "  + str(theta.shape[0])
-			self.layers_count = 1
-			
-		self.save()
-		
-	def get_phi(self):
-		return np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "phi.npy"))
-	
-	def get_theta(self):
-		return np.load(os.path.join(settings.DATA_DIR, "models", str(self.id), "theta.npy"))
-	
+				psi = layers[layer_id].get_psi().to_pickle(os.path.join(model_path, "psi" + str(layer_id)))
+				
+				
 	@transaction.atomic
 	def reload(self):  
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
-		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
-		print ("Reloading model " + str(self.id) + "...")
+		model_path = self.get_folder()
+		self.log("Reloading model " + str(self.id) + "...")
 		
 		# Loading matrices
-		print ("Loading matrices...")
-		layers_count = self.layers_count
-			
-		theta = self.get_theta()
-		theta_t = theta.transpose()
-		phi = self.get_phi()
+		self.log("Loading matrix phi...")
+		phi = pd.read_pickle(os.path.join(model_path, "phi")).values
+		np.save(os.path.join(model_path, "phi.npy"), phi)	
 		phi_t = phi.transpose()
+			
+		self.log("Loading matrix phi...")
+		theta = pd.read_pickle(os.path.join(model_path, "theta")).sort_index(axis = 1).values
+		np.save(os.path.join(model_path, "theta.npy"), theta)	
+		theta_t = theta.transpose()
+		
+		layers_count = self.layers_count
 		if layers_count > 1:
-			psi = [0 for i in range(self.layers_count)]		
+			self.log("Loading matrix psi...")
+			psi = [0 for i in range(layers_count)]		
 			for i in range(1, self.layers_count):
-				psi[i] = np.load(os.path.join(model_path, "psi"+ str(i) + ".npy"))
+				psi[i] = pd.read_pickle(os.path.join(model_path, "psi" + str(i))).values
+				np.save(os.path.join(model_path, "psi"+ str(i) + ".npy"), psi[i])
+		
+		self.log("Counting topics...")			
+		if layers_count == 1: 
+			self.topics_count = "1 "  + str(theta.shape[0])
+		else:		
+			self.topics_count = "1 " + str(psi[1].shape[1])
+			for layer_id in range(1, layers_count):  
+				self.topics_count += " " + str(psi[layer_id].shape[0])
 		
 		terms_count = self.dataset.terms_count
 		documents_count = self.dataset.documents_count		
@@ -183,7 +181,7 @@ class ArtmModel(models.Model):
 		total_topics_count = sum(topics_count)-1
 		
 		# Building temporary index for terms
-		print("Building temporary index for words...")
+		self.log("Building temporary index for words...")
 		terms_index = Term.objects.filter(dataset = self.dataset).order_by("matrix_id") 
 		terms_id_index = [term.id for term in terms_index]
 		
@@ -197,7 +195,7 @@ class ArtmModel(models.Model):
 		
 		
 		# Creating topics, loading top terms, topic labeling
-		print("Creating topics...")
+		self.log("Creating topics...")
 		topics_index = [[] for i in range(layers_count + 1)]
 		
 		# Creating root topic
@@ -252,7 +250,7 @@ class ArtmModel(models.Model):
 					top_term.save()
 				
 				if row_counter % 10 == 0:
-					print("Created topic %d/%d." % (row_counter, total_topics_count))
+					self.log("Created topic %d/%d." % (row_counter, total_topics_count))
 		
 		# Adding topics of top layer as children of root
 		for topic in topics_index[1]:
@@ -265,7 +263,7 @@ class ArtmModel(models.Model):
 		# Building topics hierarchy
 		for bottom_layer in range (2, layers_count + 1):
 			top_layer = bottom_layer - 1
-			print("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
+			self.log("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
 			for bottom_topic_id in range(topics_count[bottom_layer]):
 				top_topic_id = np.argmax(psi[top_layer][bottom_topic_id])
 				relation = TopicInTopic()
@@ -278,12 +276,11 @@ class ArtmModel(models.Model):
 		
 		# Loading temporary reference for documents
 		documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
-		print("DC", documents_count)
-		print("LDI", len(documents_index))
+ 
 		
 		
 		#Extracting documents in topics
-		print("Extracting documents in topics...")
+		self.log("Extracting documents in topics...")
 		DocumentInTopic.objects.filter(model = self).delete()
 		
 		theta_t_low = theta_t[:, total_topics_count - topics_count[layers_count] : total_topics_count]
@@ -299,7 +296,7 @@ class ArtmModel(models.Model):
 			topics_index[layers_count][topic_id].documents_count += 1
 			relation.save()
 			if doc_id % 1000 == 0:
-				print(doc_id) 
+				self.log(str(doc_id)) 
 		
 		for topic_id in range(topics_count[layers_count]):
 			topics_index[layers_count][topic_id].save()
@@ -308,8 +305,33 @@ class ArtmModel(models.Model):
 		self.arrange_topics()
 		self.status = 0
 		self.save()
-		print("Model " + str(self.id) + " reloaded.")
-		 
+		self.log("Model " + str(self.id) + " reloaded.")
+		
+	def reload_untrusted(self):
+		try:
+			self.reload()
+		except:
+			self.error_message = traceback.format_exc()
+			self.status = 2
+			self.save()
+			
+	def prepare_log(self):
+		if len(self.text_id) == 0:
+			self.text_id = str(self.id)
+		self.log_file_name = os.path.join(self.get_folder(), "log.txt")
+		with open(self.log_file_name, "w") as f:
+			f.write("<br>\n")
+			
+	def log(self, string):
+		with open(self.log_file_name, "a") as f:
+			f.write(string + "<br>\n")
+			
+	def read_log(self):
+		try:
+			with open(os.path.join(self.get_folder(), "log.txt"), "r") as f:
+				return f.read()
+		except:
+			return "Model is being processed..."
 	
 	# Only horizontal arranging
 	@transaction.atomic
@@ -347,7 +369,7 @@ class ArtmModel(models.Model):
 		
 		# Building topics spectrum
 		for layer_id in range (1, layers_count + 1):
-			print("Building topics spectrum for layer %d, mode=%s..." % (layer_id, mode))
+			self.log("Building topics spectrum for layer %d, mode=%s..." % (layer_id, mode))
 			if mode == "alphabet":
 				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
 				idx = np.argsort(titles)
@@ -371,17 +393,29 @@ class ArtmModel(models.Model):
 		
 	
 	def dispose(self):
-		model_path = os.path.join(settings.DATA_DIR, "models", str(self.id))
 		try:
-			rmtree(model_path)
+			rmtree(self.get_folder())
 		except:
 			pass
 	 
-	def get_visual_folder(self):
-		path = os.path.join(settings.DATA_DIR, "models", str(self.id), "visual")
+	def get_folder(self):
+		path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "models", self.text_id)
 		if not os.path.exists(path): 
 			os.makedirs(path) 
-		return path							
+		return path	 
+	 
+	def get_visual_folder(self):
+		path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "models", self.text_id, "visual")
+		if not os.path.exists(path): 
+			os.makedirs(path) 
+		return path			
+
+	def get_phi(self):
+		return np.load(os.path.join(self.get_folder(), "phi.npy"))
+	
+	def get_theta(self):
+		return np.load(os.path.join(self.get_folder(), "theta.npy"))
+	
 				
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

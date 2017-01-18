@@ -32,8 +32,9 @@
 {% block right %}
 	<div>
 		<h4>Meta</h4>
+		Dataset: <a href="/dataset?dataset={{document.dataset.text_id}}">{{document.dataset}}</a><br>
 		Time: {{document.time}}<br>  
-		<a href = {{document.url}}>Original</a>
+		Original: <a href = {{document.url}}>link</a>
 		<br>
 		iid: {{document.index_id}}
 		

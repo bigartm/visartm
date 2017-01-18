@@ -77,7 +77,7 @@ def visual_dataset(request):
 	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
 	
 	if dataset.status != 0:
-		return general_views.wait(request, "Dataset is being reloaded. Please wait.", dataset.creation_time)
+		return general_views.wait(request, dataset.read_log(), dataset.creation_time)
 	
 	docs = Document.objects.filter(dataset = dataset)
 	

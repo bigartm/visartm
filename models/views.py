@@ -18,13 +18,18 @@ def visual_model(request):
 		
 	if model.status != 0:
 		if model.status == 1:
-			return general_views.wait(request, "Model is not ready. Please wait.", model.creation_time)
+			return general_views.wait(request, model.read_log(), model.creation_time)
 		if model.status == 2:
 			return general_views.message(request, 
 				"Model is bad. Error occured.<br>" + 
 				model.error_message.replace('\n',"<br>") +
-				"<a href = '/models/delete_model?model=" + 
-				str(self.id) + "'>Delete this model</a>" )
+				"<a href = '/models/delete_model?model=" + str(model.id) + "'>Delete this model</a><br>" +
+				"<a href = '/models/reload_model?model=" + str(model.id) + "'>Reload this model</a><br>" )
+		if model.status == 3:
+			return general_views.message(request, 
+				"This is empty model.<br>" +
+				"Place matrices in folder " + model.get_folder() + "<br>"
+				"Then <a href='/models/reload_model?model=" + str(model.id) + "'>reload model</a>.")
 		
 	topics_count = model.topics_count.split()
 	topics = Topic.objects.filter(model = model)
@@ -37,11 +42,12 @@ def visual_model(request):
 @login_required
 def reload_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
-	if model.status != 0:
+	if model.status == 1:
 		return general_views.message(request, "Model is locked.")
 	model.creation_time = datetime.now()
 	model.status = 1
 	model.save()
+	model.prepare_log()
 	
 	t = Thread(target = ArtmModel.reload, args = (model, ), daemon = True)
 	t.start()
@@ -56,6 +62,7 @@ def arrange_topics(request):
 	model.creation_time = datetime.now()
 	model.status = 1
 	model.save()
+	model.prepare_log()
 	
 	t = Thread(target = ArtmModel.arrange_topics, args = (model, request.GET['mode'],), daemon = True)
 	t.start()
@@ -72,17 +79,25 @@ def reset_visuals(request):
 @login_required
 def create_model(request):
 	if request.method == 'GET': 
-		try:
-			target_dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-		except:
-			return redirect("/")
+		dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
+
 		
-		modalities = Modality.objects.filter(dataset = target_dataset)
+		modalities = Modality.objects.filter(dataset = dataset)
 		scripts = os.listdir(os.path.join(settings.DATA_DIR, "scripts"))
-			 
-		context = Context({'dataset': target_dataset,
+		
+		unreg = []
+		try:
+			folders = os.listdir(os.path.join(settings.DATA_DIR, "datasets", dataset.text_id, "models"))
+			existing_models = [model.text_id for model in ArtmModel.objects.filter(dataset = dataset)]
+			unreg = [i for i in folders if not i in existing_models]
+		except:
+			pass
+			
+		context = Context({'dataset': dataset,
 						   'modalities': modalities,
-						   'scripts': scripts})
+						   'scripts': scripts,
+						   'unreg': unreg})
+						   
 		return render(request, 'models/create_model.html', context)
 	
 	#print(request.POST)
@@ -95,6 +110,7 @@ def create_model(request):
 	model.creation_time = datetime.now()
 	model.status = 1
 	model.save()
+	model.prepare_log()
 	
 	t = Thread(target = ArtmModel.create_generic, args = (model, request.POST, ), daemon = True)
 	t.start()

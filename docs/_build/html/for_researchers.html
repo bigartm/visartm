@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="artmonline-docs 1 documentation" href="index.html"/>
-        <link rel="next" title="Installing ARTM Online" href="installing.html"/>
+        <link rel="next" title="Visualizations" href="visualizations.html"/>
         <link rel="prev" title="Overview" href="overview.html"/> 
 
   
@@ -83,11 +83,7 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">For researchers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installing.html">Installing ARTM Online</a></li>
-<li class="toctree-l2"><a class="reference internal" href="making_visualizations.html">Making visualizations</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">For researchers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="visualizations.html">Visualizations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="formats.html">Formats</a></li>
 </ul>
@@ -136,13 +132,63 @@
             
   <div class="section" id="for-researchers">
 <h1>For researchers<a class="headerlink" href="#for-researchers" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installing.html">Installing ARTM Online</a></li>
-<li class="toctree-l1"><a class="reference internal" href="making_visualizations.html">Making visualizations</a></li>
-</ul>
+<p>Этот раздел предназначен для исследователей, которые будут разворачивать ARTM Online локально на свойм компьтере.</p>
+<p class="rubric">Разворачивание ARTM Online</p>
+<ol class="arabic simple">
+<li>Установите python 3 (рекомендуется anaconda).</li>
+<li>Установите django</li>
+</ol>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>pip install django
+</pre></div>
 </div>
+<ol class="arabic simple" start="3">
+<li>Установите систему управления базами данных. Рекомендуеся PostgreSQL.</li>
+<li>Создайте базу данных artmonlinedb. Запомните имя пользователя и пароль для доступа к этой базе данных. Имя пользователя по умолчанию в PostgreSQL - postgres.</li>
+<li>Установите git</li>
+<li>Склонируйте проект ARTM Online на свой компьютер. Для этого создайте где-нибудь папку artmonline, перейдите в неё и выполните</li>
+</ol>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>git clone https://github.com/fedimser/artmonline.git
+</pre></div>
+</div>
+<ol class="arabic simple" start="7">
+<li>Теперь нужно связать проект c базой данных. Сначала откройте файл artmonline/settings.py и найдите там такие строчки</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">DATABASES</span> <span class="o">=</span> <span class="p">{</span>
+             <span class="s1">&#39;default&#39;</span><span class="p">:</span> <span class="p">{</span>
+                     <span class="s1">&#39;ENGINE&#39;</span><span class="p">:</span> <span class="s1">&#39;django.db.backends.postgresql_psycopg2&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;NAME&#39;</span><span class="p">:</span> <span class="s1">&#39;artmonlinedb&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;USER&#39;</span><span class="p">:</span> <span class="s1">&#39;postgres&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;PASSWORD&#39;</span><span class="p">:</span> <span class="s1">&#39;******&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;HOST&#39;</span><span class="p">:</span> <span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;PORT&#39;</span><span class="p">:</span> <span class="s1">&#39;5432&#39;</span><span class="p">,</span>
+             <span class="p">}</span>
+     <span class="p">}</span>
+</pre></div>
+</div>
+<p>Внесите изменения, соответствующие вашей СУБД. Если вы используете PostgreSQL с настройками по умолчанию, понадобится изменить только пароль.</p>
+<ol class="arabic simple" start="8">
+<li>Теперь нужно, чтобы django создал нужные ему таблицы. Для этого выполните</li>
+</ol>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>python manage.py makemigrations
+python manage.py migrate
+</pre></div>
+</div>
+<ol class="arabic simple" start="9">
+<li>Создайте суперпользователя (эти логин и пароль потом нужно будет ввести, когда сервис попросит вас залогиниться)</li>
+</ol>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>python manage.py createsuperuser
+</pre></div>
+</div>
+<ol class="arabic simple" start="10">
+<li>Запустите сервер</li>
+</ol>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>python manage.py runserver
+</pre></div>
+</div>
+<ol class="arabic simple" start="11">
+<li>Зайдите в браузере по адресу <a class="reference external" href="http://127.0.0.1:8000">http://127.0.0.1:8000</a></li>
+</ol>
+<p class="rubric">Начало работы с ARTM Online</p>
 </div>
 
 
@@ -152,7 +198,7 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installing.html" class="btn btn-neutral float-right" title="Installing ARTM Online" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="visualizations.html" class="btn btn-neutral float-right" title="Visualizations" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="overview.html" class="btn btn-neutral" title="Overview" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

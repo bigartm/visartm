@@ -2,6 +2,9 @@ Visualizations
 ===========================================
 Contents:
 
-.. toctree::
+.. rubric:: Circles
 
-   temporal_cells
+.. figure:: _static/favicon.png
+       :scale: 300 %
+       :align: center
+       :alt: Альтернативный текст

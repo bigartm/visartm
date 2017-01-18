@@ -1,8 +1,71 @@
 For researchers
 ===========================================
 
-Contents:
+Этот раздел предназначен для исследователей, которые будут разворачивать ARTM Online локально на свойм компьтере.
 
-.. toctree::
-   installing
-   making_visualizations
+.. rubric:: Разворачивание ARTM Online
+
+1. Установите python 3 (рекомендуется anaconda).
+
+2. Установите django
+
+.. code-block:: bash 
+
+   pip install django 
+
+   
+3. Установите систему управления базами данных. Рекомендуеся PostgreSQL.
+
+4. Создайте базу данных artmonlinedb. Запомните имя пользователя и пароль для доступа к этой базе данных. Имя пользователя по умолчанию в PostgreSQL - postgres.
+
+5. Установите git
+
+6. Склонируйте проект ARTM Online на свой компьютер. Для этого создайте где-нибудь папку artmonline, перейдите в неё и выполните
+
+.. code-block:: bash 
+
+   git clone https://github.com/fedimser/artmonline.git
+   
+7. Теперь нужно связать проект c базой данных. Сначала откройте файл artmonline/settings.py и найдите там такие строчки
+
+.. code-block:: python 
+
+   DATABASES = {
+		'default': {
+			'ENGINE': 'django.db.backends.postgresql_psycopg2',
+			'NAME': 'artmonlinedb',
+			'USER': 'postgres',
+			'PASSWORD': '******',
+			'HOST': '127.0.0.1',
+			'PORT': '5432', 
+		}
+	}
+
+Внесите изменения, соответствующие вашей СУБД. Если вы используете PostgreSQL с настройками по умолчанию, понадобится изменить только пароль.
+
+8. Теперь нужно, чтобы django создал нужные ему таблицы. Для этого выполните
+
+.. code-block:: bash 
+
+   python manage.py makemigrations
+   python manage.py migrate
+   
+9. Создайте суперпользователя (эти логин и пароль потом нужно будет ввести, когда сервис попросит вас залогиниться)
+
+.. code-block:: bash 
+
+   python manage.py createsuperuser
+   
+   
+10. Запустите сервер
+
+.. code-block:: bash 
+
+   python manage.py runserver
+   
+11. Зайдите в браузере по адресу http://127.0.0.1:8000
+
+.. rubric:: Начало работы с ARTM Online
+   
+
+
