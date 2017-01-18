@@ -1,9 +1,0 @@
-Log file created at: 2017/01/17 19:31:46
-Running on machine: FEDIMSER
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-I0117 19:31:46.879022 13900 c_interface.cc:74] Logging enabled to .
-I0117 19:31:46.879523 13900 c_interface.cc:221] Creating MasterModel (id=1)...
-E0117 19:31:46.881052 13900 c_interface.cc:297] Throw location unknown (consider using BOOST_THROW_EXCEPTION)
-Dynamic exception type: class boost::exception_detail::clone_impl<struct boost::exception_detail::error_info_injector<class std::ios_base::failure> >
-std::exception::what: failed create mapping: Том для открытого файла был изменен извне, поэтому работа с этим файлом невозможна.
-: iostream stream error
