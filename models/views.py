@@ -49,7 +49,7 @@ def reload_model(request):
 	model.save()
 	model.prepare_log()
 	
-	t = Thread(target = ArtmModel.reload, args = (model, ), daemon = True)
+	t = Thread(target = ArtmModel.reload_untrusted, args = (model, ), daemon = True)
 	t.start()
 	
 	return redirect("/visual/model?model=" + str(model.id))

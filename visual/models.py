@@ -1,5 +1,5 @@
 from django.db import models
-from models.models import ArtmModel
+from models.models import ArtmModel, Topic
 from datetime import datetime
 import os
 from django.conf import settings
@@ -20,9 +20,10 @@ class GlobalVisualization(models.Model):
 		script_file_name = os.path.join(settings.VISUAL_SCRIPTS_DIR, params[0] + ".py")
 		spec = importlib.util.spec_from_file_location("algo.visualizations." + params[0], script_file_name)
 		visual_module = importlib.util.module_from_spec(spec)
-		spec.loader.exec_module(visual_module)
+		
 		
 		try:
+			spec.loader.exec_module(visual_module)
 			result = visual_module.visual(self.model, params)
 		except:
 			self.error_message = traceback.format_exc()
@@ -40,4 +41,9 @@ class GlobalVisualization(models.Model):
 		self.finish_time = datetime.now()
 		self.status = 1
 		self.save()
+		
+class Polygon(models.Model):
+	points = models.TextField(null = True)
+	children = models.TextField(null = True)
+	title = models.TextField(null = True)
 	

@@ -34,37 +34,84 @@ class Dataset(models.Model):
 	def reload(self): 	
 		self.prepare_log()
 		self.log("Loading dataset " + self.text_id + "...")
-		
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
 		uci_folder = os.path.join(dataset_path, "UCI")
 		vocab_file = os.path.join(uci_folder, "vocab." + self.text_id + ".txt")
+		Term.objects.filter(dataset = self).delete()
+		Document.objects.filter(dataset = self).delete()
+		Modality.objects.filter(dataset = self).delete()
 		
-		 
+		if self.json_provided:
+			docs_info_file = os.path.join(dataset_path, "documents.json")
+			with open(docs_info_file) as f:
+				docs_info = json.load(f)
 		
-		self.log("Reading UCI bag of words...")
+		self.log("Reading UCI bag of words and creating documents...")		
 		docword_file = os.path.join(uci_folder, "docword." + self.text_id + ".txt")
 		with open(docword_file, "r") as f:
 			lines = f.readlines()
-		
+		lines.append(str(self.documents_count + 1) + " 0 0")
+		cur_doc_id = 1
+		cur_bow = bytes()
 		self.documents_count = int(lines[0]) 
 		self.terms_count = int(lines[1])
-		entries_count = int(lines[2])
-		terms_counter = np.zeros(self.documents_count + 1).astype(int)
+		#entries_count = int(lines[2])
 		bags = [bytes() for i in range(1 + self.documents_count)]
 		for line in lines[3:]:
 			parsed = line.split()
-			doc_id = int(parsed[0]) 
+			doc_id = int(parsed[0])
+			if doc_id != cur_doc_id:
+				if doc_id - cur_doc_id != 1:
+					raise ValueError("Fatal error! Document " + str(cur_doc_id + 1) + " has no terms. Or docword file isn't sorted by docId.")
+				doc = Document()
+				doc.title = "document " + str(cur_doc_id)
+				
+				if self.json_provided:
+					if cur_doc_id in docs_info:
+						doc_info = docs_info[cur_doc_id]
+					elif str(cur_doc_id) in docs_info:
+						doc_info = docs_info[str(cur_doc_id)]
+					else:
+						doc_info = None
+					
+					if doc_info == None:
+						self.log("Warning! No meta data in documents.json for document " + str(cur_doc_id) + ".")
+					else:
+						if 'title' in doc_info:
+							doc.title = doc_info["title"]
+						
+						if "snippet" in doc_info:
+							doc.snippet = doc_info["snippet"]
+						
+						if "url" in doc_info:
+							doc.url = doc_info["url"]
+						
+						if self.time_provided:
+							if "time" in doc_info:
+								lst = doc_info["time"]
+								doc.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
+							else:
+								self.log("Warning! Time isn't provided at least for document " + id + ", but you promised that it will be.")
+								self.time_provided = False
+				
+				doc.index_id = cur_doc_id
+				doc.dataset = self
+				doc.bag_of_words = cur_bow
+				doc.save() 
+				#self.log("Create doc " + str(cur_doc_id))
+				cur_bow = bytes()
+				cur_doc_id = doc_id
+			
+				if cur_doc_id % 1000 == 0:
+					self.log(str(doc_id)) 
+					
 			term_index_id = int(parsed[1])
 			term_count = int(parsed[2]) 
-			terms_counter[doc_id] += term_count
-			bags[doc_id] += struct.pack('I', term_index_id) + struct.pack('H', term_count)
+			cur_bow += struct.pack('I', term_index_id) + struct.pack('H', term_count)
 		
-		self.log("Checking for empty documents.")
-		for i in range (1, self.documents_count + 1):
-			if terms_counter[i] == 0:
-				raise ValueError("Error! Document " + str(i) + " has no terms.")
-		self.log("Check OK.")
-		
+		if cur_doc_id != self.documents_count + 1:
+			raise ValueError("Fatal error! Promised " + str(self.documents_count) + "documents, by provided " + str(cur_doc_id) + ".")
+				
 		
 		# Removing all connected models
 		from models.models import ArtmModel
@@ -73,12 +120,7 @@ class Dataset(models.Model):
 			model.dispose()
 		ArtmModel.objects.filter(dataset = self).delete()
 		
-		# Removing all terms, documents and modalities
-		Term.objects.filter(dataset = self).delete()
-		Document.objects.filter(dataset = self).delete()
-		Modality.objects.filter(dataset = self).delete()
-		
-		
+		 
 		# Reading UCI vocabulary
 		self.log("Reading UCI vocabulary...")
 		terms_index = dict()
@@ -129,7 +171,7 @@ class Dataset(models.Model):
 		
 		
 		# Loading dictionary
-		print("Loading dictionary...")
+		self.log("Loading ARTM dictionary...")
 		i = -3
 		with open(dictionary_file_name, "r", encoding = 'utf-8') as f:
 			for line in f:
@@ -151,59 +193,19 @@ class Dataset(models.Model):
 		index_to_matrix_file_name = os.path.join(dataset_path, "itm.npy")
 		np.save(index_to_matrix_file_name, index_to_matrix)
 		
-		
-		self.log("Loading documents...")
-		Document.objects.filter(dataset = self).delete()
-		
-		if self.json_provided:
-			docs_info_file = os.path.join(dataset_path, "documents.json")
-			with open(docs_info_file) as f:
-				docs_info = json.load(f)
-				
-		for id in range(1, self.documents_count + 1):
-			doc = Document()
-			doc.title = "document " + str(id)
-			
-			if self.json_provided:
-				if id in docs_info:
-					doc_info = docs_info[id]
-				elif str(id) in docs_info:
-					doc_info = docs_info[str(id)]
-				else:
-					doc_info = None
-				
-				if doc_info == None:
-					self.log("Warning! No meta data in documents.json for document " + str(id) + ".")
-				else:
-					if 'title' in doc_info:
-						doc.title = doc_info["title"]
-					
-					if "snippet" in doc_info:
-						doc.snippet = doc_info["snippet"]
-					
-					if "url" in doc_info:
-						doc.url = doc_info["url"]
-					
-					if self.time_provided:
-						if "time" in doc_info:
-							lst = doc_info["time"]
-							doc.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
-						else:
-							self.log("Warning! Time isn't provided at least for document " + id + ", but you promised that it will be.")
-							self.time_provided = False
-			
-			doc.index_id = id
-			doc.dataset = self
-			doc.bag_of_words = bags[id]
-			doc.save() 
-			
-			if id % 1000 == 0:
-				self.log(str(id))
+		 
+
 					 
-		self.log(str(self.documents_count))
+		#self.log(str(self.documents_count))
 		self.creation_time = datetime.now()
 		self.status = 0
 		self.save() 		
+		
+		
+		# Creating folder for models
+		model_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id, "models")
+		if not os.path.exists(model_path): 
+			os.makedirs(model_path) 
 		
 		self.log("Dataset " + self.text_id + " loaded.")
 		
@@ -241,8 +243,13 @@ class Dataset(models.Model):
 				return f.read()
 		except:
 			return "Datased is reloading"
-
 			
+	def get_folder(self):
+		path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
+		if not os.path.exists(path): 
+			os.makedirs(path) 
+		return path	 
+	 
 class Document(models.Model):
 	title = models.TextField(null=False)
 	url = models.URLField(null=True)

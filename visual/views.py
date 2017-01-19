@@ -261,7 +261,7 @@ def visual_global(request):
 		t.start()
 	
 	if visualization.status == 0:
-		return general_views.wait(request, "Pending...", visualization.start_time) 
+		return general_views.wait(request, "Pending...", visualization.start_time, period = "2") 
 	elif visualization.status == 2:
 		return general_views.message(request, "Error during rendering.<br>" + visualization.error_message.replace('\n', "<br>") +   \
 				"<br><br><a href='/visual/global?type=" + visual_name + \
@@ -269,7 +269,7 @@ def visual_global(request):
 	
 	
 	data_file_name = os.path.join(model.get_visual_folder(), visual_name + ".txt")
-	with open(data_file_name, "r") as f:
+	with open(data_file_name, "r", encoding = 'utf-8') as f:
 		data = f.read()
 	context = Context({'dataset': dataset,
 						'data': data,

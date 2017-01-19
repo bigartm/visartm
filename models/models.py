@@ -26,7 +26,7 @@ class ArtmModel(models.Model):
 	layers_count = models.IntegerField(default = 1) 
 	topics_count = models.TextField(null = False, default = "")
 	status = models.IntegerField(null = False, default = 0) 
-	error_message = models.TextField(null=True)
+	error_message = models.TextField(null=True) 
 	
 	def __str__(self):
 		if self.name == '':
@@ -70,7 +70,21 @@ class ArtmModel(models.Model):
 			elif mode == "matrices":
 				self.text_id = POST["matrices_folder"]
 			elif mode == "empty":
-				folder = self.get_folder()
+				sample_script_file = os.path.join(self.get_folder(), "sample.py")
+				batches_folder = os.path.join(self.dataset.get_folder(), "batches")
+				dictionary_file = os.path.join(batches_folder, "dict.txt")
+				text =  "import artm\n" + \
+					    "batch_vectorizer = artm.BatchVectorizer(data_path = '" + batches_folder + "', data_format = 'batches')\n" + \
+						"dictionary = artm.Dictionary()\n" + \
+				        "dictionary.load_text('" + dictionary_file + "')\n" + \
+						"model = artm.ARTM(num_document_passes=10, num_topics = 9, cache_theta=True)\n" + \
+						"model.initialize(dictionary = dictionary)\n" + \
+						"model.fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = 10)\n" + \
+						"model.get_phi().to_pickle('" + os.path.join(self.get_folder(), "phi") + "')\n" + \
+						"model.get_theta().to_pickle('" + os.path.join(self.get_folder(), "theta") + "')\n" 
+				
+				with open(sample_script_file, "w") as f:
+					f.write(text.replace("\\","\\\\"))
 				self.status = 3
 				self.save()
 				return
@@ -468,7 +482,8 @@ class TopicInTerm(models.Model):
 class DocumentInTopic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
 	document = models.ForeignKey(Document, null = False)
-	topic = models.ForeignKey(Topic, null = False) 
+	topic = models.ForeignKey(Topic, null = False)  
+	
 	def __str__(self):
 		return str(self.document)
 		

@@ -20,8 +20,8 @@ def	help_page(request):
 def message(request, message):
 	return render(request, 'message.html', Context({'message': message}))
 
-def wait(request, message, begin, period = "2"):
+def wait(request, message, begin, period = "5"):
 	message = "<meta http-equiv='refresh' content='" + period + "'>" + message + \
 		"<br>Elapsed: " + str((datetime.now() - begin).seconds) + " sec."
-	return render(request, 'message.html', Context({'message': message}))
+	return HttpResponse(message)
 	
