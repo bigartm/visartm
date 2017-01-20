@@ -1,7 +1,0 @@
-Log file created at: 2017/01/19 19:38:49
-Running on machine: FEDIMSER
-Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
-W0119 19:38:49.662262  3304 check_messages.h:833] Inconsistent fields size in ThetaMatrix: 3430 vs 0 vs 3430 vs 0;
-W0119 19:38:49.743325  3304 check_messages.h:833] Inconsistent fields size in ThetaMatrix: 3440 vs 0 vs 3440 vs 0;
-W0119 19:38:50.331763  3304 check_messages.h:833] Inconsistent fields size in ThetaMatrix: 10 vs 0 vs 10 vs 0;
-W0119 19:54:15.716969 13328 check_messages.h:833] Inconsistent fields size in ThetaMatrix: 3430 vs 0 vs 3430 vs 0;
