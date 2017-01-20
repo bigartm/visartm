@@ -58,7 +58,7 @@ class ArtmModel(models.Model):
 				script_file_name = os.path.join(settings.DATA_DIR, "scripts", POST['script_name'])
 				with open(script_file_name) as f:
 					code = compile(f.read(), script_file_name, "exec")		
-				batch_vectorizer, dictionary = dataset.get_batches()
+				batch_vectorizer, dictionary = self.dataset.get_batches()
 				local_vars = {"batch_vectorizer": batch_vectorizer, "dictionary": dictionary}  
 				print("Running custom sript...")		
 				exec(code, local_vars)
@@ -388,7 +388,7 @@ class ArtmModel(models.Model):
 				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
 				idx = np.argsort(titles)
 			if mode == "hamilton":
-				from algo.Hamilton import HamiltonPath 
+				from algo.topicarranging.Hamilton import HamiltonPath 
 				hp = HamiltonPath(topic_distances[layer_id])
 				idx = hp.solve()
 			elif mode == "tsne": 

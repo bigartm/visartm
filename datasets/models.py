@@ -26,6 +26,7 @@ class Dataset(models.Model):
 	creation_time = models.DateTimeField(null=False, default = datetime.now)
 	language = models.CharField(max_length = 20, default = 'undefined') 
 	status = models.IntegerField(null = False, default = 0) 
+	error_message = models.TextField(null=True) 
 	
 	def __str__(self):
 		return self.name 
@@ -40,21 +41,32 @@ class Dataset(models.Model):
 		Term.objects.filter(dataset = self).delete()
 		Document.objects.filter(dataset = self).delete()
 		Modality.objects.filter(dataset = self).delete()
+		TermInDocument.objects.filter(dataset = self).delete()
 		
 		if self.json_provided:
 			docs_info_file = os.path.join(dataset_path, "documents.json")
 			with open(docs_info_file) as f:
 				docs_info = json.load(f)
+				
+		if self.text_provided and not (self.word_index_provided and self.uci_provided):
+			self.log("Parsing words ...")
+			from algo.preprocessing.BowBuilder import BowBuilder
+			builder = BowBuilder(self.text_id)
+			builder.process()
+			self.word_index_provided = True
+			self.uci_provided = True
+			
 		
+		#print("RUCIBOW")
 		self.log("Reading UCI bag of words and creating documents...")		
 		docword_file = os.path.join(uci_folder, "docword." + self.text_id + ".txt")
 		with open(docword_file, "r") as f:
 			lines = f.readlines()
-		lines.append(str(self.documents_count + 1) + " 0 0")
-		cur_doc_id = 1
-		cur_bow = bytes()
 		self.documents_count = int(lines[0]) 
 		self.terms_count = int(lines[1])
+		lines.append(str(self.documents_count + 1) + " 0 0")
+		cur_doc_id = 1
+		cur_bow = BagOfWords()
 		#entries_count = int(lines[2])
 		bags = [bytes() for i in range(1 + self.documents_count)]
 		for line in lines[3:]:
@@ -62,52 +74,37 @@ class Dataset(models.Model):
 			doc_id = int(parsed[0])
 			if doc_id != cur_doc_id:
 				if doc_id - cur_doc_id != 1:
+					print("R " + line)
 					raise ValueError("Fatal error! Document " + str(cur_doc_id + 1) + " has no terms. Or docword file isn't sorted by docId.")
 				doc = Document()
 				doc.title = "document " + str(cur_doc_id)
 				
 				if self.json_provided:
 					if cur_doc_id in docs_info:
-						doc_info = docs_info[cur_doc_id]
+						doc.fetch_meta(docs_info[cur_doc_id])
 					elif str(cur_doc_id) in docs_info:
-						doc_info = docs_info[str(cur_doc_id)]
+						doc.fetch_meta(docs_info[str(cur_doc_id)])
 					else:
-						doc_info = None
-					
-					if doc_info == None:
 						self.log("Warning! No meta data in documents.json for document " + str(cur_doc_id) + ".")
-					else:
-						if 'title' in doc_info:
-							doc.title = doc_info["title"]
+					
+					if doc.time == None:
+						self.log("Warning! Time isn't provided at least for document " + str(cur_doc_id) + ", but you promised that it will be.")
 						
-						if "snippet" in doc_info:
-							doc.snippet = doc_info["snippet"]
-						
-						if "url" in doc_info:
-							doc.url = doc_info["url"]
-						
-						if self.time_provided:
-							if "time" in doc_info:
-								lst = doc_info["time"]
-								doc.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
-							else:
-								self.log("Warning! Time isn't provided at least for document " + id + ", but you promised that it will be.")
-								self.time_provided = False
 				
 				doc.index_id = cur_doc_id
 				doc.dataset = self
-				doc.bag_of_words = cur_bow
+				doc.bag_of_words = cur_bow.to_bytes()
 				doc.save() 
 				#self.log("Create doc " + str(cur_doc_id))
-				cur_bow = bytes()
+				cur_bow = BagOfWords()
 				cur_doc_id = doc_id
 			
 				if cur_doc_id % 1000 == 0:
 					self.log(str(doc_id)) 
 					
 			term_index_id = int(parsed[1])
-			term_count = int(parsed[2]) 
-			cur_bow += struct.pack('I', term_index_id) + struct.pack('H', term_count)
+			term_count = int(parsed[2])  
+			cur_bow.add_term(term_index_id, term_count)
 		
 		if cur_doc_id != self.documents_count + 1:
 			raise ValueError("Fatal error! Promised " + str(self.documents_count) + "documents, by provided " + str(cur_doc_id) + ".")
@@ -208,6 +205,15 @@ class Dataset(models.Model):
 			os.makedirs(model_path) 
 		
 		self.log("Dataset " + self.text_id + " loaded.")
+	
+	def reload_untrusted(self):
+		try:
+			self.reload()
+		except:
+			import traceback
+			self.error_message = traceback.format_exc()
+			self.status = 2
+			self.save()
 		
 	def get_batches(self):
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
@@ -218,14 +224,15 @@ class Dataset(models.Model):
 		dictionary = artm.Dictionary(name="dictionary")
 		dictionary.load_text(dictionary_file_name)
 		return batch_vectorizer, dictionary
+		 
 		
 	def get_index_to_matrix(self):
 		return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "itm.npy"))
 		
 	def check_can_load(self):
-		if not self.uci_provided:
-			self.error_message = "Cannot load without UCI vocabulary and docword files."
-			return False
+		#if not self.uci_provided:
+		#	self.error_message = "Cannot load without UCI vocabulary and docword files."
+		#	return False
 		return True
 		
 	def prepare_log(self):
@@ -262,6 +269,39 @@ class Document(models.Model):
 	class Meta:
 		unique_together = (("dataset", "index_id"))
 	
+	def fetch_meta(self, doc_info):
+		if 'title' in doc_info:
+			self.title = doc_info["title"]
+		
+		if "snippet" in doc_info:
+			self.snippet = doc_info["snippet"]
+		
+		if "url" in doc_info:
+			self.url = doc_info["url"]
+		 
+		if "time" in doc_info:
+			lst = doc_info["time"]
+			try:
+				self.time = datetime.fromtimestamp(lst)
+			except:
+				self.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])				
+	
+	def count_term(self, iid):
+		bow = self.bag_of_words
+		left = 0
+		right = len(bow) // 6
+		while True:
+			pos = (left + right) // 2
+			bow_iid = struct.unpack('I', bow[6 * pos : 6*pos+4])[0]
+			if bow_iid == iid:
+				return struct.unpack('H', bow[6*pos+4 : 6*pos+6])[0]
+			elif bow_iid > iid:
+				right = pos
+			else:
+				left = pos + 1
+			if left >= right:
+				return 0
+		
 	def __str__(self):
 		return self.title
 		 
@@ -280,10 +320,38 @@ class Term(models.Model):
 	token_value = models.FloatField(default=0)
 	token_tf = models.IntegerField(default=0)
 	token_df = models.IntegerField(default=0)
-	
-	
+	documents_indexed = models.BooleanField(null = False, default = False)
+
 	def __str__(self):
-		return self.text
+		return self.text	
+	
+	@transaction.atomic
+	def count_documents_index(self):
+		if self.documents_indexed:
+			return
+			
+		documents = Document.objects.filter(dataset = self.dataset)
+		for document in documents:
+			count = document.count_term(self.index_id)
+			if count != 0:
+				relation = TermInDocument()
+				relation.dataset = self.dataset
+				relation.term = self
+				relation.document = document
+				relation.count = count
+				relation.save()
+			
+		self.documents_indexed = True
+		self.save()
+	
+	
+			
+class TermInDocument(models.Model):
+	dataset = models.ForeignKey(Dataset, null = False)
+	term = models.ForeignKey(Term, null = False)
+	document = models.ForeignKey(Document, null = False)
+	count = models.IntegerField(default=0)
+
 		
 	
 from django.contrib import admin
@@ -291,3 +359,19 @@ admin.site.register(Dataset)
 admin.site.register(Document)
 admin.site.register(Modality)
 admin.site.register(Term)
+
+
+
+
+class BagOfWords():
+	def __init__(self):
+		self.bow = dict()
+		
+	def add_term(self, word_id, count):
+		self.bow[word_id] = count
+		
+	def to_bytes(self):
+		ret = bytes()
+		for word_id, count in sorted(self.bow.items()):
+			ret += struct.pack('I', word_id) + struct.pack('H', count)
+		return ret

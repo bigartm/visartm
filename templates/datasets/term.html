@@ -6,6 +6,14 @@
 	<h1> Term {{term.text}} </h1> 
 	<hr>
 	
+	{% if docs %}
+		{% for d in docs %}
+			<a href="/visual/document?id={{d.document.id}}">{{d.document}}</a> ({{d.count}}) <br> 
+		{% endfor %}
+	{% else %}
+		<a href = "/term?id={{term.id}}&docs=true">View documents</a>
+	{% endif %}
+	
 {% endblock %}
  
  
@@ -16,8 +24,9 @@
 	index_id: {{term.index_id}}<br>
 	matrix_id: {{term.matrix_id}}<br>
 	token_value: {{term.token_value}}<br>
-	token_tf: {{term.token_tf}}<br>
-	token_df: {{term.token_df}}<br>
+	Occured in {{term.token_df}} documents<br>
+	Total occurencies in dataset: {{term.token_tf}}<br>
+	
 {% endblock %}
  
 

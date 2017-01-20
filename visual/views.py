@@ -244,12 +244,14 @@ def visual_global(request):
 							"<a href='/models/create?dataset=" + dataset.text_id + "'>Create model</a><br>"     + \
 							"<a href='/dataset?dataset=" + dataset.text_id + "'>Return to dataset</a><br>")
 
+							
+	if 'try' in request.GET and request.GET['try'] == 'again':
+		GlobalVisualization.objects.filter(model = model, name = visual_name).delete()
+		return redirect("/visual/global?type=" + visual_name + "temporalcells_day&dataset=" + dataset.text_id)
+		
+		
 	try:
-		visualization = GlobalVisualization.objects.filter(model = model, name = visual_name)[0]
-		if visualization.status == 2:
-			if 'try' in request.GET and request.GET['try'] == 'again':
-				GlobalVisualization.objects.filter(model = model, name = visual_name).delete()
-				raise Exception('Try again')
+		visualization = GlobalVisualization.objects.filter(model = model, name = visual_name)[0]			
 	except:
 		visualization = GlobalVisualization()
 		visualization.name = visual_name

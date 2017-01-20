@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
-from datasets.models import Dataset, Document, Term
+from datasets.models import Dataset, Document, Term, TermInDocument
 from models.models import ArtmModel
 from visual.views import get_model
 import os
@@ -27,7 +27,7 @@ def	datasets_reload(request):
 	dataset.creation_time = datetime.now()
 	dataset.save()	
 	
-	t = Thread(target = Dataset.reload, args = (dataset, ), daemon = True)
+	t = Thread(target = Dataset.reload_untrusted, args = (dataset, ), daemon = True)
 	t.start()
 	
 	return redirect("/dataset?dataset=" + dataset.text_id) 
@@ -76,8 +76,13 @@ def	datasets_create(request):
 def visual_dataset(request):  
 	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
 	
-	if dataset.status != 0:
-		return general_views.wait(request, dataset.read_log(), dataset.creation_time)
+	if dataset.status == 1:
+		return general_views.wait(request, dataset.read_log() + \
+			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>", dataset.creation_time)
+	elif dataset.status == 2:
+		return general_views.message(request, dataset.error_message.replace("\n","<br>") + \
+			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>")
+	
 	
 	docs = Document.objects.filter(dataset = dataset)
 	
@@ -102,9 +107,19 @@ def visual_dataset(request):
 	
 	
 def visual_term(request):
-	dataset = Dataset.objects.filter(id = request.GET['ds'])[0]
-	term = Term.objects.filter(dataset = dataset, index_id = request.GET['iid'])[0]
-	return render(request, 'datasets/term.html', Context({'term': term})) 
+	if "id" in request.GET:
+		term = Term.objects.filter(id = request.GET['id'])[0]
+	else:
+		dataset = Dataset.objects.filter(id = request.GET['ds'])[0]
+		term = Term.objects.filter(dataset = dataset, index_id = request.GET['iid'])[0]
+	context = {'term': term}
+	
+	if "docs" in request.GET and request.GET["docs"] == "true":
+		term.count_documents_index()
+		#return HttpResponse("FFF")
+		context["docs"] = TermInDocument.objects.filter(term = term).order_by("-count")
+	
+	return render(request, 'datasets/term.html', Context(context)) 
 	
 	
 	

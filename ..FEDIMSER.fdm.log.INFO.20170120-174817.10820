@@ -1,0 +1,18 @@
+Log file created at: 2017/01/20 17:48:17
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I0120 17:48:17.332115 14704 c_interface.cc:74] Logging enabled to .
+I0120 17:48:17.332599 14704 c_interface.cc:221] Creating MasterModel (id=1)...
+E0120 17:48:17.333118 14704 c_interface.cc:297] Throw location unknown (consider using BOOST_THROW_EXCEPTION)
+Dynamic exception type: class boost::exception_detail::clone_impl<struct boost::exception_detail::error_info_injector<class std::ios_base::failure> >
+std::exception::what: failed opening file: Процесс не может получить доступ к файлу, так как этот файл занят другим процессом.
+: iostream stream error
+I0120 17:48:17.392066 14704 c_interface.cc:318] Pass 69b9db1b-0acc-4bbb-b417-964e153b7dd9 to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0120 17:48:17.392066 14704 c_interface.cc:283] Disposing MasterComponent (id=1)...
+I0120 17:52:34.999200 14076 c_interface.cc:221] Creating MasterModel (id=2)...
+E0120 17:52:35.044351 14076 c_interface.cc:297] Throw location unknown (consider using BOOST_THROW_EXCEPTION)
+Dynamic exception type: class boost::exception_detail::clone_impl<struct boost::exception_detail::error_info_injector<class std::ios_base::failure> >
+std::exception::what: failed opening file: Процесс не может получить доступ к файлу, так как этот файл занят другим процессом.
+: iostream stream error
+I0120 17:52:35.050367 14076 c_interface.cc:318] Pass 3a78b6f5-8ec1-4846-8236-d3b936443202 to void (__cdecl artm::core::MasterComponent::*)(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const & __ptr64) __ptr64
+I0120 17:52:35.050367 14076 c_interface.cc:283] Disposing MasterComponent (id=2)...
