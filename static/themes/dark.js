@@ -12,3 +12,4 @@ var THEME_temporalSquares_BottomColor = [0, 255, 0];
 var THEME_textColor = "#eeeeee";
 var THEME_backgroundColor = "#222222";
 var THEME_activeColor = "yellow";
+var THEME_selectionColor = "yellow";

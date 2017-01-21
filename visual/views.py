@@ -247,7 +247,7 @@ def visual_global(request):
 							
 	if 'try' in request.GET and request.GET['try'] == 'again':
 		GlobalVisualization.objects.filter(model = model, name = visual_name).delete()
-		return redirect("/visual/global?type=" + visual_name + "temporalcells_day&dataset=" + dataset.text_id)
+		return redirect("/visual/global?type=" + visual_name + "&dataset=" + dataset.text_id)
 		
 		
 	try:

@@ -67,6 +67,7 @@ class Dataset(models.Model):
 		lines.append(str(self.documents_count + 1) + " 0 0")
 		cur_doc_id = 1
 		cur_bow = BagOfWords()
+		cur_doc_terms_count = 0
 		#entries_count = int(lines[2])
 		bags = [bytes() for i in range(1 + self.documents_count)]
 		for line in lines[3:]:
@@ -87,16 +88,18 @@ class Dataset(models.Model):
 					else:
 						self.log("Warning! No meta data in documents.json for document " + str(cur_doc_id) + ".")
 					
-					if doc.time == None:
+					if self.time_provided and doc.time == None:
 						self.log("Warning! Time isn't provided at least for document " + str(cur_doc_id) + ", but you promised that it will be.")
-						
+						self.time_provided = False
 				
 				doc.index_id = cur_doc_id
 				doc.dataset = self
 				doc.bag_of_words = cur_bow.to_bytes()
+				doc.terms_count = cur_doc_terms_count
 				doc.save() 
 				#self.log("Create doc " + str(cur_doc_id))
 				cur_bow = BagOfWords()
+				cur_doc_terms_count = 0
 				cur_doc_id = doc_id
 			
 				if cur_doc_id % 1000 == 0:
@@ -104,6 +107,7 @@ class Dataset(models.Model):
 					
 			term_index_id = int(parsed[1])
 			term_count = int(parsed[2])  
+			cur_doc_terms_count += term_count
 			cur_bow.add_term(term_index_id, term_count)
 		
 		if cur_doc_id != self.documents_count + 1:
@@ -265,6 +269,7 @@ class Document(models.Model):
 	index_id = models.IntegerField(null = False)
 	dataset = models.ForeignKey(Dataset, null = False)
 	bag_of_words = models.BinaryField(null=False, default = bytes())
+	terms_count = models.IntegerField(null = False, default = 0)
 	
 	class Meta:
 		unique_together = (("dataset", "index_id"))
