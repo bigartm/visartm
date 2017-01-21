@@ -12,11 +12,11 @@ from datetime import datetime
  
 def datasets_list(request): 
 	current_user = request.user
-	entries = Dataset.objects.filter(owner__isnull = True)
+	datasets = Dataset.objects.filter(owner__isnull = True)
 	if request.user.is_authenticated == True:
-		entries |= Dataset.objects.filter(owner = current_user) 
+		datasets |= Dataset.objects.filter(owner = current_user) 
 		
-	context = Context({'entries': entries, 
+	context = Context({'datasets': datasets, 
 					   'user': current_user})
 	return render(request, 'datasets/datasets_list.html', context)
 	
@@ -46,8 +46,13 @@ def	datasets_create(request):
 	
 	print(request.POST)
 	dataset = Dataset()
-	dataset.name = request.POST['unreg_name']
-	dataset.text_id = dataset.name
+	if request.POST['mode'] == 'upload':
+		dataset.upload_from_archive(request.FILES['archive'])
+		#return HttpResponse("OK")
+	else:
+		dataset.name = request.POST['unreg_name']
+		dataset.text_id = dataset.name
+	
 	dataset.description = request.POST['description']
 	dataset.owner = request.user
 	if 'time_provided' in request.POST:
@@ -64,7 +69,7 @@ def	datasets_create(request):
 	if not dataset.check_can_load():
 		return HttpResponse(dataset.error_message)
 	dataset.status = 1
-	dataset.creation_time = datetime.now()
+	dataset.creation_time = datetime.now()	
 	dataset.save()	
 	
 	t = Thread(target = Dataset.reload, args = (dataset, ), daemon = True)

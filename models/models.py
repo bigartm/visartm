@@ -122,9 +122,9 @@ class ArtmModel(models.Model):
 				topic_names=[str(t) for t in range(num_topics[layer_id + 1])]
 			)
 			layers[layer_id].initialize(dictionary=dictionary)
-			print("Layer " + str(layer_id) + " initialized.")
+			self.log("Layer " + str(layer_id) + " initialized.")
 			layers[layer_id].fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = iter_count)  
-			print("Layer " + str(layer_id) + " fitted.")
+			self.log("Layer " + str(layer_id) + " fitted.")
 			
 		self.log("Model built.")
 		return model

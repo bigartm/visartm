@@ -4,9 +4,9 @@
 
 {% block content %}
 	<h1>Datasets</h1>
-	{% for entry in entries %}
+	{% for dataset in datasets %}
 		<p> 
-			 <a href="/dataset?dataset={{entry.text_id}}">{{ entry.name }}</a> - {{ entry.description }}
+			 <a href="/dataset?dataset={{dataset.text_id}}">{{ dataset.name }}</a> - {{ dataset.description }} ({{dataset.documents_count}} documents)
 		</p>
 	{% endfor %}
 {% endblock %}

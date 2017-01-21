@@ -219,6 +219,30 @@ class Dataset(models.Model):
 			self.status = 2
 			self.save()
 		
+	def upload_from_archive(self, archive):
+		archive_name = str(archive)
+		parsed = archive_name.split('.')
+		if parsed[1] != 'zip':
+			raise ValueError("Must be zip archive")
+		self.text_id = parsed[0]
+		self.name = parsed[0]
+		
+		if len(Dataset.objects.filter(text_id = parsed[0])) != 0:
+			raise ValueError("Dataset " + parsed[0] + " already exists.")
+		zip_file_name = os.path.join(self.get_folder(), archive_name)
+		with open(os.path.join(self.get_folder(), archive_name), 'wb+') as f:
+			for chunk in archive.chunks():
+				f.write(chunk)
+		print("Archive unloaded.")
+		
+		import zipfile
+		zip_ref = zipfile.ZipFile(zip_file_name, 'r')
+		zip_ref.extractall(self.get_folder())
+		zip_ref.close() 
+		print("Archive unpacked. Dataset name: " + self.text_id)
+		
+		
+		
 	def get_batches(self):
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
 		batches_folder = os.path.join(dataset_path, "batches")

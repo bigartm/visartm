@@ -30,10 +30,12 @@ def get_documents(request):
 		
 		if full:
 			#document = Document.objects.filter(id = int(id))[0]
-			file_name = os.path.join(settings.DATA_DIR, "datasets", document.dataset.text_id, "documents", str(document.index_id) + ".txt")
-			with open(file_name, encoding = "utf-8") as f:
-				doc["text"] = f.read().replace("\n","<br>")
-		
+			if document.dataset.text_provided:
+				file_name = os.path.join(settings.DATA_DIR, "datasets", document.dataset.text_id, "documents", str(document.index_id) + ".txt")
+				with open(file_name, encoding = "utf-8") as f:
+					doc["text"] = f.read().replace("\n","<br>")
+			else:
+				doc["text"] = "Text wasn't provided"
 		result.append(doc)
 			
 	response =  HttpResponse(json.dumps(result), content_type='application/json')  
