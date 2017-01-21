@@ -2,3 +2,5 @@
 /data/datasets
 /temp
 ..FEDIMSER.fdm.log.*
+.FEDIMSER.fdm.log.*
+
