@@ -5,7 +5,9 @@
 {% block content %}
 	<h1> Modality {{modality.name}} </h1> 
 	<hr> 
-	
+	{% for term in terms %}
+		<a href="/term?id={{term.id}}">{{term}}</a> ({{term.token_tf}})<br>
+	{% endfor %}
 {% endblock %}
  
  

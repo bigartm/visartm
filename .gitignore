@@ -3,4 +3,5 @@
 /temp
 ..FEDIMSER.fdm.log.*
 .FEDIMSER.fdm.log.*
+*.batch
 

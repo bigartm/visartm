@@ -112,7 +112,6 @@ def visual_dataset(request):
 		terms = Term.objects.filter(dataset = dataset).order_by("-token_tf")
 		word = ['word']
 		freq = ['freq'] 
-		
 		x = 0
 		last_y = -1
 		print("loop in")
@@ -125,11 +124,10 @@ def visual_dataset(request):
 			x+=1	
 		print("loop out")
 		word.append(x)
-		freq.append(y)
-		
+		freq.append(y)		
 		context['stats'] = {'word_freq':[word, freq]}
+	elif mode == 'modalities':
 		context['modalities'] = Modality.objects.filter(dataset = dataset)
-		
 	else:
 		docs = Document.objects.filter(dataset = dataset)
 		if "search" in request.GET and len(search_query) >= 2: 
@@ -162,4 +160,5 @@ def visual_term(request):
 def visual_modality(request): 
 	modality = Modality.objects.filter(id = request.GET['id'])[0]
 	context = {"modality": modality}
+	context["terms"] = Term.objects.filter(modality = modality).order_by("-token_tf")[:100]
 	return render(request, 'datasets/modality.html', Context(context)) 

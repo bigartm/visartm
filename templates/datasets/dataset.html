@@ -8,14 +8,22 @@
 	{% if documents %}
 		<li class="active"><a>Documents</a></li> 
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
 	{% elif terms %}
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
 		<li class="active"><a>Terms</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
+	{% elif modalities %}
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
+		<li class="active"><a>Modalities</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
 	{% else %}
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
 		<li class="active"><a>Statistics</a></li>
 	{% endif %}
 	</ul> 
@@ -27,12 +35,16 @@
 	{% for term in terms %}
 		<a href = "/term?id={{term.id}}" >{{term}}</a> ({{term.token_tf}})<br>
 	{% endfor %}
-{% else %}
+{% elif modalities %}
+	{% for modality in modalities %}
+		<a href = "/modality?id={{modality.id}}" >{{modality}}</a> ({{modality.terms_count}})<br>
+	{% endfor %}
+	<h4>Modality distribution</h4>
+	<div id = "pie_modality" ></div>
+{% elif stats %}
 	<h4>Word frequency</h4>
 	<div id="freq_chart"></div>		 
 	<hr>
-	<h4>Modality distribution</h4>
-	<div id = "pie_modality" ></div>
 
 {% endif %}
 
@@ -116,6 +128,7 @@
 		document.cookie = "model_{{dataset.id}}=" + id;
 	}
 	
+	{% if stats %}
 	var freq_chart = c3.generate({
 		bindto: "#freq_chart",
 		data: {
@@ -132,7 +145,9 @@
 		legend: {show:false},
 		point: {r:0}
 	});
+	{% endif %}
 	
+	{% if modalities %}
 	var pie = new d3pie("pie_modality", {
 		"header": {
 			"title": {
@@ -216,5 +231,6 @@
 			}
 		},
 	});
+	{% endif %}
 </script>
 {% endblock %}
