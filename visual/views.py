@@ -235,8 +235,14 @@ def get_model(request, dataset):
 
 	
 def visual_global(request):
-	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-	model = get_model(request, dataset)
+	if 'dataset' in request.GET:
+		dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
+		model = get_model(request, dataset)
+	else:
+		model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+		dataset = model.dataset
+		
+		
 	visual_name = request.GET['type']
 	
 	if model == None:

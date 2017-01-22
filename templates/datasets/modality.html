@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Modality {{modality.name}} {% endblock %}
+
+{% block content %}
+	<h1> Modality {{modality.name}} </h1> 
+	<hr> 
+	
+{% endblock %}
+ 
+ 
+{% block right %}
+	<h4>Information</h4>
+	Dataset: <a href ="/dataset?dataset={{modality.dataset.text_id}}">{{modality.dataset}}</a><br>
+	Number of terms: {{modality.terms_count}}<br> 
+{% endblock %}
+ 
+
+{% block javascript %}
+{% endblock %}
+
+

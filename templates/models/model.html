@@ -23,6 +23,24 @@
 	{% endfor %}
 	Author: <a href="/accounts/{{model.author}}">{{model.author}}</a>
 <hr>
+
+<h4>Visualizations</h4>
+	<a href = "/visual/global?type=htmltree&model={{model.id}}">HTML tree</a> <br>
+
+	{% if model.dataset.time_provided %}
+	<a href = "/visual/global?type=temporaldots&model={{model.id}}">Temporal dots</a> <br>
+	<a href = "/visual/global?type=temporalcells_month&model={{model.id}}">Temporal cells (by month)</a> <br>
+	<a href = "/visual/global?type=temporalcells_day&model={{model.id}}">Temporal cells (by day)</a> <br>
+	{% endif %}
+	
+	<a href = "/visual/global?type=polygonal&model={{model.id}}">Polygonal</a> <br>
+	<a href = "/visual/global?type=foamtree&model={{model.id}}">FoamTree</a> <br>
+	<a href = "/visual/global?type=foamtree_light&model={{model.id}}">FoamTree (light)</a> <br>
+	<a href = "/visual/global?type=circles&model={{model.id}}">Circles</a> <br>
+	<a href = "/visual/global?type=tsne&model={{model.id}}">t-SNE</a> <br>
+<hr>
+
+
 <h4>Options</h4>
   {% if not user.is_anonymous %}
 	<a href = "/models/change_model?model={{model.id}}">Change</a> 

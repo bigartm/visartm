@@ -4,11 +4,37 @@
 
 {% block content %}
 <h1>Dataset {{dataset.name}}</h1> 
-<h3>Documents</h3>
-{% for doc in documents %}
-    <a href = "/visual/document?id={{doc.id}}" > {{doc.title}}</a><br>
-{% endfor %}
+<ul class="nav nav-tabs">
+	{% if documents %}
+		<li class="active"><a>Documents</a></li> 
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
+	{% elif terms %}
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
+		<li class="active"><a>Terms</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
+	{% else %}
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
+		<li class="active"><a>Statistics</a></li>
+	{% endif %}
+	</ul> 
+{% if documents %}
+	{% for doc in documents %}
+		<a href = "/visual/document?id={{doc.id}}" >{{doc.title}}</a><br>
+	{% endfor %}
+{% elif terms %}
+	{% for term in terms %}
+		<a href = "/term?id={{term.id}}" >{{term}}</a> ({{term.token_tf}})<br>
+	{% endfor %}
+{% else %}
+	<h4>Word frequency</h4>
+	<div id="freq_chart"></div>		 
+	<hr>
+	<h4>Modality distribution</h4>
+	<div id = "pie_modality" ></div>
 
+{% endif %}
 
 {% endblock %}
 
@@ -30,17 +56,26 @@
 	{% endif %}
 	
 	<hr>
-	<h4>Seacrh documents</h4>
-	<form class="" role="search" method="GET" action="/dataset">
-		 
-			<input type="text" name='search' class="" placeholder = "" value="{{search_query}}"></input>
-			<input type="hidden" name='dataset' value="{{dataset.text_id}}"> </input>
-		 
-	</form>
-	<hr>
+	{% if documents %}
+		<h4>Seacrh document</h4>
+		<form class="" role="search" method="GET" action="/dataset">
+				<input type="text" name='search' class="" placeholder = "" value="{{search_query}}"></input>
+				<input type="hidden" name='dataset' value="{{dataset.text_id}}"> </input> 
+		</form>
+		<hr>
+	{% elif terms %}
+		<h4>Seacrh term</h4>
+		<form class="" role="search" method="GET" action="/dataset">
+				<input type="text" name='search' class="" placeholder = "" value="{{search_query}}"></input>
+				<input type="hidden" name='dataset' value="{{dataset.text_id}}"> </input>
+				<input type="hidden" name='mode' value="terms"> </input>
+		</form>
+		<hr>
+	{% endif %}
 	
+	
+	<!---
 	<h4>Visualizations</h4>
-	
 	<a href = "/visual/global?type=htmltree&dataset={{dataset.text_id}}">HTML tree</a> <br>
 	<a href = "/visual/global?type=temporaldots&dataset={{dataset.text_id}}">Temporal dots</a> <br>
 	<a href = "/visual/global?type=temporalcells_month&dataset={{dataset.text_id}}">Temporal cells (by month)</a> <br>
@@ -50,9 +85,9 @@
 	<a href = "/visual/global?type=foamtree_light&dataset={{dataset.text_id}}">FoamTree (light)</a> <br>
 	<a href = "/visual/global?type=circles&dataset={{dataset.text_id}}">Circles</a> <br>
 	<a href = "/visual/global?type=tsne&dataset={{dataset.text_id}}">t-SNE</a> <br>
-	
-	
 	<hr>
+	-->
+	
 	<h4>Models</h4>
 	{% for model in models %}
 		<input type="radio" name="cb_model" onClick = "useModel({{model.id}});" {% if model == active_model %}checked = "checked"{% endif %}/>
@@ -67,9 +102,119 @@
 {% endblock %}
 
 {% block javascript %}
+<script src="/static/js/d3.v3.min.js"></script>
+<script src="/static/js/c3.min.js"></script>
+<script src="/static/js/d3pie.min.js"></script>
+<style>
+	.c3 path, .c3 line {
+		fill: none;
+		stroke: #000;
+	}
+</style>
 <script type = "text/javascript">
 	function useModel(id) { 
 		document.cookie = "model_{{dataset.id}}=" + id;
 	}
+	
+	var freq_chart = c3.generate({
+		bindto: "#freq_chart",
+		data: {
+			x: 'word',
+			columns:  {% autoescape off %} {{stats.word_freq}} {% endautoescape %},
+			types: {freq: 'area'},
+			labels: false
+			
+		},
+		axis: {
+		  x: {show: true, label: 'Terms', tick:{count:1}},
+		  y: {show: true, label: {text: 'Frequency', position: 'outer-middle'}}
+		},
+		legend: {show:false},
+		point: {r:0}
+	});
+	
+	var pie = new d3pie("pie_modality", {
+		"header": {
+			"title": {
+				"fontSize": 22,
+				"font": "verdana"
+			},
+			"subtitle": {
+				"color": "#999999",
+				"fontSize": 10,
+				"font": "verdana"
+			},
+			"titleSubtitlePadding": 12
+		},
+		"footer": {
+			"color": "#999999",
+			"fontSize": 11,
+			"font": "open sans",
+			"location": "bottom-center"
+		},
+		"size": {
+			"canvasHeight": 200,
+			"canvasWidth": 400,
+			"pieOuterRadius": "100%"
+		},
+		"data": { 
+			"content": [
+				{% for modality in modalities %}
+				{
+					"label": "{{modality.name}}",
+					"value": {{modality.terms_count}},
+					"url": "/modality?id={{modality.id}}",
+					//"color" : THEME_pieColor{{topic.i}},
+				}, 
+				{% endfor %}
+			]
+		},
+		"labels": {
+			"outer": { 
+				"pieDistance": 10,
+				"format": "label-value1"
+			},
+			"inner": {
+				"hideWhenLessThanPercentage": 5,
+			},
+			"mainLabel": {
+				"font": "verdana"
+			},
+			"percentage": {
+				"color": THEME_textColor,
+				"font": "verdana",
+				"decimalPlaces": 1
+			},
+			"value": {
+				"color": THEME_textColor,
+				"font": "verdana"
+			},
+			"lines": {
+				"enabled": true,
+				"color": THEME_textColor
+			},
+			"truncation": {
+				"enabled": true
+			}
+		},
+		"tooltips": { 
+		},
+		"effects": {
+			"load": {
+				"effect": "default",
+				"speed":500,
+			},
+			"pullOutSegmentOnClick": {
+				"effect": "none",
+				"speed": 400,
+				"size": 8
+			}
+		},
+		"callbacks": {
+			onClickSegment : function (obj) {
+				window.location.href = obj["data"]["url"];
+			}
+		},
+	});
 </script>
 {% endblock %}

@@ -94,7 +94,7 @@ class DatesNamer:
 		if (group_by == "year"):
 			return str(date_hash)
 		if (group_by == "month"):
-			return str(date_hash % 100) + " " + self.monthes[int(date_hash / 100)] 
+			return self.monthes[int(date_hash % 100)] + " " + str(date_hash / 100)  
 		elif (group_by == "day"):
 			return str(date_hash % 100) + " " + self.monthes[ int(date_hash / 100) % 100] + " " + str(int(date_hash / 10000) % 100)
 

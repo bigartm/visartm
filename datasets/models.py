@@ -141,7 +141,9 @@ class Dataset(models.Model):
 					pass
 				terms_index[parsed[0] + "$#" + modality_name] = term
 				if modality_name in modalities_index:
-					term.modality = modalities_index[modality_name]
+					modality = modalities_index[modality_name]
+					term.modality = modality
+					modality.terms_count += 1
 				else:
 					modality = Modality()
 					modality.name = modality_name
@@ -155,6 +157,8 @@ class Dataset(models.Model):
 				
 		index_to_matrix = np.full(i,-1).astype(int)
 		
+		for key, modality in modalities_index.items():
+			modality.save()
 		
 		
 		# Creating ARTM batches and dictionary
@@ -337,6 +341,7 @@ class Document(models.Model):
 class Modality(models.Model):
 	name = models.TextField(null=False)
 	dataset = models.ForeignKey(Dataset, null = False)
+	terms_count = models.IntegerField(null = False, default = 0)
 	def __str__(self):
 		return self.name
 		

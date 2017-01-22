@@ -125,7 +125,7 @@
 			;
 			
 			d3plus.textwrap()
-			.container(container.append("text").attr("pointer-events","none").datum(item))
+			.container(container.append("text").attr("pointer-events","none").attr("fill", THEME_textColor).datum(item))
 			.shape("square")
 			.resize(true)
 			.size(Array(1,10000))

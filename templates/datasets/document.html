@@ -9,12 +9,12 @@
 	<ul class="nav nav-tabs">
 	{% if lines %}
 		<li class="active"><a>Text</a></li> 
-		<li><a id="profile-tab" href="#" onclick="window.location.replace('/visual/document?id={{document.id}}&mode=bow')">Bag of words</a></li>
+		<li><a href="#" onclick="window.location.replace('/visual/document?id={{document.id}}&mode=bow')">Bag of words</a></li>
 	{% else %}
-		<li><a id="home-tab" href="#" onclick="window.location.replace('/visual/document?id={{document.id}}')">Text</a></li> 
+		<li><a href="#" onclick="window.location.replace('/visual/document?id={{document.id}}')">Text</a></li> 
 		<li  class="active"><a>Bag of words</a></li>
 	{% endif %}
-</ul> 
+	</ul> 
 	{% if lines %}
 		{% autoescape off %}
 		{% for paragraph in lines %}

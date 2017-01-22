@@ -20,7 +20,7 @@
 {% block right %}
 	<h4>Information</h4>
 	Dataset: <a href ="/dataset?dataset={{term.dataset.text_id}}">{{term.dataset}}</a><br>
-	Modality: {{term.modality}}<br>
+	Modality: <a href = "/modality?id={{term.modality.id}}">{{term.modality}}</a><br>
 	index_id: {{term.index_id}}<br>
 	matrix_id: {{term.matrix_id}}<br>
 	token_value: {{term.token_value}}<br>
@@ -30,8 +30,9 @@
 {% endblock %}
  
 
-{% block additional_scripts %}
-<script src="/static/js/d3pie.min.js"></script> 
+{% block javascript %}
+
+ 
 {% endblock %}
 
 

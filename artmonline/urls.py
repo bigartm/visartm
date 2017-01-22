@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^datasets', datasets_views.datasets_list),
     url(r'^dataset', datasets_views.visual_dataset),
 	url(r'^term', datasets_views.visual_term),	
+	url(r'^modality', datasets_views.visual_modality),	
 	
 	# Visualization
 	url(r'^visual/document', visual_views.visual_document),

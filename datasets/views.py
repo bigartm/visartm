@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
-from datasets.models import Dataset, Document, Term, TermInDocument
+from datasets.models import Dataset, Document, Term, TermInDocument, Modality
 from models.models import ArtmModel
 from visual.views import get_model
 import os
@@ -88,27 +88,59 @@ def visual_dataset(request):
 		return general_views.message(request, dataset.error_message.replace("\n","<br>") + \
 			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>")
 	
+	context = {'dataset': dataset}
 	
-	docs = Document.objects.filter(dataset = dataset)
-	
-	search_query = ""
 	if "search" in request.GET:
 		search_query = request.GET["search"]
-		docs = docs.filter(title__contains = search_query)
-		
-		
-	docs = docs[:100]
-	models = ArtmModel.objects.filter(dataset = dataset)
+		context['search_query'] = search_query
 	
+	mode = 'docs'
+	if 'mode' in request.GET:
+		mode = request.GET['mode'] 
+		
+	if mode == 'terms':
+		print("Start term query")
+		terms = Term.objects.filter(dataset = dataset)
+		print("End term query")
+		if "search" in request.GET and len(search_query) >= 2: 
+			terms = terms.filter(text__icontains = search_query).order_by("text")
+		else:	
+			terms = terms.order_by("-token_tf")[:100] 
+		context['terms'] = terms
+	elif mode == 'stats':
+		from math import log
+		terms = Term.objects.filter(dataset = dataset).order_by("-token_tf")
+		word = ['word']
+		freq = ['freq'] 
+		
+		x = 0
+		last_y = -1
+		print("loop in")
+		for term in terms:
+			y = term.token_tf
+			if y != last_y:
+				word.append(x)
+				freq.append(y)
+				last_y = y 
+			x+=1	
+		print("loop out")
+		word.append(x)
+		freq.append(y)
+		
+		context['stats'] = {'word_freq':[word, freq]}
+		context['modalities'] = Modality.objects.filter(dataset = dataset)
+		
+	else:
+		docs = Document.objects.filter(dataset = dataset)
+		if "search" in request.GET and len(search_query) >= 2: 
+			docs = docs.filter(title__icontains = search_query) 
+		else:	
+			docs = docs[:100] 
+		context['documents'] = docs
 	
-	context = Context({'dataset': dataset,
-					   'documents' : docs,
-					   'models' : models,
-					   'active_model' : get_model(request, dataset),
-					   'search_query' : search_query,
-					   })
-					   
-	return render(request, 'datasets/dataset.html', context) 
+	context['models'] = ArtmModel.objects.filter(dataset = dataset)
+	context['active_model'] = get_model(request, dataset)
+	return render(request, 'datasets/dataset.html', Context(context)) 
 	
 	
 def visual_term(request):
@@ -127,4 +159,7 @@ def visual_term(request):
 	return render(request, 'datasets/term.html', Context(context)) 
 	
 	
-	
+def visual_modality(request): 
+	modality = Modality.objects.filter(id = request.GET['id'])[0]
+	context = {"modality": modality}
+	return render(request, 'datasets/modality.html', Context(context)) 
