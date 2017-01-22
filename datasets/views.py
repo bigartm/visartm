@@ -126,6 +126,17 @@ def visual_dataset(request):
 		word.append(x)
 		freq.append(y)		
 		context['stats'] = {'word_freq':[word, freq]}
+		
+		if dataset.time_provided:
+			import itertools
+			date_list = ['date']
+			count_list = ['count']
+			documents = Document.objects.filter(dataset = dataset).order_by("time")
+			for dt, grp in itertools.groupby(documents, key=lambda x: x.time.date()):
+				date_list.append(str(dt))
+				count_list.append(len(list(grp)))
+			context['stats']['timeline'] = [date_list, count_list]
+		
 	elif mode == 'modalities':
 		context['modalities'] = Modality.objects.filter(dataset = dataset)
 	else:
