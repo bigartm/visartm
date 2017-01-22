@@ -173,3 +173,29 @@ def visual_modality(request):
 	context = {"modality": modality}
 	context["terms"] = Term.objects.filter(modality = modality).order_by("-token_tf")[:100]
 	return render(request, 'datasets/modality.html', Context(context)) 
+	
+def global_search(request):
+	context = {}
+	if "search" in request.GET:
+		search_query = request.GET["search"]
+		context['search_query'] = search_query
+		
+		context['message'] = "Nothing found."
+		total_found = 0
+		if len(search_query) < 3:
+			context['message'] = "Query is too short."
+		else:
+			documents = Document.objects.filter(title__icontains = search_query) 
+			if len(documents) !=0:
+				context["documents"] = documents
+				total_found += len(documents)
+				
+			terms = Term.objects.filter(text__icontains = search_query) 
+			if len(terms) != 0:
+				context["terms"] = terms
+				total_found += len(terms)
+		
+		if total_found > 0:
+			context['message'] = "Found " + str(total_found) + " results."
+		
+	return render(request, 'datasets/search.html', Context(context))
