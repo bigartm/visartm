@@ -8,7 +8,7 @@
 	{% if is_low %}
 		<h3>Documents</h3>
 		{% for doc in documents %}
-			<a href = "/visual/document?dataset={{model.dataset.text_id}}&iid={{doc.document.index_id}}" >{{doc.document.title}}</a>
+			<a href = "/document?id={{doc.document.id}}" >{{doc.document.title}}</a>
 			<br>
 		{% endfor %}
 	{% else %}
@@ -23,8 +23,8 @@
 {% block right %}
 <div> 
 	<h4>Information</h4>
-	Dataset: <a href="/dataset?dataset={{model.dataset.text_id}}">{{model.dataset}}</a><br>
-	Model: <a href="/visual/model?model={{model.id}}">{{model}}</a><br>
+	Dataset: <a href="/dataset?dataset={{topic.model.dataset.text_id}}">{{model.dataset}}</a><br>
+	Model: <a href="/visual/model?model={{topic.model.id}}">{{model}}</a><br>
 	Layer: {{topic.layer}}<br>
 	Documents: {{topic.documents_count}}	
 	<form class="" role="search" method="POST" action="/topics/rename">
@@ -34,6 +34,13 @@
 	</form>
 	
 	<hr>
+	
+	{% if is_low %}
+		<h4>Distribution over higher topics</h4>
+		{% for x in topic_dist%}
+			<a href ="/visual/topic?id={{x.topic.id}}">{{x.topic}}</a>  {{x.weight | floatformat:2}}%<br>
+		{% endfor %}
+	{% endif %}
 	<h4>Related topics</h4>
 	{% for related_topic in related_topics%}
 		<a href="/visual/topic?id={{related_topic.topic2.id}}">{{related_topic.topic2}}</a> ({{related_topic.weight | floatformat:2}})
@@ -44,7 +51,7 @@
 	
 	<h4>Top terms</h4>
 	{% for top_term in top_terms%}  
-		<a href = "/term?ds={{model.dataset.id}}&iid={{top_term.term.index_id}}" >{{top_term.term}}</a> ({{top_term.weight | floatformat:4}})
+		<a href = "/term?ds={{topic.model.dataset.id}}&iid={{top_term.term.index_id}}" >{{top_term.term}}</a> ({{top_term.weight | floatformat:4}})
 		<br> 
 	{% endfor %}
 	

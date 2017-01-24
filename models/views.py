@@ -150,22 +150,27 @@ def delete_all_models(request):
 				"<a href = '/dataset?dataset=" + dataset.text_id + "'>No</a>")	
 							
 def	visual_topic(request):
-	target_topic = Topic.objects.filter(id = request.GET['id'])[0]
-	
-	model = target_topic.model
-	main_modality = target_topic.model.dataset.word_modality
-	top_terms = TopTerm.objects.filter(topic = target_topic).order_by('-weight')
+	topic = Topic.objects.filter(id = request.GET['id'])[0]
+	model = topic.model
+	#main_modality = topic.model.dataset.word_modality
+	top_terms = TopTerm.objects.filter(topic = topic).order_by('-weight')
 	#top_terms = [term for term in top_terms if term.term.modality == main_modality]
-	related_topics = TopicRelated.objects.filter(model = target_topic.model, topic1 = target_topic).order_by("weight")	
-	context = {'model': target_topic.model, 'topic': target_topic, 'top_terms': top_terms, 'related_topics' : related_topics}
+	related_topics = TopicRelated.objects.filter(model = topic.model, topic1 = topic).order_by("weight")	
+	context = {'topic': topic, 'top_terms': top_terms, 'related_topics' : related_topics}
 	
-	if target_topic.layer == model.layers_count:
-		documents = DocumentInTopic.objects.filter(topic = target_topic)
+	if topic.layer == model.layers_count:
+		documents = DocumentInTopic.objects.filter(topic = topic)
 		#documents = documents[:100]
 		context['documents'] = documents
 		context['is_low'] = True
+		
+		dist = model.get_psi(model.layers_count - 1)[topic.id_model]
+		high_topics = Topic.objects.filter(model = model, layer = model.layers_count - 1).order_by("id_model")		
+		topic_dist = [{"topic": high_topics[i], "weight": 100 * dist[i]} for i in range(dist.shape[0])]
+		topic_dist.sort(key=lambda x: x["weight"], reverse=True)
+		context['topic_dist'] = topic_dist
 	else:
-		topics = TopicInTopic.objects.filter(parent = target_topic)
+		topics = TopicInTopic.objects.filter(parent = topic)
 		context['topics'] = topics
 		context['is_low'] = False
 		 

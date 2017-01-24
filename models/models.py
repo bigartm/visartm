@@ -274,20 +274,30 @@ class ArtmModel(models.Model):
 			relation.parent = root_topic
 			relation.child = topic
 			relation.save()
-			
+		
+		threshold = self.threshold / 100.0
+		
 		# Building topics hierarchy
 		for bottom_layer in range (2, layers_count + 1):
 			top_layer = bottom_layer - 1
 			self.log("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
 			for bottom_topic_id in range(topics_count[bottom_layer]):
-				top_topic_id = np.argmax(psi[top_layer][bottom_topic_id])
+				best_top_topic_id = np.argmax(psi[top_layer][bottom_topic_id])
 				relation = TopicInTopic()
 				relation.model = self
-				relation.parent = topics_index[top_layer][top_topic_id]
+				relation.parent = topics_index[top_layer][best_top_topic_id]
 				relation.child = topics_index[bottom_layer][bottom_topic_id]
 				relation.save()
-		
-		
+				
+				if self.threshold <= 50:
+					for top_topic_id in range(topics_count[top_layer]):
+						if psi[top_layer][bottom_topic_id][top_topic_id] > threshold and top_topic_id != best_top_topic_id:
+							relation = TopicInTopic()
+							relation.model = self
+							relation.parent = topics_index[top_layer][top_topic_id]
+							relation.child = topics_index[bottom_layer][bottom_topic_id]
+							relation.save()
+			
 		
 		# Loading temporary reference for documents
 		documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
@@ -300,16 +310,26 @@ class ArtmModel(models.Model):
 		
 		theta_t_low = theta_t[:, total_topics_count - topics_count[layers_count] : total_topics_count]
 		
-		
 		for doc_id in range(0, documents_count):
 			distr = theta_t_low[doc_id]
-			topic_id = distr.argmax()
+			best_topic_id = distr.argmax()
 			relation = DocumentInTopic()
 			relation.model = self
 			relation.document = documents_index[doc_id]
-			relation.topic = topics_index[layers_count][topic_id]
-			topics_index[layers_count][topic_id].documents_count += 1
+			relation.topic = topics_index[layers_count][best_topic_id]
+			topics_index[layers_count][best_topic_id].documents_count += 1
 			relation.save()
+			
+			if self.threshold <= 50:
+				for topic_id in range(topics_count[layers_count]):
+					if distr[topic_id] > threshold and topic_id != best_topic_id:
+						relation = DocumentInTopic()
+						relation.model = self
+						relation.document = documents_index[doc_id]
+						relation.topic = topics_index[layers_count][topic_id]
+						topics_index[layers_count][topic_id].documents_count += 1
+						relation.save()
+						
 			if doc_id % 1000 == 0:
 				self.log(str(doc_id)) 
 		
@@ -430,6 +450,9 @@ class ArtmModel(models.Model):
 	
 	def get_theta(self):
 		return np.load(os.path.join(self.get_folder(), "theta.npy"))
+	
+	def get_psi(self, i):
+		return np.load(os.path.join(self.get_folder(), "psi" + str(i) + ".npy"))
 	
 				
 class Topic(models.Model):
