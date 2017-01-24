@@ -40,24 +40,35 @@
 		
 	</div>
 	<hr>
-	<div>
-		<h4>Topic distribution</h4>
-		<div id = "pieChart2" align = "center" ></div>
-		
-		{% for topic in topics %}
-		<span id ="square{{topic.i}}">∎</span>
-		<a href = "{{topic.url}}">{{topic.title}}</a>
-		</br>
-		{% endfor %}
-	</div>
-	<hr>
-	<div> 
-		<h4>Related documents</h4>
-		{% for rel_doc in related_documents %}
-			<a href = "/visual/document?id={{rel_doc.id}}" >{{rel_doc.title}}</a>
-			<br>
-		{% endfor %}
-	</div>
+	{% if model %}
+		<div>
+			<h4>Topic distribution</h4>
+			<div id = "pieChart2" align = "center" ></div>
+			
+			{% for topic in topics %}
+			<span id ="square{{topic.i}}">∎</span>
+			<a href = "{{topic.url}}">{{topic.title}}</a>
+			</br>
+			{% endfor %}
+		</div>
+		<hr>
+	{% endif %}
+	{% if document.dataset.tag_modality %}
+		<div>
+			<h4>Tags</h4>
+			<p id = "tags">{% autoescape off %}{{tags_string}}{% endautoescape %}</p>
+		</div>
+		<hr>
+	{% endif %}
+	{% if model %}
+		<div> 
+			<h4>Related documents</h4>
+			{% for rel_doc in related_documents %}
+				<a href = "/visual/document?id={{rel_doc.id}}" >{{rel_doc.title}}</a>
+				<br>
+			{% endfor %}
+		</div>
+	{% endif %}
 {% endblock %}
 
 {% block javascript %}
@@ -164,7 +175,15 @@
 			}
 		},
 	});
-
+	
+	/*
+	{% if document.dataset.tag_modality %}
+		var api = new ArtmApi();
+		api.getTags({{document.id}}, function(text) {
+			document.getElementById("tags").innerHTML = text;
+		});
+	{% endif %}
+	*/
 </script> 
 
 {% endblock %}

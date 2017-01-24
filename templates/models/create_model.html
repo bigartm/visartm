@@ -22,18 +22,18 @@
 				</div>
 			</div> 
 	
-	
+			<!--
 			<div class="form-group row">
 				<label  class="col-sm-2 col-form-label">Main modality</label>
 				<div class="col-sm-3">
 					<select class="form-control"  name="word_modality">
 					  {% for modality in modalities %}
-						<option>{{modality}}</option>
+							<option>{{modality.name}}</option>
 					  {% endfor %}
 					</select>
 				</div>
 			</div> 
-			
+			-->
 			<hr>
 			<h3>BigARTM Model</h3>
 			
@@ -147,9 +147,12 @@
 			<hr>
 			<h3>Postprocessing</h3>
 			
-			<hr>
-			<h3>Visualizations</h3>
-			<hr>
+				<div class="form-group row">
+					<label class="col-sm-2 col-form-label">Hierarchical threshold</label>
+					<div class="col-sm-1">
+						<input type="number" name="threshold" min = "5" max="100" value="100" />
+					</div>
+				</div>
 			
 			<div class="form-group row">
 			  <div class="offset-sm-2 col-sm-10">

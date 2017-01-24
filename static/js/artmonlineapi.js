@@ -56,4 +56,15 @@ class ArtmApi {
 		xhttp.open("GET", this.host + "/api/polygons/children?id=" + polygonId, true);
 		xhttp.send();
 	}
+	
+	getTags(documentId, callback) {
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				callback(this.responseText);
+			}
+		};
+		xhttp.open("GET", this.host + "/api/tags?id=" + documentId, true);
+		xhttp.send();
+	}
 }

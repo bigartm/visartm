@@ -27,12 +27,15 @@ class Dataset(models.Model):
 	language = models.CharField(max_length = 20, default = 'undefined') 
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
+	word_modality = models.ForeignKey("Modality", related_name = "dwm", null = True)
+	tag_modality = models.ForeignKey("Modality", related_name = "dtm", null = True)
 	
 	def __str__(self):
 		return self.name 
 		
 	@transaction.atomic
 	def reload(self): 	
+		#print("IN")
 		self.prepare_log()
 		self.log("Loading dataset " + self.text_id + "...")
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
@@ -148,6 +151,7 @@ class Dataset(models.Model):
 					modality = Modality()
 					modality.name = modality_name
 					modality.dataset = self
+					modality.terms_count = 1
 					modality.save()
 					modalities_index[modality_name] = modality
 					term.modality = modality
@@ -156,9 +160,18 @@ class Dataset(models.Model):
 					self.log(str(i))
 				
 		index_to_matrix = np.full(i,-1).astype(int)
+		tag_index = np.full(i,0).astype(int)
 		
+		self.log("Saving modalities...")
+		max_modality_size = 0
 		for key, modality in modalities_index.items():
 			modality.save()
+			if modality.terms_count > max_modality_size:
+				self.word_modality = modality
+				max_modality_size = modality.terms_count
+			if 'tag' in modality.name:
+				self.tag_modality = modality
+
 		
 		
 		# Creating ARTM batches and dictionary
@@ -191,13 +204,16 @@ class Dataset(models.Model):
 				term.token_tf = int(parsed[3].split('.')[0])
 				term.token_df = int(parsed[4].split('.')[0])
 				index_to_matrix[term.index_id] = i
+				if term.modality == self.word_modality:
+					tag_index[term.index_id] = 1
+				elif term.modality == self.tag_modality:
+					tag_index[term.index_id] = 2
 				term.save()
 				if i % 10000 == 0:
 					self.log(str(i))
-			
-		index_to_matrix_file_name = os.path.join(dataset_path, "itm.npy")
-		np.save(index_to_matrix_file_name, index_to_matrix)
-		
+			 
+		np.save(os.path.join(dataset_path, "itm.npy"), index_to_matrix)
+		np.save(os.path.join(dataset_path, "tgi.npy"), tag_index)
 		 
 
 					 
@@ -261,6 +277,10 @@ class Dataset(models.Model):
 	def get_index_to_matrix(self):
 		return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "itm.npy"))
 		
+	def get_tag_index(self):
+		return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "tgi.npy"))
+	
+	
 	def check_can_load(self):
 		#if not self.uci_provided:
 		#	self.error_message = "Cannot load without UCI vocabulary and docword files."
@@ -288,7 +308,14 @@ class Dataset(models.Model):
 		if not os.path.exists(path): 
 			os.makedirs(path) 
 		return path	 
-	 
+	
+	'''	
+	def reload_tags(self):
+		documents = Document.objects.filter(dataset = self)
+		for document in documents:
+			document.fetch_tags(True)
+	'''
+	
 class Document(models.Model):
 	title = models.TextField(null=False)
 	url = models.URLField(null=True)
@@ -298,6 +325,10 @@ class Document(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
 	bag_of_words = models.BinaryField(null=False, default = bytes())
 	terms_count = models.IntegerField(null = False, default = 0)
+	tags_string = models.TextField(null=True)
+	
+	#tags_fetched = models.BooleanField(null = False, default = False)
+	#
 	
 	class Meta:
 		unique_together = (("dataset", "index_id"))
@@ -334,7 +365,25 @@ class Document(models.Model):
 				left = pos + 1
 			if left >= right:
 				return 0
-		
+	
+	def fetch_tags(self, forced = False):
+		tags_string = ""
+		bow = self.bag_of_words
+		unique_terms_count = len(bow) // 6 
+		ctr = 0
+		tag_index = self.dataset.get_tag_index()
+		for i in range(unique_terms_count):
+			bow_iid = struct.unpack('I', bow[6*i : 6*i+4])[0]
+			if tag_index[bow_iid] == 2:
+				term = Term.objects.filter(dataset = self.dataset, index_id = bow_iid)[0]
+				if ctr != 0:
+					tags_string += ', '
+				tags_string += '<a href="/term?id=' + str(term.id) + '">' + term.text + '</a>' 
+				ctr += 1
+				if ctr == 5:
+					break
+		return tags_string
+	
 	def __str__(self):
 		return self.title
 		 
@@ -343,7 +392,7 @@ class Modality(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
 	terms_count = models.IntegerField(null = False, default = 0)
 	def __str__(self):
-		return self.name
+		return self.dataset.name + "/" + self.name
 		
 class Term(models.Model):
 	text = models.TextField(null=False)
@@ -385,8 +434,7 @@ class TermInDocument(models.Model):
 	term = models.ForeignKey(Term, null = False)
 	document = models.ForeignKey(Document, null = False)
 	count = models.IntegerField(default=0)
-
-		
+ 
 	
 from django.contrib import admin
 admin.site.register(Dataset)

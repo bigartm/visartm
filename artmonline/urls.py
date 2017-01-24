@@ -60,6 +60,7 @@ urlpatterns = [
 	url(r'^topics/rename', models_views.rename_topic),
 	
 	# API
+	url(r'^api/tags', api_views.get_tags),
 	url(r'^api/documents', api_views.get_documents),
 	url(r'^api/polygons/children', api_views.get_polygon_children),
 	

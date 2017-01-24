@@ -26,11 +26,14 @@ def visual_document(request):
 		dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
 		document = Document.objects.filter(dataset = dataset, index_id = int(request.GET['iid']))[0]
 	
-	context = {'dataset': dataset, 'document': document}
+	context = {'document': document}
 	
 	model = get_model(request, dataset)	
 	if not model is None:
 		context['model'] = model
+		
+	if not dataset.tag_modality == None:
+		context['tags_string'] = document.fetch_tags()
 
 	if not model is None:
 		topics_count = [int(x) for x in model.topics_count.split()]
@@ -191,9 +194,8 @@ def visual_document_all_topics(request):
 	model = get_model(request, document.dataset)
 	topics_count = [int(x) for x in model.topics_count.split()] 
 	target_layer = model.layers_count
-	document_matrix_id = document.model_id - 1
 	 
-	theta_file_name = os.path.join(settings.DATA_DIR, "models", str(model.id), "theta.npy")
+	theta_file_name = os.path.join(model.get_folder(), "theta.npy")
 	theta = np.load(theta_file_name) 
 	
 	  
@@ -204,7 +206,7 @@ def visual_document_all_topics(request):
 	
 	topics_list = []
 	for topic_id in range(0, topics_count[target_layer]):
-		topics_list.append((theta[shift + topic_id, document_matrix_id], topics_index[topic_id]))
+		topics_list.append((theta[shift + topic_id, document.index_id - 1], topics_index[topic_id]))
 	
 	topics_list.sort(reverse = True)
 	 

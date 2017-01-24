@@ -10,21 +10,31 @@
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
 	{% elif terms %}
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
 		<li class="active"><a>Terms</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
 	{% elif modalities %}
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
 		<li class="active"><a>Modalities</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
-	{% else %}
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
+	{% elif stats %}
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
 		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
 		<li class="active"><a>Statistics</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
+	{% else %}
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
+		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
+		<li class="active"><a>Settings</a></li> 
 	{% endif %}
 	</ul> 
 {% if documents %}
@@ -37,7 +47,10 @@
 	{% endfor %}
 {% elif modalities %}
 	{% for modality in modalities %}
-		<a href = "/modality?id={{modality.id}}" >{{modality}}</a> ({{modality.terms_count}})<br>
+		<a href = "/modality?id={{modality.id}}" >{{modality}}</a> ({{modality.terms_count}})
+		{% if dataset.word_modality == modality %}(Word modality){% endif %}
+		{% if dataset.tag_modality == modality %}(Tag modality){% endif %}
+		<br>
 	{% endfor %}
 	<h4>Modality distribution</h4>
 	<div id = "pie_modality" ></div>
@@ -49,6 +62,39 @@
 		<h4>Timeline</h4>
 		<div id="timeline_chart"></div>		 
 	{% endif %}
+{% elif settings %}
+	<!--
+	<form method = "post">
+		<div class="form-group row">
+			<label  class="col-sm-2 col-form-label">Word modality</label>
+			<div class="col-sm-3">
+				<select class="form-control" name="word_modality"  >
+					<option selected="selected">-----</option>
+					{% for modality in settings.modalities %}
+						<option {% if modality == dataset.word_modality %} selected="selected" {% endif %}>{{modality.name}}</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label  class="col-sm-2 col-form-label">Tag modality</label>
+			<div class="col-sm-3">
+				<select class="form-control" name="tag_modality" value="{{dataset.tag_modality.name}}" >
+					<option selected="selected">-----</option>
+					{% for modality in settings.modalities %}
+						<option {% if modality == dataset.tag_modality %} selected="selected" {% endif %}>{{modality.name}}</option>
+					{% endfor %}
+				</select>
+			</div>
+		</div> 
+		
+		<input type = "hidden" name = "dataset" value = "{{dataset.text_id}}"/>
+		<div class="offset-sm-2 col-sm-10">
+			<button type="submit" class="btn btn-primary">Save</button>
+		</div> 
+ 		{% csrf_token %}
+	</form>
+	-->
 {% endif %}
 
 {% endblock %}

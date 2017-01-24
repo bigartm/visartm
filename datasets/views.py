@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
@@ -79,8 +80,14 @@ def	datasets_create(request):
 	
 	
 def visual_dataset(request):  
-	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
+	if request.method == "POST":
+		print(request.POST)
+		dataset = Dataset.objects.filter(text_id = request.POST['dataset'])[0]
+		dataset.save() 
+		return redirect("/dataset/?dataset=" + request.POST['dataset'] + "&mode=settings")
 	
+	
+	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
 	if dataset.status == 1:
 		return general_views.wait(request, dataset.read_log() + \
 			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>", dataset.creation_time)
@@ -139,7 +146,9 @@ def visual_dataset(request):
 		
 	elif mode == 'modalities':
 		context['modalities'] = Modality.objects.filter(dataset = dataset)
-	else:
+	elif mode == 'settings':
+		context['settings'] = {'modalities': Modality.objects.filter(dataset = dataset)}
+	elif mode == 'docs':
 		docs = Document.objects.filter(dataset = dataset)
 		if "search" in request.GET and len(search_query) >= 2: 
 			docs = docs.filter(title__icontains = search_query) 

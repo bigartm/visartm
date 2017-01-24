@@ -105,7 +105,8 @@ def create_model(request):
 	model = ArtmModel()
 	model.dataset = dataset
 	model.name = request.POST['model_name']
-	model.main_modality = Modality.objects.filter(dataset = dataset, name = request.POST['word_modality'])[0]
+	#model.main_modality = Modality.objects.filter(dataset = dataset, name = request.POST['word_modality'])[0]
+	model.threshold = int(request.POST['threshold'])
 	model.author = request.user
 	model.creation_time = datetime.now()
 	model.status = 1
@@ -152,9 +153,9 @@ def	visual_topic(request):
 	target_topic = Topic.objects.filter(id = request.GET['id'])[0]
 	
 	model = target_topic.model
-	main_modality = target_topic.model.main_modality
+	main_modality = target_topic.model.dataset.word_modality
 	top_terms = TopTerm.objects.filter(topic = target_topic).order_by('-weight')
-	top_terms = [term for term in top_terms if term.term.modality == main_modality]
+	#top_terms = [term for term in top_terms if term.term.modality == main_modality]
 	related_topics = TopicRelated.objects.filter(model = target_topic.model, topic1 = target_topic).order_by("weight")	
 	context = {'model': target_topic.model, 'topic': target_topic, 'top_terms': top_terms, 'related_topics' : related_topics}
 	

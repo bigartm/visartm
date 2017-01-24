@@ -41,8 +41,7 @@ def get_documents(request):
 	response =  HttpResponse(json.dumps(result), content_type='application/json')  
 	_acao_response(response)
 	return response
-	
-	
+	 
 def get_polygon_children(request):
 	print("API for" + request.GET['id'])
 	polygon = Polygon.objects.filter(id = request.GET['id'])[0]
@@ -53,5 +52,11 @@ def get_polygon_children(request):
 	response =  HttpResponse(json.dumps(result), content_type='application/json')  
 	_acao_response(response)
 	return response
+	
+def get_tags(request):
+	document = Document.objects.filter(id = request.GET["id"])[0]
+	response =  HttpResponse(document.fetch_tags(), content_type='text/plain')  
+	_acao_response(response)
+	return response 
 	 
 	

@@ -20,13 +20,14 @@ class ArtmModel(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
 	creation_time = models.DateTimeField(null=False, default = datetime.now)
 	text_id = models.TextField(null=False, default = "")
-	main_modality = models.ForeignKey(Modality, null = True)
+	#main_modality = models.ForeignKey(Modality, null = True)
 	name = models.TextField(null=True)
 	author = models.ForeignKey(User, null=True)
 	layers_count = models.IntegerField(default = 1) 
 	topics_count = models.TextField(null = False, default = "")
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
+	threshold = models.IntegerField(null = False, default = 100) 
 	
 	def __str__(self):
 		if self.name == '':
@@ -241,7 +242,7 @@ class ArtmModel(models.Model):
 				cnt = 0
 				for i in idx:
 					term = terms_index[int(i)]
-					if term.modality == self.main_modality:
+					if term.modality == self.dataset.word_modality:
 						terms_to_title.append(term.text)
 						cnt += 1
 					if cnt == title_size:
