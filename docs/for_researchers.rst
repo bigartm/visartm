@@ -24,7 +24,7 @@ For researchers
 
 .. code-block:: bash 
 
-   git clone https://github.com/fedimser/artmonline.git
+   git clone https://github.com/bigartm/visartm.git
    
 7. Теперь нужно связать проект c базой данных. Сначала откройте файл artmonline/settings.py и найдите там такие строчки
 
