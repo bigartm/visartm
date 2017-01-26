@@ -249,7 +249,7 @@ latex_elements = {
 
      # Additional stuff for the LaTeX preamble.
      #
-     'preamble': '\\usepackage[utf8x]{inputenc} ',
+     'preamble': '\\usepackage[utf8x]{inputenc}\n\\usepackage[english,russian]{babel}',
 
      # Latex figure (float) alignment
      #
