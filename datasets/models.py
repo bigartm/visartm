@@ -33,7 +33,7 @@ class Dataset(models.Model):
 	def __str__(self):
 		return self.name 
 		
-	@transaction.atomic
+	#@transaction.atomic
 	def reload(self): 	
 		#print("IN")
 		self.prepare_log()
@@ -142,7 +142,6 @@ class Dataset(models.Model):
 					modality_name = parsed[1]
 				except:
 					pass
-				terms_index[parsed[0] + "$#" + modality_name] = term
 				if modality_name in modalities_index:
 					modality = modalities_index[modality_name]
 					term.modality = modality
@@ -155,6 +154,7 @@ class Dataset(models.Model):
 					modality.save()
 					modalities_index[modality_name] = modality
 					term.modality = modality
+				terms_index[parsed[0] + "$#" + modality_name] = term
 				i += 1
 				if i % 10000 == 0:
 					self.log(str(i))
@@ -164,13 +164,17 @@ class Dataset(models.Model):
 		
 		self.log("Saving modalities...")
 		max_modality_size = 0
+		word_modality_id = -1
+		tag_modality_id = -1
 		for key, modality in modalities_index.items():
 			modality.save()
 			if modality.terms_count > max_modality_size:
 				self.word_modality = modality
+				word_modality_id = modality.id
 				max_modality_size = modality.terms_count
 			if 'tag' in modality.name:
 				self.tag_modality = modality
+				tag_modality_id = modality.id
 
 		
 		
@@ -196,28 +200,34 @@ class Dataset(models.Model):
 				i += 1
 				if i < 0:
 					continue
+ 
 				parsed = line.replace(',',' ').split()
 				key = parsed[0] + "$#" + parsed[1]
 				term = terms_index[key]
+ 
 				term.matrix_id = i
 				term.token_value = float(parsed[2])
 				term.token_tf = int(parsed[3].split('.')[0])
 				term.token_df = int(parsed[4].split('.')[0])
 				index_to_matrix[term.index_id] = i
-				if term.modality == self.word_modality:
+ 
+				if term.modality.id == word_modality_id:
 					tag_index[term.index_id] = 1
-				elif term.modality == self.tag_modality:
+ 
+				elif term.modality.id == tag_modality_id:
 					tag_index[term.index_id] = 2
-				term.save()
+  
+				term.save() 
 				if i % 10000 == 0:
 					self.log(str(i))
+					print(i)
 			 
 		np.save(os.path.join(dataset_path, "itm.npy"), index_to_matrix)
 		np.save(os.path.join(dataset_path, "tgi.npy"), tag_index)
 		 
 
 					 
-		#self.log(str(self.documents_count))
+		self.log(str(self.documents_count))
 		self.creation_time = datetime.now()
 		self.status = 0
 		self.save() 		
@@ -383,6 +393,14 @@ class Document(models.Model):
 				if ctr == 5:
 					break
 		return tags_string
+	
+	def get_text(self):
+		if self.dataset.text_provided:
+			file_name = os.path.join(settings.DATA_DIR, "datasets", document.dataset.text_id, "documents", str(document.index_id) + ".txt")
+			with open(file_name, encoding = "utf-8") as f:
+				return f.read().replace("\n","<br>")
+		else:
+			return "Text wasn't provided"
 	
 	def __str__(self):
 		return self.title

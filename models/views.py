@@ -159,16 +159,7 @@ def	visual_topic(request):
 	context = {'topic': topic, 'top_terms': top_terms, 'related_topics' : related_topics}
 	
 	if topic.layer == model.layers_count:
-		documents = DocumentInTopic.objects.filter(topic = topic)
-		#documents = documents[:100]
-		context['documents'] = documents
 		context['is_low'] = True
-		
-		dist = model.get_psi(model.layers_count - 1)[topic.id_model]
-		high_topics = Topic.objects.filter(model = model, layer = model.layers_count - 1).order_by("id_model")		
-		topic_dist = [{"topic": high_topics[i], "weight": 100 * dist[i]} for i in range(dist.shape[0])]
-		topic_dist.sort(key=lambda x: x["weight"], reverse=True)
-		context['topic_dist'] = topic_dist
 	else:
 		topics = TopicInTopic.objects.filter(parent = topic)
 		context['topics'] = topics

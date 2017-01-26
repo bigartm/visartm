@@ -3,14 +3,15 @@
 {% block title %}Artm Online | {{topic}} {% endblock %}
 
 {% block content %}
+	
+	
+	
 	<h1> Topic {{topic.title}} </h1>
 	<hr>
 	{% if is_low %}
 		<h3>Documents</h3>
-		{% for doc in documents %}
-			<a href = "/document?id={{doc.document.id}}" >{{doc.document.title}}</a>
-			<br>
-		{% endfor %}
+		<div id="documents"></div>
+		<p><a id = "morelink" onclick = "append(100)">More</a></p>
 	{% else %}
 		<h3>Topics</h3>
 		{% for topic in topics %}
@@ -23,8 +24,8 @@
 {% block right %}
 <div> 
 	<h4>Information</h4>
-	Dataset: <a href="/dataset?dataset={{topic.model.dataset.text_id}}">{{model.dataset}}</a><br>
-	Model: <a href="/visual/model?model={{topic.model.id}}">{{model}}</a><br>
+	Dataset: <a href="/dataset?dataset={{topic.model.dataset.text_id}}">{{topic.model.dataset}}</a><br>
+	Model: <a href="/visual/model?model={{topic.model.id}}">{{topic.model}}</a><br>
 	Layer: {{topic.layer}}<br>
 	Documents: {{topic.documents_count}}	
 	<form class="" role="search" method="POST" action="/topics/rename">
@@ -37,9 +38,7 @@
 	
 	{% if is_low %}
 		<h4>Distribution over higher topics</h4>
-		{% for x in topic_dist%}
-			<a href ="/visual/topic?id={{x.topic.id}}">{{x.topic}}</a>  {{x.weight | floatformat:2}}%<br>
-		{% endfor %}
+		<p>Not implemented</p>
 	{% endif %}
 	<h4>Related topics</h4>
 	{% for related_topic in related_topics%}
@@ -61,9 +60,27 @@
 
 {% endblock %}
 
-{% block additional_scripts %}
-<script src="/static/js/d3pie.min.js"></script>
-<script src="/static/js/pie.js"></script>
+
+{% block javascript %}
+<script type="text/javascript">	
+	api = new ArtmApi();
+	counter = 0;
+	append(100);
+	
+	function append(count) {
+		api.getDocumentsByTopic({{topic.id}}, counter, count, function(documents) {
+			documents.forEach(function(doc, i, arr) {
+				document.getElementById("documents").innerHTML += "<a href='/document?id=" + doc.id + "'>" + 
+					doc.title + "</a> (" + doc.weight + "%)<br>";
+			});
+			if (documents.length < count) {
+				document.getElementById("morelink").innerHTML = "";
+			}
+		});
+		counter += count;
+	}
+
+</script>
 {% endblock %}
 
 

@@ -11,7 +11,7 @@ class ArtmApi {
 				callback(JSON.parse(this.responseText)[0]);
 			}
 		};
-		xhttp.open("GET", this.host + "/api/documents?ids=" + documentId, true);
+		xhttp.open("GET", this.host + "/api/documents/get?ids=" + documentId, true);
 		xhttp.send();
 	}
 	
@@ -23,7 +23,7 @@ class ArtmApi {
 				callback(JSON.parse(this.responseText)[0]);
 			}
 		};
-		xhttp.open("GET", this.host + "/api/documents?full=1&ids=" + documentId, true);
+		xhttp.open("GET", this.host + "/api/documents/get?fields=text&ids=" + documentId, true);
 		xhttp.send();
 	}
 	
@@ -42,7 +42,19 @@ class ArtmApi {
 				callback(JSON.parse(this.responseText));
 			}
 		};
-		xhttp.open("GET", this.host + "/api/documents?ids=" + query, true);
+		xhttp.open("GET", this.host + "/api/documents/get?ids=" + query, true);
+		xhttp.send();
+	}
+	
+	getDocumentsByTopic(topicId, offset, count, callback) {
+		var xhttp = new XMLHttpRequest(); 
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				//alert(this.responseText);
+				callback(JSON.parse(this.responseText));
+			}
+		};
+		xhttp.open("GET", this.host + "/api/documents/get?topic_id=" + topicId + "&offset=" + offset + "&count=" + count, true);
 		xhttp.send();
 	}
 	
@@ -56,15 +68,5 @@ class ArtmApi {
 		xhttp.open("GET", this.host + "/api/polygons/children?id=" + polygonId, true);
 		xhttp.send();
 	}
-	
-	getTags(documentId, callback) {
-		var xhttp = new XMLHttpRequest();
-		xhttp.onreadystatechange = function() {
-			if (this.readyState == 4 && this.status == 200) {
-				callback(this.responseText);
-			}
-		};
-		xhttp.open("GET", this.host + "/api/tags?id=" + documentId, true);
-		xhttp.send();
-	}
+	 
 }

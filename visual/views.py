@@ -51,7 +51,7 @@ def visual_document(request):
 	# Topics distribution in document (actually, column form Theta)
 	topics = []
 	if not model is None:
-		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("id_model")
+		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
 		shift = 0
 		for i in range(1, target_layer):
 			shift += topics_count[i]
@@ -65,12 +65,12 @@ def visual_document(request):
 		idx = 0
 		other_weight = 1
 		for (weight, topic_id) in topics_list:
-			if weight < 0.05:
+			if other_weight < 0.05:
 				break
 			idx +=1 
 			if idx <= topics_hl_count:
 				topic = topics_index[topic_id] 
-				hl_topics[topic.id_model] = idx
+				hl_topics[topic.index_id] = idx
 				other_weight -= weight
 				topics.append({
 					"i" : idx, 
@@ -199,7 +199,7 @@ def visual_document_all_topics(request):
 	theta = np.load(theta_file_name) 
 	
 	  
-	topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("id_model")
+	topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
 	shift = 0
 	for i in range(1, target_layer):
 		shift += topics_count[i]

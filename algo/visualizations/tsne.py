@@ -1,4 +1,5 @@
 from datasets.models import Document
+from models.models import DocumentInTopic
 import numpy as np 
 import json 
 import os
@@ -35,12 +36,14 @@ def visual(model, params):
 	print("min",border_0)
 	print("max",border_1)
 	
-	
+	print("coloring...")
 	i = 0
 	for document in documents:
 		answer.append({"X": (tsne_matrix[i][0] - border_0[0]) / (border_1[0] - border_0[0]), 
 					   "Y": (tsne_matrix[i][1] - border_0[1]) / (border_1[1] - border_0[1]), 
+					   "color": DocumentInTopic.objects.filter(model = model, document = document)[0].topic.index_id,
 					   "id": document.id})
 		i += 1
+	print("colored")
 		
 	return "docs = " + json.dumps(answer) + ";\n"

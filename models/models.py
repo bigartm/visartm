@@ -216,7 +216,7 @@ class ArtmModel(models.Model):
 		# Creating root topic
 		root_topic = Topic()
 		root_topic.model = self
-		root_topic.id_model = 0
+		root_topic.index_id = 0
 		root_topic.title = "root"
 		root_topic.layer = 0
 		root_topic.save()		
@@ -228,7 +228,7 @@ class ArtmModel(models.Model):
 			for topic_id in range(topics_count[layer_id]):
 				topic = Topic()
 				topic.model = self
-				topic.id_model = topic_id
+				topic.index_id = topic_id
 				topic.layer = layer_id
 				distr = phi_t[row_counter]
 				row_counter += 1
@@ -317,6 +317,7 @@ class ArtmModel(models.Model):
 			relation.model = self
 			relation.document = documents_index[doc_id]
 			relation.topic = topics_index[layers_count][best_topic_id]
+			relation.weight = distr[best_topic_id]
 			topics_index[layers_count][best_topic_id].documents_count += 1
 			relation.save()
 			
@@ -327,6 +328,7 @@ class ArtmModel(models.Model):
 						relation.model = self
 						relation.document = documents_index[doc_id]
 						relation.topic = topics_index[layers_count][topic_id]
+						relation.weight = distr[topic_id]
 						topics_index[layers_count][topic_id].documents_count += 1
 						relation.save()
 						
@@ -377,7 +379,7 @@ class ArtmModel(models.Model):
 		phi_t = phi.transpose()
 		layers_count = self.layers_count
 		topics_count = [int(x) for x in self.topics_count.split()]
-		topics_index = [[topic for topic in Topic.objects.filter(model = self, layer = i).order_by("id_model")]  for i in range(layers_count + 1)]
+		topics_index = [[topic for topic in Topic.objects.filter(model = self, layer = i).order_by("index_id")]  for i in range(layers_count + 1)]
 		
 		
 		
@@ -457,7 +459,7 @@ class ArtmModel(models.Model):
 				
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
-	id_model = models.IntegerField(null = True)
+	index_id = models.IntegerField(null = True)
 	title = models.TextField(null=False)
 	title_short = models.TextField(null=True) 
 	spectrum_index = models.IntegerField(null = True, default = 0) 
@@ -506,7 +508,8 @@ class TopicInTerm(models.Model):
 class DocumentInTopic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
 	document = models.ForeignKey(Document, null = False)
-	topic = models.ForeignKey(Topic, null = False)  
+	topic = models.ForeignKey(Topic, null = False) 
+	weight = models.FloatField(null=False, default = 0)
 	
 	def __str__(self):
 		return str(self.document)
