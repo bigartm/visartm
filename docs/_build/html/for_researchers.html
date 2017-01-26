@@ -31,7 +31,6 @@
 
   
     <link rel="top" title="artmonline-docs 1 documentation" href="index.html"/>
-        <link rel="next" title="Visualizations" href="visualizations.html"/>
         <link rel="prev" title="Overview" href="overview.html"/> 
 
   
@@ -84,8 +83,6 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">For researchers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="visualizations.html">Visualizations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="formats.html">Formats</a></li>
 </ul>
 
             
@@ -236,6 +233,7 @@ docID wordID count
 docID wordID count
 </pre></div>
 </div>
+<p>ВАЖНО! Записи должны быть упорядочены по docID.</p>
 <p>Примеры можно посмотреть на <a class="reference external" href="https://archive.ics.uci.edu/ml/machine-learning-databases/bag-of-words/readme.txt">https://archive.ics.uci.edu/ml/machine-learning-databases/bag-of-words/readme.txt</a></p>
 <p>Важно, чтобы в каждом документе был хотя бы один термин.</p>
 <p>Документы в папке documents - просто текст.</p>
@@ -255,9 +253,9 @@ url
 <span class="nb">time</span>
 </pre></div>
 </div>
-<p>Время должно быть JSON-списком из шести целых чисел (год, месяц, день, час, минута, секунда).</p>
+<p>Время должно быть целым числом в формате UNIX TIMESTAMP.</p>
 <p>Теперь, когда вы поместили все нужные данные, можно их импортировать. Для этого в интерфейсе ARTM Online выберите пунккт Datasets вверху, потом справа
-нажмите на Create new dataset... Выберите вкладку Local, в ней из списка Dataset name выберите имя вашего dataset&#8217;a (система находит его автоматически,
+нажмите на Create new dataset... Из списка Dataset name выберите имя вашего dataset&#8217;a (система находит его автоматически,
 если вы его поместилии в правильную папку). Теперь правильно установите следующие галочки (это важно!):</p>
 <ul class="simple">
 <li>UCI vocab and docword provided - включите обязательно</li>
@@ -296,8 +294,6 @@ pandas.dataframe&#8217;ов в папку с моделью. Разумеетс�
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="visualizations.html" class="btn btn-neutral float-right" title="Visualizations" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="overview.html" class="btn btn-neutral" title="Overview" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
