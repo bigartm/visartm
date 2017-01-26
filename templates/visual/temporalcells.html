@@ -12,7 +12,10 @@
 </div>
 {% endblock %}
 
-{% block right %}		
+{% block right %}	
+	
+	{% load extra_tags %}
+	H:{% temporal_spectrum %}
 	<div>
 		<h4 id="label1"> </h4>  
 		<p id="label2"> </p>  
@@ -300,15 +303,15 @@
 	function get_color(intense, y) {
 		ky = (y / topics_count);
 		kz = intense / max_intense;
-		{% if temporal_spectrum %}
+		if ({% temporal_spectrum %}) {
 			R = THEME_temporalSquares_TopColor[0] * (1 - ky) + THEME_temporalSquares_BottomColor[0] * ky; 
 			G = THEME_temporalSquares_TopColor[1] * (1 - ky) + THEME_temporalSquares_BottomColor[1] * ky;  
 			B = THEME_temporalSquares_TopColor[2] * (1 - ky) + THEME_temporalSquares_BottomColor[2] * ky;  
-		{% else %}
+		} else {
 			R = THEME_temporalSquares_ActiveColor[0]; 
 			G = THEME_temporalSquares_ActiveColor[1]; 
 			B = THEME_temporalSquares_ActiveColor[2]; 
-		{% endif %}
+		}
 		return d3.rgb(R * kz + THEME_temporalSquares_EmptyColor[0] * (1 - kz),
 					  G * kz + THEME_temporalSquares_EmptyColor[1] * (1 - kz),
 					  B * kz + THEME_temporalSquares_EmptyColor[2] * (1 - kz));

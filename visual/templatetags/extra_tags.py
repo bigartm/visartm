@@ -9,3 +9,10 @@ def color_theme(context):
 		return context['request'].COOKIES["color_theme"]
 	except:
 		return "light"
+		
+@register.simple_tag(takes_context=True)
+def temporal_spectrum(context):
+	try:
+		return context['request'].COOKIES["temporal_spectrum"]
+	except:
+		return 'false'

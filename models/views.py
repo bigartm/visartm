@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from models.models import ArtmModel, Topic, DocumentInTopic, TopTerm, TopicRelated, TopicInTopic
 from visual.models import GlobalVisualization
 from django.contrib.auth.decorators import login_required, permission_required
-import artmonline.views as general_views
+import visartm.views as general_views
 import traceback
 from django.conf import settings
 import os

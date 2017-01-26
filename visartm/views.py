@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from datetime import datetime
  
 def start_page(request):
-    return render(request, 'index.html')
+    return render(request, 'index.html', Context({'no_footer' : True}))
 
 def settings_page(request):
 	template = loader.get_template('settings.html')

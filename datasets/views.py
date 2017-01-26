@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
@@ -7,7 +6,7 @@ from models.models import ArtmModel
 from visual.views import get_model
 import os
 from django.conf import settings
-import artmonline.views as general_views
+import visartm.views as general_views
 from threading import Thread
 from datetime import datetime
  

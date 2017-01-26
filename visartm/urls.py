@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 from django.contrib import admin
  
-import artmonline.views as general_views
+import visartm.views as general_views
 import datasets.views as datasets_views
 import visual.views as visual_views
 import models.views as models_views

@@ -2,18 +2,83 @@
 
 {% block title %}ARTM Online | Start page{% endblock %}
 
+{% block style %}
+	<script language="JavaScript" src = "/static/slideshow/touch.js"></script>
+	<link rel="stylesheet" href="/static/slideshow/slideshow.css">
+	<script src="/static/slideshow/slideshow.js?version={% now 'U' %}"></script>
+{% endblock %}
+
+
 {% block content %}
-<div class="page-header">
-  <h1> ARTM Online </h1>  
-  
-</div>
+
+<div id = "slideshow" style="width: 100%; margin-left:-5px;">
+    <section class="slideshow-images js-slideshow-images ">
+        <nav>
+            <button class="slideshow-nav slideshow-nav--prev js-slideshow-previous"></button>
+            <button class="slideshow-nav slideshow-nav--next js-slideshow-next"></button>
+        </nav>
+        <div class="slideshow-container js-slideshow-container">
+            <div class="slideshow-slide js-slideshow-slide" label="We use BigARTM - state-of-the-art, powerful and effective topic modelling core" >
+                <img class="slideshow-slide--image"  src="/static/slideshow/1.jpeg"/>
+            </div>
+           <!-- <div class="slideshow-slide js-slideshow-slide" label="Preprocess, lemmatize and filter your documents in one click">
+                <img class="slideshow-slide--image"   src="/static/slideshow/2.jpeg"/>
+            </div>-->
+            <div class="slideshow-slide js-slideshow-slide"  label="We use d3 library, so visualizations are beautiful and fast">
+                <img class="slideshow-slide--image" src="/static/slideshow/3.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide"  label="Build temporal models">
+                <img class="slideshow-slide--image" src="/static/slideshow/4.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide"  label="Build hierarchical models">
+                <img class="slideshow-slide--image" src="/static/slideshow/5.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide"  label="We highlight words, so you can understand our decision">
+                <img class="slideshow-slide--image" src="/static/slideshow/6.jpeg"/>
+            </div>
+        </div>
+		
+        <aside>
+            <div class="slideshow-counter js-slideshow-counter" ;"></div>
+        </aside>
+    </section>
+</div> 
+ 
+ <!--
+<img src = "/static/img/BigARTM-logo.svg" height = "80">
+<img src = "/static/img/django-logo.svg" height = "40">
+<img src = "/static/img/d3-logo.svg" height = "80">
+-->
+{% endblock %}
+
+{% block right %}
+	
 	{% if not user.is_anonymous %}
 		<p>Hi, {{user}}!</p>
 	{% endif %}
 	<p>This is interactive topic modelling service based on BigARTM.</p>
-	<p>It enables you build topics models for big document corpora and visualize them.</p>
-  
-<img src = "/static/img/BigARTM-logo.svg" height = "80">
-<img src = "/static/img/django-logo.svg" height = "40">
-<img src = "/static/img/d3-logo.svg" height = "80">
+	<p>It enables you build topics models for big document corpora and visualize them.</p> 
+{% endblock %}
+
+{% block javascript %}
+
+<script language="Javascript">
+	init();
+	
+	function init() {	
+		var cont = document.getElementById("slideshow");
+		cont.style.height = (9/16)*cont.offsetWidth + "px"; 
+		var slideshowImages = Slideshow();
+		slideshowImages.init('.js-slideshow-images', true);	
+		//cont.style.visibility = "visible";
+		window.onresize = function(){ location.reload(); }
+		
+		setInterval(function(){
+			slideshowImages.goToNext();
+			//alert('DDD');
+		}, 8000);
+	}
+	
+ 
+</script> 
 {% endblock %}

@@ -14,7 +14,7 @@ from visual.models import GlobalVisualization
 import struct
 from threading import Thread
 from datetime import datetime
-import artmonline.views as general_views
+import visartm.views as general_views
 
 	
 	
