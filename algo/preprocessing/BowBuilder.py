@@ -9,7 +9,7 @@ import pymorphy2
 class BowBuilder:
     def __init__(self, dataset_name, language = "russian"):
         self.dataset_name = dataset_name
-        self.dataset_folder = os.path.join("D:\\artmonline\\data\\datasets", dataset_name)
+        self.dataset_folder = os.path.join("D:\\visartm\\data\\datasets", dataset_name)
         self.documents_dir = os.path.join(self.dataset_folder, "documents")
         self.word_index_dir = os.path.join(self.dataset_folder, "word_index")
         self.uci_dir = os.path.join(self.dataset_folder, "UCI")
@@ -57,7 +57,7 @@ class BowBuilder:
             self.docs[doc_id] = dict()
         self.cur_doc = self.docs[doc_id]
         
-    def add_word_text(self, word_text, line_num, init_pos, length):
+    def add_word_text(self, word_text, init_pos, length):
         word_text = self.lemmatize(word_text)
         
             
@@ -75,7 +75,7 @@ class BowBuilder:
             self.cur_doc[word_id] += 1        
         self.term_occur_count[word_id] += 1
 
-        self.current_word_index.append((line_num, init_pos, length, word_id))
+        self.current_word_index.append(( init_pos, length, word_id))
 
     def filter_words(self):
         self.filtered_words_index = dict()
@@ -107,33 +107,33 @@ class BowBuilder:
     def char_good(self, c):    
         return (c.isalpha() or c in '#_')
         
+        
+    #TODO: Make generator
     def parse_text(self, doc_file_name):
         with open(doc_file_name, 'r', encoding = 'utf-8')  as f:
-            lines = f.readlines()
-        line_num = 0 
-        for line in lines:
-            line_num += 1
-            cur_pos = 0
-            bracket_level = 0
-            line_len = len(line)
-            while cur_pos < line_len:
-                while cur_pos < line_len and not self.char_good(line[cur_pos]):
-                    c = line[cur_pos]
-                    if (c == '{' or c=='['):
-                        bracket_level +=1
-                    if (c == '}' or c==']'):
-                        bracket_level -=1
-                    cur_pos +=1
-                init_pos = cur_pos
-                
-                while cur_pos < line_len and self.char_good(line[cur_pos]):
-                    cur_pos +=1
-                    
-                length = cur_pos - init_pos
-                word = line[init_pos : init_pos + length]
-                if len(word) > 1:
-                    self.add_word_text(word, line_num, init_pos, length)
+            line = f.read()
         
+        cur_pos = 0
+        bracket_level = 0
+        line_len = len(line)
+        while cur_pos < line_len:
+            while cur_pos < line_len and not self.char_good(line[cur_pos]):
+                c = line[cur_pos]
+                if (c == '{' or c=='['):
+                    bracket_level +=1
+                if (c == '}' or c==']'):
+                    bracket_level -=1
+                cur_pos +=1
+            init_pos = cur_pos
+            
+            while cur_pos < line_len and self.char_good(line[cur_pos]):
+                cur_pos +=1
+                
+            length = cur_pos - init_pos
+            word = line[init_pos : init_pos + length]
+            if len(word) > 1:
+                self.add_word_text(word, init_pos, length)
+    
     def process(self):
         print("Reading documents")
         jj = 0
@@ -155,9 +155,9 @@ class BowBuilder:
         for doc_id, word_index in self.word_index_dict.items():
             with open(os.path.join(self.word_index_dir, str(doc_id) + ".txt"), "w") as f:
                 for entry in word_index:
-                    word_id = entry[3]
+                    word_id = entry[2]
                     if word_id in self.filtered_words_index:
-                        f.write("%d %d %d %d\n" % (entry[0], entry[1], entry[2], self.filtered_words_index[word_id]))
+                        f.write("%d %d %d\n" % (entry[0], entry[1], self.filtered_words_index[word_id]))
             jj+=1
             if jj % 100 == 0:
                 print(jj)

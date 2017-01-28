@@ -95,59 +95,49 @@ def visual_document(request):
 			cut_bow = int(request.COOKIES["cut_bow"])
 		context['bow'] = document.fetch_bow(cut_bow)
 	else:			
-		if not dataset.text_provided:
-			context['lines'] = ["","Text wasn't provided"]
-		else:
-			file_name = os.path.join(settings.DATA_DIR, "datasets", dataset.text_id, "documents", str(document.index_id) + ".txt")
-			with open(file_name, 'r', encoding = 'utf-8') as f:
-				lines = f.readlines()
+		text = document.get_text()
+		
+		highlight_terms = True
+		if "highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false":
+			highlight_terms = False
+		 
+		# Word highlight
+		if highlight_terms:
+			if not model is None: 
+				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
+				theta_t_layer = theta_t[document_matrix_id, shift : shift + topics_count[target_layer]]
+			
+			entries = []
+			
+			wi = document.get_word_index()
+			print(wi)
+			for start_pos, length, term_index_id in wi:
+				if model is None:
+					entries.append((start_pos, length, term_index_id, 0)) 
+				else:
+					term_matrix_id = term_index_id - 1
+					topic_id = np.argmax(phi_layer[term_matrix_id] * theta_t_layer)			
+					entries.append((start_pos, length, term_index_id, hl_topics[topic_id])) 
+		
+			new_text = ""
+			cur_pos = 0
+			text_length = len(text)
+			for (start_pos, length, term_index_id, class_id) in entries:
+				if (cur_pos < start_pos):
+					new_text += text[cur_pos : start_pos]
+					cur_pos = start_pos
+				new_text += "<a href = '/term?ds=" + str(dataset.id) + "&iid=" + str(term_index_id) + "' class = 'nolink tpc" + str(class_id) + "'>"
+				new_text += text[cur_pos : cur_pos + length]
+				new_text += "</a>"
+				cur_pos += length
+			
+			if (cur_pos < text_length):
+				new_text += text[cur_pos : text_length]
+				cur_pos = text_length
+			text = new_text
 				
-			highlight_terms = dataset.word_index_provided 
-			if "highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false":
-				highlight_terms = False
-			 
-			# Word highlight
-			if highlight_terms:
-				if not model is None: 
-					phi_layer = phi[:, shift : shift + topics_count[target_layer]]
-					theta_t_layer = theta_t[document_matrix_id, shift : shift + topics_count[target_layer]]
-				lines_count = len(lines)
-				entries_index = [[] for i in range(0,lines_count)]
-				word_index_file_name = os.path.join(settings.DATA_DIR, "datasets", dataset.text_id, "word_index", str(document.index_id) + ".txt")
-				with open(word_index_file_name, 'r', encoding = 'utf-8') as f:
-					for word_index_line in f.readlines():
-						word_info = word_index_line.split()
-						line = int(word_info[0]) - 1
-						start_pos = int(word_info[1])
-						length = int(word_info[2])
-						term_index_id = int(word_info[3])			
-						if model is None:
-							entries_index[line].append((start_pos, length, term_index_id, 0)) 
-						else:
-							term_matrix_id = term_index_id - 1
-							topic_id = np.argmax(phi_layer[term_matrix_id] * theta_t_layer)			
-							entries_index[line].append((start_pos, length, term_index_id, hl_topics[topic_id])) 
-				
-				for i in range(0, lines_count):
-					old_line = lines[i]
-					new_line = ""
-					cur_pos = 0
-					old_line_length = len(old_line)
-					for (start_pos, length, term_index_id, class_id) in entries_index[i]:
-						if (cur_pos < start_pos):
-							new_line += old_line[cur_pos : start_pos]
-							cur_pos = start_pos
-						new_line += "<a href = '/term?ds=" + str(dataset.id) + "&iid=" + str(term_index_id) + "' class = 'nolink tpc" + str(class_id) + "'>"
-						new_line += old_line[cur_pos : cur_pos + length]
-						new_line += "</a>"
-						cur_pos += length
-					
-					if (cur_pos < old_line_length):
-						new_line += old_line[cur_pos : old_line_length]
-						cur_pos = old_line_length
-					lines[i] = new_line
-			context['lines'] = lines
-				
+		context['lines'] = text.split('\n')
+			
 		
 	# Related documents 
 	if not model is None:

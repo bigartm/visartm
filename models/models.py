@@ -31,7 +31,7 @@ class ArtmModel(models.Model):
 	
 	def __str__(self):
 		if self.name == '':
-			return self.creation_time.strftime("%d.%m.%Y %H:%M")
+			return "model " + str(self.id)
 		else: 
 			return self.name		
 	
@@ -197,7 +197,7 @@ class ArtmModel(models.Model):
 		
 		# Building temporary index for terms
 		self.log("Building temporary index for words...")
-		terms_index = Term.objects.filter(dataset = self.dataset).order_by("matrix_id") 
+		terms_index = Term.objects.filter(dataset = self.dataset).order_by("index_id") 
 		terms_id_index = [term.id for term in terms_index]
 		
 		# Removing existing topics and related objects
@@ -242,7 +242,7 @@ class ArtmModel(models.Model):
 				cnt = 0
 				for i in idx:
 					term = terms_index[int(i)]
-					if term.modality == self.dataset.word_modality:
+					if term.modality.is_word:
 						terms_to_title.append(term.text)
 						cnt += 1
 					if cnt == title_size:

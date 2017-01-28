@@ -54,9 +54,7 @@ def	datasets_create(request):
 		dataset.text_id = dataset.name
 	
 	dataset.description = request.POST['description']
-	dataset.owner = request.user
-	if 'time_provided' in request.POST:
-		dataset.time_provided = True
+	dataset.owner = request.user 
 	if 'text_provided' in request.POST:
 		dataset.text_provided = True
 	if 'word_index_provided' in request.POST:
@@ -65,6 +63,8 @@ def	datasets_create(request):
 		dataset.uci_provided = True
 	if 'json_provided' in request.POST:
 		dataset.json_provided = True
+	if 'vw_provided' in request.POST:
+		dataset.vw_provided = True 
 	dataset.language = request.POST['lang']
 	if not dataset.check_can_load():
 		return HttpResponse(dataset.error_message)

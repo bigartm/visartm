@@ -16,29 +16,32 @@ class Dataset(models.Model):
 	text_id = models.TextField(unique=True, null=False)
 	description = models.TextField('Description') 
 	owner = models.ForeignKey(User, null=True, blank=True, default = None)
-	time_provided = models.BooleanField(null=False, default = False)
-	text_provided = models.BooleanField(null=False, default = False)
-	word_index_provided = models.BooleanField(null=False, default = False)
-	uci_provided = models.BooleanField(null=False, default = False)
-	json_provided = models.BooleanField(null=False, default = False)
-	documents_count = models.IntegerField(default = 0)
 	terms_count = models.IntegerField(default = 0) 
+	documents_count = models.IntegerField(default = 0)
 	creation_time = models.DateTimeField(null=False, default = datetime.now)
 	language = models.CharField(max_length = 20, default = 'undefined') 
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
 
+	time_provided = models.BooleanField(null=False, default = True)
+	text_provided = models.BooleanField(null=False, default = False)
+	word_index_provided = models.BooleanField(null=False, default = False)
+	uci_provided = models.BooleanField(null=False, default = False)
+	json_provided = models.BooleanField(null=False, default = False)
+	vw_provided = models.BooleanField(null=False, default = False)
+ 	
+	
 	def __str__(self):
 		return self.name 
 		
-	@transaction.atomic
+	
 	def reload(self): 	
 		#print("IN")
 		self.prepare_log()
 		self.log("Loading dataset " + self.text_id + "...")
-		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
-		uci_folder = os.path.join(dataset_path, "UCI")
-		vocab_file = os.path.join(uci_folder, "vocab." + self.text_id + ".txt")
+		#dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
+		#uci_folder = os.path.join(dataset_path, "UCI")
+		
 		
 		Term.objects.filter(dataset = self).delete()
 		Document.objects.filter(dataset = self).delete()
@@ -47,10 +50,12 @@ class Dataset(models.Model):
 		from models.models import ArtmModel	
 		ArtmModel.objects.filter(dataset = self).delete()
 		
-		if self.json_provided:
-			docs_info_file = os.path.join(dataset_path, "documents.json")
-			with open(docs_info_file) as f:
-				docs_info = json.load(f)
+		if self.json_provided: 
+			with open(os.path.join(self.get_folder(), "documents.json")) as f:
+				self.docs_info = json.load(f)
+		else:
+			self.time_provided = False
+			self.docs_info = {}
 				
 		if self.text_provided and not (self.word_index_provided and self.uci_provided):
 			self.log("Parsing words ...")
@@ -61,31 +66,78 @@ class Dataset(models.Model):
 			self.uci_provided = True
 			
 		
-		# Creating ARTM batches and dictionary
+		self.create_batches()
+		self.gather_dictionary()
+		 
+		
+		
+		 
+		
+
+					 
+		self.load_documents()
+			 
+		
+		
+		
+		self.log("Loaded " + str(self.documents_count) + " documents.")
+		
+		
+		# Creating folder for models
+		model_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id, "models")
+		if not os.path.exists(model_path): 
+			os.makedirs(model_path) 
+		
+		self.log("Dataset " + self.text_id + " loaded.")
+		self.creation_time = datetime.now()
+		self.status = 0
+		self.save() 
+	
+	def create_batches(self): 
 		self.log("Creating ARTM batches and dictionary...")
-		batches_folder = os.path.join(dataset_path, "batches")
-		dictionary_file_name = os.path.join(batches_folder, "dict.txt")
+		batches_folder = os.path.join(self.get_folder(), "batches")
+		dictionary_file_name = os.path.join(batches_folder, "dictionary.txt")
 		if os.path.exists(batches_folder): 
 			rmtree(batches_folder)
 		os.makedirs(batches_folder)  
-		batch_vectorizer = artm.BatchVectorizer(data_path = uci_folder, data_format = "bow_uci", batch_size = 1000,
-								collection_name = self.text_id, target_folder = batches_folder)
+		
+		if self.uci_provided:
+			batch_vectorizer = artm.BatchVectorizer(
+				data_path = os.path.join(self.get_folder(), "UCI"), 
+				data_format = "bow_uci", 
+				batch_size = 1000,
+				collection_name = self.text_id, 
+				target_folder = batches_folder
+			)	
+		elif self.vw_provided:
+			file_name = os.listdir(os.path.join(self.get_folder(), "VW"))[0]
+			batch_vectorizer = artm.BatchVectorizer(
+				data_path = os.path.join(self.get_folder(), "VW", file_name),
+				data_format = "vowpal_wabbit", 
+				batch_size = 1000,
+				collection_name = self.text_id, 
+				target_folder = batches_folder
+			)
+		else:
+			raise ValueError("Fatal error. No UCI or VW provided.")
+			
+	@transaction.atomic	
+	def gather_dictionary(self):
+		self.log("Creating ARTM dictionary...")
 		dictionary = artm.Dictionary(name="dictionary")
-		dictionary.gather(batches_folder, vocab_file_path = vocab_file)
+		batches_folder = os.path.join(self.get_folder(), "batches")
+		if self.uci_provided: 
+			dictionary.gather(batches_folder, vocab_file_path=os.path.join(self.get_folder(), "UCI", "vocab." + self.text_id + ".txt"))
+		else:
+			dictionary.gather(batches_folder)
+		dictionary_file_name = os.path.join(self.get_folder(), "batches", "dictionary.txt")
 		dictionary.save_text(dictionary_file_name)
 		
-		
-		
-		
-		
-
-		
-		# Loading dictionary
-		self.log("Loading ARTM dictionary...")
-		term_modality_index = np.full(1000000,-1).astype(int)
+		self.log("Saving terms to database...")
 		term_index_id = -2
 		modality_index_id = 0
-		modalities_index = dict() 
+		self.terms_index = dict()
+		modalities_index = dict()  
 		with open(dictionary_file_name, "r", encoding = 'utf-8') as f:
 			for line in f:
 				term_index_id += 1
@@ -108,15 +160,16 @@ class Dataset(models.Model):
 					modality.dataset = self 
 					modality.save()
 					modalities_index[modality_name] = modality 
-				modality = modalities_index[modality_name] 
-				term_modality_index[term_index_id] = modality.index_id
+				modality = modalities_index[modality_name]  
 				term.modality = modality
 				modality.terms_count += 1
 				
 				term.save() 
+				self.terms_index[term.text + "$#" + term.modality.name] = term
+				self.terms_index[term.index_id] = term
 				if term_index_id % 10000 == 0:
 					self.log(str(term_index_id))
-					print(term_index_id)
+					#print(term_index_id)
 					
 					
 		self.log("Saving modalities...")
@@ -133,12 +186,20 @@ class Dataset(models.Model):
 			if 'tag' in modality.name:
 				modality.is_tag = True
 			modality.save()
-
-					 
-			 
+		
+	def load_documents(self):
+		if self.uci_provided:
+			self.load_documents_uci()
+		elif self.vw_provided:
+			self.load_documents_vw()
+		else:
+			raise ValueError("Fatal error. No UCI or VW provided.")
+	
+	@transaction.atomic
+	def load_documents_uci(self):
 		# Reading documents entries
 		self.log("Reading UCI bag of words and creating documents...")		
-		docword_file = os.path.join(uci_folder, "docword." + self.text_id + ".txt")
+		docword_file = os.path.join(self.get_folder(), "UCI", "docword." + self.text_id + ".txt")
 		with open(docword_file, "r") as f:
 			lines = f.readlines()
 		self.documents_count = int(lines[0]) 
@@ -148,7 +209,7 @@ class Dataset(models.Model):
 		cur_bow = BagOfWords()
 		cur_doc_terms_count = 0
 		#entries_count = int(lines[2])
-		bags = [bytes() for i in range(1 + self.documents_count)]
+		#bags = [bytes() for i in range(1 + self.documents_count)]
 		for line in lines[3:]:
 			parsed = line.split()
 			doc_id = int(parsed[0])
@@ -160,20 +221,16 @@ class Dataset(models.Model):
 				doc.title = "document " + str(cur_doc_id)
 				
 				if self.json_provided:
-					if cur_doc_id in docs_info:
-						doc.fetch_meta(docs_info[cur_doc_id])
-					elif str(cur_doc_id) in docs_info:
-						doc.fetch_meta(docs_info[str(cur_doc_id)])
+					if cur_doc_id in self.docs_info:
+						doc.fetch_meta(self.docs_info[cur_doc_id])
+					elif str(cur_doc_id) in self.docs_info:
+						doc.fetch_meta(self.docs_info[str(cur_doc_id)])
 					else:
 						self.log("Warning! No meta data in documents.json for document " + str(cur_doc_id) + ".")
-					
-					if self.time_provided and doc.time == None:
-						self.log("Warning! Time isn't provided.")
-						self.time_provided = False
 				
 				doc.index_id = cur_doc_id
 				doc.dataset = self
-				doc.bag_of_words = cur_bow.to_bytes()
+				doc.bag_of_words = cur_bow.to_bytes(self.terms_index)
 				doc.terms_count = cur_doc_terms_count
 				doc.save() 
 				#self.log("Create doc " + str(cur_doc_id))
@@ -187,26 +244,35 @@ class Dataset(models.Model):
 			term_index_id = int(parsed[1])
 			term_count = int(parsed[2])  
 			cur_doc_terms_count += term_count
-			cur_bow.add_term(term_index_id, term_count, term_modality_index[term_index_id])
+			cur_bow.add_term(term_index_id, term_count)
 		
 		if cur_doc_id != self.documents_count + 1:
 			raise ValueError("Fatal error! Promised " + str(self.documents_count) + "documents, by provided " + str(cur_doc_id) + ".")
-		 
+		self.save()
 		
 		
-		self.log("Loaded " + str(self.documents_count) + " documents.")
+	@transaction.atomic
+	def load_documents_vw(self):
+		vw_folder = os.path.join(self.get_folder(), "VW")
+		vw_file_name = os.path.join(vw_folder, os.listdir(vw_folder)[0])
+		self.log("Loading documents in Vowpal Wabbit foramt from " + vw_file_name)		
+		doc_id = 0
+		with open(vw_file_name, "r", encoding = "utf-8") as f:
+			for line in f:
+				doc = Document()
+				doc.dataset = self
+				doc_id += 1
+				doc.index_id = doc_id
+				doc.fetch_vw(line)
+				if doc.text_id in self.docs_info:
+					doc.fetch_meta(self.docs_info[doc.text_id])
+				doc.save()
+				if doc_id % 1000 == 0:
+					self.log(str(doc_id))
 		
-		
-		# Creating folder for models
-		model_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id, "models")
-		if not os.path.exists(model_path): 
-			os.makedirs(model_path) 
-		
-		self.log("Dataset " + self.text_id + " loaded.")
-		self.creation_time = datetime.now()
-		self.status = 0
-		self.save() 
-	
+		self.documents_count = doc_id
+		self.save()
+					
 	def reload_untrusted(self):
 		try:
 			self.reload()
@@ -243,7 +309,7 @@ class Dataset(models.Model):
 	def get_batches(self):
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
 		batches_folder = os.path.join(dataset_path, "batches")
-		dictionary_file_name = os.path.join(batches_folder, "dict.txt")
+		dictionary_file_name = os.path.join(batches_folder, "dictionary.txt")
 		
 		batch_vectorizer = artm.BatchVectorizer(data_path = batches_folder, data_format = "batches")
 		dictionary = artm.Dictionary(name="dictionary")
@@ -290,13 +356,17 @@ class Document(models.Model):
 	snippet = models.TextField(null=True)
 	time = models.DateTimeField(null=True)
 	index_id = models.IntegerField(null = False)
+	text_id = models.TextField(null=True)
 	dataset = models.ForeignKey(Dataset, null = False)
-	bag_of_words = models.BinaryField(null=False, default = bytes())
+	bag_of_words = models.BinaryField(null = True)					# [4 bytes term.index_id][2 bytes count][1 byte modality.index_id]
 	terms_count = models.IntegerField(null = False, default = 0)
-	tags_string = models.TextField(null=True)
-	 	
+	text_file_name = models.TextField(null=True)
+	text = models.TextField(null=True)
+	word_index = models.BinaryField(null = True)					# [4 bytes position][1 byte length][4 bytes term.index_id]
+		
 	class Meta:
 		unique_together = (("dataset", "index_id"))
+	 
 	
 	def fetch_meta(self, doc_info):
 		if 'title' in doc_info:
@@ -313,7 +383,35 @@ class Document(models.Model):
 			try:
 				self.time = datetime.fromtimestamp(lst)
 			except:
-				self.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])				
+				self.time = datetime(lst[0], lst[1], lst[2], lst[3], lst[4], lst[5])
+		else:			
+			if self.dataset.time_provided:
+				self.dataset.log("Warning! Time isn't provided.")
+				self.dataset.time_provided = False
+	
+	def fetch_vw(self, line):
+		parsed = line.split()
+		self.text_id = parsed[0]
+		self.title = self.text_id
+		bow = BagOfWords()
+		current_modality = '@default_class'
+		self.text = ""
+		self.word_index = bytes()
+		for term in parsed[1:]:
+			if term[0] == '|':
+				current_modality = term[1:]
+			else:
+				parsed_term = term.split(':')
+				key = parsed_term[0] + "$#" + current_modality
+				if ':' in term:
+					count = int(parsed_term[1])	
+				else:
+					count = 1
+				term_index_id = self.dataset.terms_index[key].index_id
+				bow.add_term(term_index_id, count)
+				self.word_index += struct.pack('I', len(self.text)) + struct.pack('B', len(parsed_term[0])) + struct.pack('I', term_index_id)
+			self.text += term + " "
+		self.bag_of_words = bow.to_bytes(self.dataset.terms_index)
 	
 	def count_term(self, iid):
 		bow = self.bag_of_words
@@ -385,12 +483,46 @@ class Document(models.Model):
 		return bow_send
 	
 	def get_text(self):
-		if self.dataset.text_provided:
-			file_name = os.path.join(settings.DATA_DIR, "datasets", document.dataset.text_id, "documents", str(document.index_id) + ".txt")
+		#TODO remove
+		if self.text_file_name is None:
+			self.text_file_name = str(self.index_id) + ".txt"
+			self.save()
+		
+		if not self.text is None:
+			return self.text
+		elif not self.text_file_name is None:
+			file_name = os.path.join(self.dataset.get_folder(), "documents", self.text_file_name)
 			with open(file_name, encoding = "utf-8") as f:
-				return f.read().replace("\n","<br>")
+				return f.read()
 		else:
 			return "Text wasn't provided"
+	
+	def get_word_index(self):
+		wi = self.word_index
+		if wi is None:
+			try:
+				wi = bytes()
+				word_index_file_name = os.path.join(self.dataset.get_folder(), "word_index", str(self.index_id) + ".txt")
+				with open(word_index_file_name, 'r', encoding = 'utf-8') as f:
+					for word_index_line in f.readlines():
+						word_info = word_index_line.split()
+						if len(word_info) == 4:
+							word_info = word_info[1:]
+						wi += struct.pack('I', int(word_info[0])) + struct.pack('B', int(word_info[1])) + struct.pack('I', int(word_info[2]))
+				self.word_index = wi
+				self.save()
+			except:
+				pass
+				
+		count = len(wi) // 9
+		ret = []
+		for i in range(count):
+			ret.append((
+				(struct.unpack('I', wi[9*i : 9*i+4]))[0],
+				(struct.unpack('B', wi[9*i+4 : 9*i+5]))[0],
+				(struct.unpack('I', wi[9*i+5 : 9*i+9]))[0]
+			))
+		return ret
 	
 	def __str__(self):
 		return self.title
@@ -457,13 +589,16 @@ admin.site.register(Term)
 
 class BagOfWords():
 	def __init__(self):
-		self.bow = dict()
+		self.bow = dict() 
 		
-	def add_term(self, word_id, count, modality_index_id):
-		self.bow[word_id] = (count, modality_index_id)
+	def add_term(self, word_id, count):
+		if not word_id in self.bow:
+			self.bow[word_id] = count
+		else:
+			self.bow[word_id] += count 
 		
-	def to_bytes(self):
+	def to_bytes(self, terms_index):
 		ret = bytes()
-		for word_id, x in sorted(self.bow.items()):
-			ret += struct.pack('I', word_id) + struct.pack('H', x[0]) + struct.pack('B', x[1])
+		for word_id, count in sorted(self.bow.items()): 
+			ret += struct.pack('I', word_id) + struct.pack('H', count) + struct.pack('B', terms_index[word_id].modality.index_id)
 		return ret
