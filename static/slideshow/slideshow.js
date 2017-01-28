@@ -10,6 +10,7 @@ var Slideshow = function () {
     var slideshowShouldLoop = false;
     var currentSlidePosition;
     var startTouch = null;
+	var autoMode = true;
 
     var slideshow = {
         container: ".js-slideshow-container",
@@ -196,14 +197,23 @@ var Slideshow = function () {
     };
 
     var goToPrevious = function () {
+		autoMode = false;
         if (!isFirstSlide()) {
             currentSlideIndex--;
         }
         setCurrentSlide(true);
     };
 
-    var goToNext = function () {
-        if (!isLastSlide()) {
+    var goToNext = function (automatically) {
+		//alert(automatically);
+        if (automatically != "m") {
+			autoMode = false; 
+		}
+		if (automatically == "m" && !autoMode){
+			return;
+		}
+		
+		if (!isLastSlide()) {
             currentSlideIndex++;
         }
         setCurrentSlide(true);

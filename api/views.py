@@ -1,12 +1,12 @@
 from django.shortcuts import render
-from datasets.models import Dataset, Document
+from datasets.models import Dataset, Document, Modality
 from models.models import DocumentInTopic
 from visual.models import Polygon
 from django.http import HttpResponse
 import json
 import os
 from django.conf import settings
-from django.core.paginator import Paginator
+#from django.core.paginator import Paginator
 
 def _acao_response(response):
 	response['Access-Control-Allow-Origin'] = '*'
@@ -80,5 +80,19 @@ def get_polygon_children(request):
 	_acao_response(response)
 	return response
 	
-
+def set_parameter(request):
+	if request.GET['entity'] == 'Modality':
+		target = Modality.objects.filter(id = request.GET['id'])[0]
+		if request.GET['param'] == 'is_word':
+			target.is_word = change_boolean(target.is_word, request.GET['value'])
+		elif request.GET['param'] == 'is_tag':
+			target.is_tag = change_boolean(target.is_tag, request.GET['value'])
+		target.save()
+	
+	return HttpResponse("OK")
+	
+def change_boolean(initial, new):
+	if new == "change":
+		return not initial
+	return (new == 'true')
 	

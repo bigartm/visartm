@@ -144,7 +144,7 @@ def visual_dataset(request):
 			context['stats']['timeline'] = [date_list, count_list]
 		
 	elif mode == 'modalities':
-		context['modalities'] = Modality.objects.filter(dataset = dataset)
+		context['modalities'] = Modality.objects.filter(dataset = dataset).order_by('-terms_count')
 	elif mode == 'settings':
 		context['settings'] = {'modalities': Modality.objects.filter(dataset = dataset)}
 	elif mode == 'docs':
@@ -172,6 +172,7 @@ def visual_term(request):
 		term.count_documents_index()
 		#return HttpResponse("FFF")
 		context["docs"] = TermInDocument.objects.filter(term = term).order_by("-count")
+		print(context["docs"])
 	
 	return render(request, 'datasets/term.html', Context(context)) 
 	

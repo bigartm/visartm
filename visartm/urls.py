@@ -62,5 +62,7 @@ urlpatterns = [
 	# API
 	url(r'^api/documents/get', api_views.get_documents),
 	url(r'^api/polygons/children', api_views.get_polygon_children),
+	url(r'^api/settings/set', api_views.set_parameter),
+	
 	
 ]

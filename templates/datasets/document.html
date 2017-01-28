@@ -4,7 +4,7 @@
 
 {% block content %}
 	<h1> {{document.title}} </h1>  
-	{{document.snippet}}
+	{% if document.snippet %}{{document.snippet}}{% endif %}
 
 	<ul class="nav nav-tabs">
 	{% if lines %}
@@ -53,13 +53,15 @@
 		</div>
 		<hr>
 	{% endif %}
-	{% if document.dataset.tag_modality %}
-		<div>
-			<h4>Tags</h4>
-			<p id = "tags">{% autoescape off %}{{tags_string}}{% endautoescape %}</p>
-		</div>
-		<hr>
-	{% endif %}
+	
+ 
+	{% for tag in tags %}
+	<h4>{{tag.name}}</h4>
+	<p id = "tags">{% autoescape off %}{{tag.string}}{% endautoescape %}</p>
+	<hr> 
+	{% endfor %}
+ 
+	
 	{% if model %}
 		<div> 
 			<h4>Related documents</h4>

@@ -46,14 +46,41 @@
 		<a href = "/term?id={{term.id}}" >{{term}}</a> ({{term.token_tf}})<br>
 	{% endfor %}
 {% elif modalities %}
-	{% for modality in modalities %}
-		<a href = "/modality?id={{modality.id}}" >{{modality}}</a> ({{modality.terms_count}})
-		{% if dataset.word_modality == modality %}(Word modality){% endif %}
-		{% if dataset.tag_modality == modality %}(Tag modality){% endif %}
-		<br>
-	{% endfor %}
-	<h4>Modality distribution</h4>
-	<div id = "pie_modality" ></div>
+	<div class= "col-sm-5">
+		<table class = "table table-bordered table-hover">
+			<thead>
+				<tr>
+					<td>Name</td>
+					<td>Words</td>
+					<td>Is word</td>
+					<td>Is tag</td>
+				</tr>
+			</thead>
+			<tbody>
+			{% for modality in modalities %}
+				<tr>
+					<td><a href = "/modality?id={{modality.id}}" >{{modality.name}}</a></td>
+					<td>{{modality.terms_count}}</td>
+					<td>
+						<input 
+							type="checkbox"  
+							{% if modality.is_word %}checked="checked"{% endif %}
+							onclick="api.setParameter('Modality', {{modality.id}}, 'is_word', 'change');"
+						/>
+					</td>
+					<td>
+						<input 
+							type="checkbox"  
+							{% if modality.is_tag %}checked="checked"{% endif %}
+							onclick="api.setParameter('Modality', {{modality.id}}, 'is_tag', 'change');"
+						/>
+					</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table> 
+	</div>
+	<div class = "col-sm-4" id = "pie_modality" ></div>
 {% elif stats %}
 	<h4>Word frequency</h4>
 	<div id="freq_chart"></div>		 
@@ -108,6 +135,7 @@
 	Number of documents: {{dataset.documents_count}}<br>
 	Number of terms: {{dataset.terms_count}}<br>
 	Language: {{dataset.language}}<br>
+	Created: {{dataset.creation_time}}<br>
 	
 
 	
@@ -176,6 +204,8 @@
 	function useModel(id) { 
 		document.cookie = "model_{{dataset.id}}=" + id;
 	}
+	
+	var api = new ArtmApi(); 
 	
 	{% if stats %}
 	var freq_chart = c3.generate({

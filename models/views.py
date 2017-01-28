@@ -123,7 +123,6 @@ def delete_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
 	dataset_name = model.dataset.text_id 
 	if 'sure' in request.GET and request.GET['sure'] == 'yes': 
-		model.dispose()
 		ArtmModel.objects.filter(id = request.GET['model']).delete()
 		return general_views.message(request, "Model was deleted. <a href ='/dataset?dataset=" + dataset_name + "'> Return to dataset</a>.")
 	else:

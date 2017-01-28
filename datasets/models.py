@@ -1,5 +1,5 @@
 from django.db import models 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User	
 import os
 from django.conf import settings
 import json
@@ -27,13 +27,11 @@ class Dataset(models.Model):
 	language = models.CharField(max_length = 20, default = 'undefined') 
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
-	word_modality = models.ForeignKey("Modality", related_name = "dwm", null = True)
-	tag_modality = models.ForeignKey("Modality", related_name = "dtm", null = True)
-	
+
 	def __str__(self):
 		return self.name 
 		
-	#@transaction.atomic
+	@transaction.atomic
 	def reload(self): 	
 		#print("IN")
 		self.prepare_log()
@@ -41,10 +39,13 @@ class Dataset(models.Model):
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
 		uci_folder = os.path.join(dataset_path, "UCI")
 		vocab_file = os.path.join(uci_folder, "vocab." + self.text_id + ".txt")
+		
 		Term.objects.filter(dataset = self).delete()
 		Document.objects.filter(dataset = self).delete()
 		Modality.objects.filter(dataset = self).delete()
 		TermInDocument.objects.filter(dataset = self).delete()
+		from models.models import ArtmModel	
+		ArtmModel.objects.filter(dataset = self).delete()
 		
 		if self.json_provided:
 			docs_info_file = os.path.join(dataset_path, "documents.json")
@@ -60,7 +61,82 @@ class Dataset(models.Model):
 			self.uci_provided = True
 			
 		
-		#print("RUCIBOW")
+		# Creating ARTM batches and dictionary
+		self.log("Creating ARTM batches and dictionary...")
+		batches_folder = os.path.join(dataset_path, "batches")
+		dictionary_file_name = os.path.join(batches_folder, "dict.txt")
+		if os.path.exists(batches_folder): 
+			rmtree(batches_folder)
+		os.makedirs(batches_folder)  
+		batch_vectorizer = artm.BatchVectorizer(data_path = uci_folder, data_format = "bow_uci", batch_size = 1000,
+								collection_name = self.text_id, target_folder = batches_folder)
+		dictionary = artm.Dictionary(name="dictionary")
+		dictionary.gather(batches_folder, vocab_file_path = vocab_file)
+		dictionary.save_text(dictionary_file_name)
+		
+		
+		
+		
+		
+
+		
+		# Loading dictionary
+		self.log("Loading ARTM dictionary...")
+		term_modality_index = np.full(1000000,-1).astype(int)
+		term_index_id = -2
+		modality_index_id = 0
+		modalities_index = dict() 
+		with open(dictionary_file_name, "r", encoding = 'utf-8') as f:
+			for line in f:
+				term_index_id += 1
+				if term_index_id <= 0:
+					continue
+				parsed = line.replace(',',' ').split()
+				term = Term()
+				term.dataset = self
+				term.text = parsed[0]
+				term.index_id = term_index_id
+				term.token_value = float(parsed[2])
+				term.token_tf = int(parsed[3].split('.')[0])
+				term.token_df = int(parsed[4].split('.')[0]) 
+				modality_name = parsed[1]
+				if not modality_name in modalities_index:
+					modality = Modality()
+					modality_index_id += 1
+					modality.index_id = modality_index_id
+					modality.name = modality_name
+					modality.dataset = self 
+					modality.save()
+					modalities_index[modality_name] = modality 
+				modality = modalities_index[modality_name] 
+				term_modality_index[term_index_id] = modality.index_id
+				term.modality = modality
+				modality.terms_count += 1
+				
+				term.save() 
+				if term_index_id % 10000 == 0:
+					self.log(str(term_index_id))
+					print(term_index_id)
+					
+					
+		self.log("Saving modalities...")
+		max_modality_size = 0
+		word_modality_id = -1
+		for key, modality in modalities_index.items():
+			if modality.terms_count > max_modality_size:
+				word_modality_id = modality.id
+				max_modality_size = modality.terms_count
+				
+		for key, modality in modalities_index.items():
+			if modality.id == word_modality_id:
+				modality.is_word = True
+			if 'tag' in modality.name:
+				modality.is_tag = True
+			modality.save()
+
+					 
+			 
+		# Reading documents entries
 		self.log("Reading UCI bag of words and creating documents...")		
 		docword_file = os.path.join(uci_folder, "docword." + self.text_id + ".txt")
 		with open(docword_file, "r") as f:
@@ -92,7 +168,7 @@ class Dataset(models.Model):
 						self.log("Warning! No meta data in documents.json for document " + str(cur_doc_id) + ".")
 					
 					if self.time_provided and doc.time == None:
-						self.log("Warning! Time isn't provided at least for document " + str(cur_doc_id) + ", but you promised that it will be.")
+						self.log("Warning! Time isn't provided.")
 						self.time_provided = False
 				
 				doc.index_id = cur_doc_id
@@ -111,126 +187,14 @@ class Dataset(models.Model):
 			term_index_id = int(parsed[1])
 			term_count = int(parsed[2])  
 			cur_doc_terms_count += term_count
-			cur_bow.add_term(term_index_id, term_count)
+			cur_bow.add_term(term_index_id, term_count, term_modality_index[term_index_id])
 		
 		if cur_doc_id != self.documents_count + 1:
 			raise ValueError("Fatal error! Promised " + str(self.documents_count) + "documents, by provided " + str(cur_doc_id) + ".")
-				
-		
-		# Removing all connected models
-		from models.models import ArtmModel
-		models = ArtmModel.objects.filter(dataset = self)
-		for model in models:
-			model.dispose()
-		ArtmModel.objects.filter(dataset = self).delete()
-		
 		 
-		# Reading UCI vocabulary
-		self.log("Reading UCI vocabulary...")
-		terms_index = dict()
-		modalities_index = dict()
-		modality_name = "@default_class"
-		i = 1
-		with open(vocab_file, "r", encoding = 'utf-8') as f:
-			for line in f:
-				parsed = line.split()
-				term = Term()
-				term.dataset = self
-				term.text = parsed[0]
-				term.index_id = i
-				try:
-					modality_name = parsed[1]
-				except:
-					pass
-				if modality_name in modalities_index:
-					modality = modalities_index[modality_name]
-					term.modality = modality
-					modality.terms_count += 1
-				else:
-					modality = Modality()
-					modality.name = modality_name
-					modality.dataset = self
-					modality.terms_count = 1
-					modality.save()
-					modalities_index[modality_name] = modality
-					term.modality = modality
-				terms_index[parsed[0] + "$#" + modality_name] = term
-				i += 1
-				if i % 10000 == 0:
-					self.log(str(i))
-				
-		index_to_matrix = np.full(i,-1).astype(int)
-		tag_index = np.full(i,0).astype(int)
-		
-		self.log("Saving modalities...")
-		max_modality_size = 0
-		word_modality_id = -1
-		tag_modality_id = -1
-		for key, modality in modalities_index.items():
-			modality.save()
-			if modality.terms_count > max_modality_size:
-				self.word_modality = modality
-				word_modality_id = modality.id
-				max_modality_size = modality.terms_count
-			if 'tag' in modality.name:
-				self.tag_modality = modality
-				tag_modality_id = modality.id
-
 		
 		
-		# Creating ARTM batches and dictionary
-		self.log("Creating ARTM batches and dictionary...")
-		batches_folder = os.path.join(dataset_path, "batches")
-		dictionary_file_name = os.path.join(batches_folder, "dict.txt")
-		if os.path.exists(batches_folder): 
-			rmtree(batches_folder)
-		os.makedirs(batches_folder)  
-		batch_vectorizer = artm.BatchVectorizer(data_path = uci_folder, data_format = "bow_uci", batch_size = 1000,
-								collection_name = self.text_id, target_folder = batches_folder)
-		dictionary = artm.Dictionary(name="dictionary")
-		dictionary.gather(batches_folder)
-		dictionary.save_text(dictionary_file_name)
-		
-		
-		# Loading dictionary
-		self.log("Loading ARTM dictionary...")
-		i = -3
-		with open(dictionary_file_name, "r", encoding = 'utf-8') as f:
-			for line in f:
-				i += 1
-				if i < 0:
-					continue
- 
-				parsed = line.replace(',',' ').split()
-				key = parsed[0] + "$#" + parsed[1]
-				term = terms_index[key]
- 
-				term.matrix_id = i
-				term.token_value = float(parsed[2])
-				term.token_tf = int(parsed[3].split('.')[0])
-				term.token_df = int(parsed[4].split('.')[0])
-				index_to_matrix[term.index_id] = i
- 
-				if term.modality.id == word_modality_id:
-					tag_index[term.index_id] = 1
- 
-				elif term.modality.id == tag_modality_id:
-					tag_index[term.index_id] = 2
-  
-				term.save() 
-				if i % 10000 == 0:
-					self.log(str(i))
-					print(i)
-			 
-		np.save(os.path.join(dataset_path, "itm.npy"), index_to_matrix)
-		np.save(os.path.join(dataset_path, "tgi.npy"), tag_index)
-		 
-
-					 
-		self.log(str(self.documents_count))
-		self.creation_time = datetime.now()
-		self.status = 0
-		self.save() 		
+		self.log("Loaded " + str(self.documents_count) + " documents.")
 		
 		
 		# Creating folder for models
@@ -239,6 +203,9 @@ class Dataset(models.Model):
 			os.makedirs(model_path) 
 		
 		self.log("Dataset " + self.text_id + " loaded.")
+		self.creation_time = datetime.now()
+		self.status = 0
+		self.save() 
 	
 	def reload_untrusted(self):
 		try:
@@ -283,10 +250,7 @@ class Dataset(models.Model):
 		dictionary.load_text(dictionary_file_name)
 		return batch_vectorizer, dictionary
 		 
-		
-	def get_index_to_matrix(self):
-		return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "itm.npy"))
-		
+		 
 	def get_tag_index(self):
 		return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "tgi.npy"))
 	
@@ -318,13 +282,7 @@ class Dataset(models.Model):
 		if not os.path.exists(path): 
 			os.makedirs(path) 
 		return path	 
-	
-	'''	
-	def reload_tags(self):
-		documents = Document.objects.filter(dataset = self)
-		for document in documents:
-			document.fetch_tags(True)
-	'''
+ 
 	
 class Document(models.Model):
 	title = models.TextField(null=False)
@@ -336,10 +294,7 @@ class Document(models.Model):
 	bag_of_words = models.BinaryField(null=False, default = bytes())
 	terms_count = models.IntegerField(null = False, default = 0)
 	tags_string = models.TextField(null=True)
-	
-	#tags_fetched = models.BooleanField(null = False, default = False)
-	#
-	
+	 	
 	class Meta:
 		unique_together = (("dataset", "index_id"))
 	
@@ -363,12 +318,12 @@ class Document(models.Model):
 	def count_term(self, iid):
 		bow = self.bag_of_words
 		left = 0
-		right = len(bow) // 6
+		right = len(bow) // 7
 		while True:
 			pos = (left + right) // 2
-			bow_iid = struct.unpack('I', bow[6 * pos : 6*pos+4])[0]
+			bow_iid = struct.unpack('I', bow[7 * pos : 7*pos+4])[0]
 			if bow_iid == iid:
-				return struct.unpack('H', bow[6*pos+4 : 6*pos+6])[0]
+				return struct.unpack('H', bow[7*pos+4 : 7*pos+6])[0]
 			elif bow_iid > iid:
 				right = pos
 			else:
@@ -376,23 +331,58 @@ class Document(models.Model):
 			if left >= right:
 				return 0
 	
-	def fetch_tags(self, forced = False):
-		tags_string = ""
+	def fetch_tags(self):
+		tag_modalities = Modality.objects.filter(dataset = self.dataset, is_tag = True)
+		if len (tag_modalities) == 0:
+			return []
+			
+		tag_names = dict()
+		tag_strings = dict()
+		
+		for modality in tag_modalities:
+			tag_names[modality.index_id] = modality.name
+			 
 		bow = self.bag_of_words
-		unique_terms_count = len(bow) // 6 
-		ctr = 0
-		tag_index = self.dataset.get_tag_index()
+		unique_terms_count = len(bow) // 7 
+		
 		for i in range(unique_terms_count):
-			bow_iid = struct.unpack('I', bow[6*i : 6*i+4])[0]
-			if tag_index[bow_iid] == 2:
+			bow_iid = struct.unpack('I', bow[7*i : 7*i+4])[0]
+			modality_iid = struct.unpack('B', bow[7*i+6 : 7*i+7])[0]
+			if modality_iid in tag_names:
 				term = Term.objects.filter(dataset = self.dataset, index_id = bow_iid)[0]
-				if ctr != 0:
-					tags_string += ', '
-				tags_string += '<a href="/term?id=' + str(term.id) + '">' + term.text + '</a>' 
-				ctr += 1
-				if ctr == 5:
-					break
-		return tags_string
+				if modality_iid in tag_strings:
+					tag_strings[modality_iid] += ', '
+				else:
+					tag_strings[modality_iid] =''
+				tag_strings[modality_iid] += '<a href="/term?id=' + str(term.id) + '">' + term.text + '</a>' 
+				
+		ret = []
+		for tag_id, tag_string in tag_strings.items():
+			ret.append({"name": tag_names[tag_id], "string": tag_string})
+		return ret
+		
+	def fetch_bow(self, cut_bow):
+		bow = self.bag_of_words
+		unique_terms_count = len(bow) // 7 		
+		bow_entries = []
+		for i in range(unique_terms_count):
+			bow_iid = struct.unpack('I', bow[7*i : 7*i+4])[0]
+			bow_count = struct.unpack('H', bow[7*i+4 : 7*i+6])[0]
+			bow_entries.append((-bow_count, bow_iid))
+		bow_entries.sort()
+		bow_send = ""
+		prfx = "<a href = '/term?ds=" + str(self.dataset.id) + "&iid="
+		rest = unique_terms_count
+		for x in bow_entries:
+			cnt = -x[0]
+			iid = x[1]
+			if cnt <= cut_bow:
+				bow_send += str(rest) + " terms, which occured " + str(cut_bow) + " times or less, aren't shown." 
+				break
+			bow_send += prfx + str(iid) + "'>" + Term.objects.filter(dataset = self.dataset, index_id = iid)[0].text + "</a>: " + str(cnt) + "<br>"
+			rest -= 1
+		
+		return bow_send
 	
 	def get_text(self):
 		if self.dataset.text_provided:
@@ -409,6 +399,9 @@ class Modality(models.Model):
 	name = models.TextField(null=False)
 	dataset = models.ForeignKey(Dataset, null = False)
 	terms_count = models.IntegerField(null = False, default = 0)
+	index_id = models.IntegerField(null = False, default = 0)
+	is_word = models.BooleanField(null = False, default = False)
+	is_tag = models.BooleanField(null = False, default = False)
 	def __str__(self):
 		return self.dataset.name + "/" + self.name
 		
@@ -416,8 +409,7 @@ class Term(models.Model):
 	text = models.TextField(null=False)
 	modality =  models.ForeignKey(Modality, null = False)
 	dataset = models.ForeignKey(Dataset, null = False)
-	index_id = models.IntegerField(null = False)				#id in UCI files and word_index files
-	matrix_id = models.IntegerField(default = -1, null = False)				#id in dictionary and phi matrix
+	index_id = models.IntegerField(null = False)				#id in UCI files and word_index files 
 	token_value = models.FloatField(default=0)
 	token_tf = models.IntegerField(default=0)
 	token_df = models.IntegerField(default=0)
@@ -467,11 +459,11 @@ class BagOfWords():
 	def __init__(self):
 		self.bow = dict()
 		
-	def add_term(self, word_id, count):
-		self.bow[word_id] = count
+	def add_term(self, word_id, count, modality_index_id):
+		self.bow[word_id] = (count, modality_index_id)
 		
 	def to_bytes(self):
 		ret = bytes()
-		for word_id, count in sorted(self.bow.items()):
-			ret += struct.pack('I', word_id) + struct.pack('H', count)
+		for word_id, x in sorted(self.bow.items()):
+			ret += struct.pack('I', word_id) + struct.pack('H', x[0]) + struct.pack('B', x[1])
 		return ret

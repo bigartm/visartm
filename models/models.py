@@ -429,11 +429,7 @@ class ArtmModel(models.Model):
 		self.save()
 		
 	
-	def dispose(self):
-		try:
-			rmtree(self.get_folder())
-		except:
-			pass
+
 	 
 	def get_folder(self):
 		path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "models", self.text_id)
@@ -456,6 +452,19 @@ class ArtmModel(models.Model):
 	def get_psi(self, i):
 		return np.load(os.path.join(self.get_folder(), "psi" + str(i) + ".npy"))
 	
+	
+	
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+@receiver(pre_delete, sender=ArtmModel, dispatch_uid='artmmodel_delete_signal')
+def remove_model_files(sender, instance, using, **kwargs):
+	print("Now removing model " + str(instance.id))
+	folder = instance.get_folder()
+	print("Will delete folder " + folder)
+	try:
+		rmtree(folder)
+	except:
+		pass
 				
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

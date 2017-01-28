@@ -32,8 +32,7 @@ def visual_document(request):
 	if not model is None:
 		context['model'] = model
 		
-	if not dataset.tag_modality == None:
-		context['tags_string'] = document.fetch_tags()
+	context['tags'] = document.fetch_tags()
 
 	if not model is None:
 		topics_count = [int(x) for x in model.topics_count.split()]
@@ -91,35 +90,10 @@ def visual_document(request):
 
 		
 	if 'mode' in request.GET and request.GET['mode'] == 'bow':
-		# reading bag of words
-		bow = document.bag_of_words
-		
-		unique_terms_count = len(bow) // 6 
-		
-		bow_entries = []
-		for i in range(unique_terms_count):
-			bow_iid = struct.unpack('I', bow[6*i : 6*i+4])[0]
-			bow_count = struct.unpack('H', bow[6*i+4 : 6*i+6])[0]
-			bow_entries.append((-bow_count, bow_iid))
-		
-		bow_entries.sort()
-		bow_send = ""
-		
 		cut_bow = 1
 		if "cut_bow" in request.COOKIES:
 			cut_bow = int(request.COOKIES["cut_bow"])
-		
-		prfx = "<a href = '/term?ds=" + str(dataset.id) + "&iid="
-		rest = unique_terms_count
-		for x in bow_entries:
-			cnt = -x[0]
-			iid = x[1]
-			if cnt <= cut_bow:
-				bow_send += str(rest) + " terms, which occured " + str(cut_bow) + " times or less, aren't shown." 
-				break
-			bow_send += prfx + str(iid) + "'>" + Term.objects.filter(dataset = dataset, index_id = iid)[0].text + "</a>: " + str(cnt) + "<br>"
-			rest -= 1
-		context['bow'] = bow_send
+		context['bow'] = document.fetch_bow(cut_bow)
 	else:			
 		if not dataset.text_provided:
 			context['lines'] = ["","Text wasn't provided"]
@@ -134,8 +108,7 @@ def visual_document(request):
 			 
 			# Word highlight
 			if highlight_terms:
-				if not model is None:
-					index_to_matrix = dataset.get_index_to_matrix()
+				if not model is None: 
 					phi_layer = phi[:, shift : shift + topics_count[target_layer]]
 					theta_t_layer = theta_t[document_matrix_id, shift : shift + topics_count[target_layer]]
 				lines_count = len(lines)
@@ -151,7 +124,7 @@ def visual_document(request):
 						if model is None:
 							entries_index[line].append((start_pos, length, term_index_id, 0)) 
 						else:
-							term_matrix_id = index_to_matrix[term_index_id]
+							term_matrix_id = term_index_id - 1
 							topic_id = np.argmax(phi_layer[term_matrix_id] * theta_t_layer)			
 							entries_index[line].append((start_pos, length, term_index_id, hl_topics[topic_id])) 
 				

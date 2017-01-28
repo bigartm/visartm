@@ -68,5 +68,11 @@ class ArtmApi {
 		xhttp.open("GET", this.host + "/api/polygons/children?id=" + polygonId, true);
 		xhttp.send();
 	}
+	
+	setParameter(entity, id, param, value) {
+		var xhttp = new XMLHttpRequest();
+		xhttp.open("GET", this.host + "/api/settings/set?entity=" + entity + "&id=" + id + "&param=" + param + "&value=" + value, true);
+		xhttp.send();
+	}
 	 
 }
