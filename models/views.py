@@ -135,11 +135,9 @@ def delete_model(request):
 @login_required
 def delete_all_models(request):
 	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-	models = ArtmModel.objects.filter(dataset = dataset)
+	
 	if 'sure' in request.GET and request.GET['sure'] == 'yes': 
-		for model in models:
-			model.dispose()
-		models.delete()
+		ArtmModel.objects.filter(dataset = dataset).delete()
 		return general_views.message(request, "All models were deleted. <a href ='/dataset?dataset=" + 
 					dataset.text_id + "'>Return to dataset</a>.")
 	else:

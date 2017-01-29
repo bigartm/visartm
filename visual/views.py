@@ -97,10 +97,11 @@ def visual_document(request):
 	else:			
 		text = document.get_text()
 		
+		wi = document.get_word_index()
 		highlight_terms = True
-		if "highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false":
+		if ("highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false") or not wi:
 			highlight_terms = False
-		 
+		
 		# Word highlight
 		if highlight_terms:
 			if not model is None: 
@@ -109,8 +110,7 @@ def visual_document(request):
 			
 			entries = []
 			
-			wi = document.get_word_index()
-			print(wi)
+
 			for start_pos, length, term_index_id in wi:
 				if model is None:
 					entries.append((start_pos, length, term_index_id, 0)) 

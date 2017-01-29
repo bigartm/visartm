@@ -27,8 +27,11 @@ def	datasets_reload(request):
 	dataset.creation_time = datetime.now()
 	dataset.save()	
 	
-	t = Thread(target = Dataset.reload_untrusted, args = (dataset, ), daemon = True)
-	t.start()
+	if settings.CONSOLE_OUTPUT:
+		dataset.reload()
+	else:
+		t = Thread(target = Dataset.reload_untrusted, args = (dataset, ), daemon = True)
+		t.start()
 	
 	return redirect("/dataset?dataset=" + dataset.text_id) 
 	
@@ -54,17 +57,8 @@ def	datasets_create(request):
 		dataset.text_id = dataset.name
 	
 	dataset.description = request.POST['description']
+	dataset.description = request.POST['preprocessing']
 	dataset.owner = request.user 
-	if 'text_provided' in request.POST:
-		dataset.text_provided = True
-	if 'word_index_provided' in request.POST:
-		dataset.word_index_provided = True
-	if 'uci_provided' in request.POST:
-		dataset.uci_provided = True
-	if 'json_provided' in request.POST:
-		dataset.json_provided = True
-	if 'vw_provided' in request.POST:
-		dataset.vw_provided = True 
 	dataset.language = request.POST['lang']
 	if not dataset.check_can_load():
 		return HttpResponse(dataset.error_message)
