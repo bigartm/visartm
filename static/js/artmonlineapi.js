@@ -1,6 +1,6 @@
 class ArtmApi {
-	constructor(_host) {
-		this.host = "http://127.0.0.1:8000";
+	constructor() {
+		this.host = window.location.protocol + "//" + window.location.host;
 	}
 
 	getDocument(documentId, callback) {

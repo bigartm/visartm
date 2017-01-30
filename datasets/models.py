@@ -96,6 +96,8 @@ class Dataset(models.Model):
 			parser.store_order = params["store_order"]
 		if "hashtags" in params:
 			parser.hashtags = params["hashtags"]
+		if "bigrams" in params:
+			parser.bigrams = params["bigrams"]
 		self.log("Parsing initialized.")
 		parser.process()
 		self.log("Parsing done.")
@@ -357,17 +359,20 @@ class Document(models.Model):
 			
 			wordpos_file = os.path.join(self.dataset.get_folder(), "wordpos", self.text_id)
 			if os.path.exists(wordpos_file):
-				self.word_index = bytes()
+				word_index_list = []
 				with open(wordpos_file, "r", encoding = "utf-8") as f2:
 					for line in f2.readlines():
 						parsed = line.split()
-						try:
-							term_index_id = self.dataset.terms_index[parsed[2]].index_id
-							self.word_index += struct.pack('I', int(parsed[0])) + struct.pack('B', int(parsed[1])) + struct.pack('I', term_index_id)
-						except:
-							pass
+						key = parsed[2]
+						if key in self.dataset.terms_index:
+							term_index_id = self.dataset.terms_index[key].index_id
+							word_index_list.append((int(parsed[0]), -int(parsed[1]), term_index_id))
+				word_index_list.sort()
+				self.word_index = bytes() 
+				for pos, length, tid in word_index_list:
+					self.word_index += struct.pack('I', pos) + struct.pack('B', -length) + struct.pack('I', tid)
 			else:
-				self.log("WARNING! No wordpos wor file " + selff.text_id)
+				self.log("WARNING! No wordpos for file " + selff.text_id)
 		
 		bow = BagOfWords()
 		current_modality = '@default_class'		
@@ -464,19 +469,26 @@ class Document(models.Model):
 	def get_text(self):
 		return self.text
 		
-	def get_word_index(self):
+	def get_word_index(self, no_overlap=True):
 		wi = self.word_index
 		if wi is None:
 			return None
 				
 		count = len(wi) // 9
+		last_pos = -1
+		print("WIIIIIIIIIIIICCCCCCC", count)
+		print(wi)
 		ret = []
 		for i in range(count):
-			ret.append((
-				struct.unpack('I', wi[9*i : 9*i+4])[0],
-				struct.unpack('B', wi[9*i+4 : 9*i+5])[0],
-				struct.unpack('I', wi[9*i+5 : 9*i+9])[0]
-			))
+			pos = struct.unpack('I', wi[9*i : 9*i+4])[0]
+			length = struct.unpack('B', wi[9*i+4 : 9*i+5])[0]
+			if no_overlap:
+				if pos < last_pos:
+					continue
+				else:
+					last_pos = pos + length
+			ret.append((pos, length, struct.unpack('I', wi[9*i+5 : 9*i+9])[0]))
+			
 		return ret
 		
 	def get_concordance(self, term):

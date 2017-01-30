@@ -11,7 +11,7 @@
 	{% if is_low %}
 		<h3>Documents</h3>
 		<div id="documents"></div>
-		<p><a id = "morelink" onclick = "append(100)">More</a></p>
+		<p><a id = "morelink" onclick = "append(100)"></a></p>
 	{% else %}
 		<h3>Topics</h3>
 		{% for topic in topics %}
@@ -73,9 +73,7 @@
 				document.getElementById("documents").innerHTML += "<a href='/document?id=" + doc.id + "'>" + 
 					doc.title + "</a> (" + doc.weight + "%)<br>";
 			});
-			if (documents.length < count) {
-				document.getElementById("morelink").innerHTML = "";
-			}
+			document.getElementById("morelink").innerHTML = ((documents.length == count) ? "More" : "");
 		});
 		counter += count;
 	}

@@ -33,8 +33,6 @@ class VocabFilter():
                         self.total_terms_count += count
     
     def save_vocabulary(self, vocab_file):
-        print("min length is " + str(self.minimal_length))
-        
         with open(vocab_file, "w", encoding = "utf-8") as f:
             upper_bound = min(self.upper_bound, self.upper_bound_relative*self.documents_count)
             for word, count in self.vocab.items():

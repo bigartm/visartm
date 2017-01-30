@@ -230,39 +230,42 @@ class ArtmModel(models.Model):
 				topic.model = self
 				topic.index_id = topic_id
 				topic.layer = layer_id
+				topic.save()
+				
+				# Top terms
 				distr = phi_t[row_counter]
 				row_counter += 1
 				idx = np.zeros(terms_count)
 				idx = np.argsort(distr)
 				idx = idx[::-1]
-				
-				
 				terms_to_title = []
 				title_size = 3
-				cnt = 0
+				top_terms_size = 20
+				ctr = 0
 				for i in idx:
 					term = terms_index[int(i)]
 					if term.modality.is_word:
-						terms_to_title.append(term.text)
-						cnt += 1
-					if cnt == title_size:
-						break
+						ctr += 1
+						top_term = TopTerm()
+						top_term.model = self
+						top_term.topic = topic
+						top_term.term_id = terms_id_index[int(i)]
+						top_term.weight = distr[int(i)]
+						top_term.save()
+						
+						if ctr <= title_size:
+							terms_to_title.append(term.text)
+						if ctr == top_terms_size:
+							break
 						
 				topic.title = ', '.join(terms_to_title)
 				topic.title_multiline = '\n'.join(terms_to_title)
-				topic.title_short = topic.title[0:20]
-				
-				
+				topic.title_short = topic.title[0:20]			
 				topic.save()
-				topics_index[layer_id].append(topic)
 				
-				for i in idx[0:100]:
-					top_term = TopTerm()
-					top_term.model = self
-					top_term.topic = topic
-					top_term.term_id = terms_id_index[int(i)]
-					top_term.weight = distr[int(i)]
-					top_term.save()
+				topics_index[layer_id].append(topic)
+				 
+					
 				
 				if row_counter % 10 == 0:
 					self.log("Created topic %d/%d." % (row_counter, total_topics_count))

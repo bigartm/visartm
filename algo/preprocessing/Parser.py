@@ -14,6 +14,7 @@ class Parser:
         
         self.store_order = False
         self.hashtags = False
+        self.bigrams = False
         
         self.ctr = 0
     
@@ -50,13 +51,19 @@ class Parser:
             
         self.vw_file.write(rel_name + " |word")    
         bow = dict()
-        hashtags = list()
+        hashtags = [] 
+        bigrams = dict()
+        
         wordpos_file = open(os.path.join(self.output_folder, rel_name), "w", encoding='utf-8')
         
         cur_pos = 0 
+        prev_word = None
+        prev_word_start_pos = 0
         text_len = len(text)
         while cur_pos < text_len:
             while cur_pos < text_len and not self.char_good(text[cur_pos]):
+                if text[cur_pos] in "\n.!?":
+                    prev_word = None
                 cur_pos +=1
             init_pos = cur_pos
             
@@ -73,7 +80,20 @@ class Parser:
                 if word_lemmatized[0] == '#' and self.hashtags:
                     wordpos_file.write("%d %d %s$#hashtag\n" % (init_pos, length, word_lemmatized))
                     hashtags.append(word_lemmatized)
+                    prev_word = None
                 else:
+                    if self.bigrams:
+                        if prev_word:
+                            bigram_text = prev_word + "_" + word_lemmatized
+                            bigram_pos = prev_word_start_pos
+                            bigram_length = init_pos + length - prev_word_start_pos
+                            wordpos_file.write("%d %d %s$#bigram\n" % (bigram_pos, bigram_length, bigram_text))
+                            try:
+                                bigrams[bigram_text] += 1
+                            except:
+                                bigrams[bigram_text] = 1
+                        prev_word_start_pos = init_pos 
+                        prev_word = word_lemmatized 
                     wordpos_file.write("%d %d %s$#word\n" % (init_pos, length, word_lemmatized))
                     if self.store_order:
                         self.vw_file.write(" " + word_lemmatized)
@@ -92,6 +112,15 @@ class Parser:
                     
         if len(hashtags) > 0:
             self.vw_file.write(" |hashtag "+ ' '.join(hashtags))
+            
+        if len(bigrams) > 0:
+            self.vw_file.write(" |bigram")
+            for word, count in bigrams.items():
+                if count == 1:
+                    self.vw_file.write(" %s" % word)
+                else:
+                    self.vw_file.write(" %s:%d" % (word, count))
+            
          
         if rel_name in self.meta_vw:
             self.vw_file.write(self.meta_vw[rel_name])
@@ -127,6 +156,8 @@ class Parser:
 if __name__ == "__main__":
     parser = Parser("D:\\visartm\\data\\datasets\\lurkopub1000")
     parser.hashtags = True
+    parser.bigrams = False
     parser.store_order = False
+    
     parser.process()
 

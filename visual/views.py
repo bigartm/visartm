@@ -102,8 +102,10 @@ def visual_document(request):
 		if ("highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false") or not wi:
 			highlight_terms = False
 		
+		print("WIIIIII",wi)
 		# Word highlight
 		if highlight_terms:
+			print(highlight_terms)
 			if not model is None: 
 				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
 				theta_t_layer = theta_t[document_matrix_id, shift : shift + topics_count[target_layer]]
@@ -137,6 +139,7 @@ def visual_document(request):
 			text = new_text
 				
 		context['lines'] = text.split('\n')
+		context['lines'].append(str(entries))
 			
 		
 	# Related documents 
