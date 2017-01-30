@@ -52,30 +52,40 @@
 			
 			 
 			<hr>	
-			<h3>Settings</h3>
-			<div class="form-group row">
-				<label class="col-sm-2 col-form-label">Description</label>
-				<textarea name="description" cols="40" rows="5"></textarea>
-			</div> 	
+			<h3>Preprocessing</h3>
 			
-			<div class="form-group row">
-				<label class="col-sm-2 col-form-label">Language</label>
-				<div class="col-sm-2">
-					<select class="form-control"  name="lang">
-						{% for lang in languages %}
-							<option>{{lang}}</option>
-						{% endfor %}				
-					</select>
-				</div>
-			</div> 	
-			
-			<div class="form-group row">
-				<label class="col-sm-2 col-form-label">Preprocessing arguments</label>
-				<textarea name="preprocessing" cols="40" rows="5"></textarea>
+			<input type="checkbox" id = "parse" name = "parse" onclick="checkboxClick('parse');"><big> Parse</big></input>
+			<div id="parse-params" style="display:none;">
+				<div class="form-group row" style="margin-left:30px;">
+					<input type="checkbox" name="store_order">Store order</input>
+				</div> 
 			</div> 
 			
- 
-						 
+			<p></p>
+			
+			<input type="checkbox" id="filter" name = "filter" onclick="checkboxClick('filter');"><big> Filter</big></input>
+			<div id="filter-params" style="display:none;">
+				<div class="form-group row" style="margin-left:30px;">
+					<label class="col-sm-2 col-form-label">Lower bound</label>
+					<div class="col-sm-1">
+						<input type="number" name="lower_bound" value="0" />
+					</div>
+				</div> 
+				<div class="form-group row" style="margin-left:30px;">
+					<label class="col-sm-2 col-form-label">Upper bound</label>
+					<div class="col-sm-1">
+						<input type="number" name="upper_bound" value="1000000" />
+					</div>
+				</div> 
+				<div class="form-group row" style="margin-left:30px;">
+					<label class="col-sm-2 col-form-label">Upper bound (relative)</label>
+					<div class="col-sm-1">
+						<input type="number" name="upper_bound_relative" value="1000000" />
+					</div>
+				</div> 
+			</div>
+			
+			
 			<div class="form-group row">
 			  <div class="offset-sm-2 col-sm-10">
 				<button type="submit" class="btn btn-primary">Create</button>
@@ -91,6 +101,15 @@
 <script type = "text/javascript">
 	function setMode(mode) {
 		document.getElementById("mode").value = mode;
+	}
+	
+	function checkboxClick(key) {
+		targetDiv = document.getElementById(key + "-params");
+		
+		if (document.getElementById(key).checked)
+			targetDiv.style.display = "inline";
+		else
+			targetDiv.style.display = "none";
 	}
 </script>
 {% endblock %}

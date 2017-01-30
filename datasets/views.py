@@ -41,10 +41,8 @@ def	datasets_create(request):
 		existing_datasets = [dataset.text_id for dataset in Dataset.objects.all()]
 		folders = os.listdir(os.path.join(settings.DATA_DIR, "datasets"))
 		unreg = [i for i in folders if not i in existing_datasets]
-		
-		languages = ['undefined', 'russian', 'english'] 
-		context = Context({"languages": languages,
-						   "unreg": unreg})
+		 
+		context = Context({"unreg": unreg})
 		return render(request, "datasets/create_dataset.html", context) 
 	
 	print(request.POST)
@@ -53,11 +51,27 @@ def	datasets_create(request):
 		dataset.upload_from_archive(request.FILES['archive'])
 		#return HttpResponse("OK")
 	else:
-		dataset.name = request.POST['unreg_name']
-		dataset.text_id = dataset.name
+		dataset.text_id = request.POST['unreg_name']
 	
-	dataset.description = request.POST['description']
-	dataset.description = request.POST['preprocessing']
+	dataset.name = dataset.text_id 
+	
+	preprocess_params = dict()
+	if 'parse' in request.POST:
+		preprocess_params['parse'] = {
+			'store_order' : ('store_order' in request.POST)
+		}
+		
+	if 'filter' in request.POST:
+		preprocess_params['filter'] = {
+			'lower_bound' : request.POST['lower_bound'],
+			'upper_bound' : request.POST['upper_bound'],
+			'upper_bound_relative' : request.POST['upper_bound_relative'],
+		}
+	import json
+	dataset.preprocess = json.dumps(preprocess_params)	
+	#return HttpResponse(dataset.preprocess)
+	
+	
 	dataset.owner = request.user 
 	dataset.language = request.POST['lang']
 	if not dataset.check_can_load():
@@ -76,6 +90,10 @@ def visual_dataset(request):
 	if request.method == "POST":
 		print(request.POST)
 		dataset = Dataset.objects.filter(text_id = request.POST['dataset'])[0]
+		dataset.name = request.POST['name']
+		dataset.description = request.POST['description']
+		dataset.preprocessing = request.POST['preprocessing']
+		
 		dataset.save() 
 		return redirect("/dataset/?dataset=" + request.POST['dataset'] + "&mode=settings")
 	

@@ -6,7 +6,7 @@ from random import randint
 import pymorphy2
             
             
-class WVBuilder:
+class Parser:
     def __init__(self, dataset_folder): 
         self.documents_folder = os.path.join(dataset_folder, "documents")
         self.output_folder = os.path.join(dataset_folder, "wordpos")
@@ -17,13 +17,14 @@ class WVBuilder:
         self.store_order = False
         self.ctr = 0
     
+        self.meta_vw = dict()
         meta_vw_file = os.path.join(dataset_folder, "meta", "meta.vw.txt")       
         if os.path.exists(meta_vw_file):
-            self.meta_vw = dict()
             with open(meta_vw_file, "r", encoding = 'utf-8') as f:
                 for line in f:
                     pos = line.find(' ')
                     self.meta_vw[line[0:pos]] = line[pos:-1]
+            
                     
         
     def lemmatize(self, word):
@@ -64,6 +65,8 @@ class WVBuilder:
             word = text[init_pos : cur_pos]
             if length > 1:
                 word_lemmatized = self.lemmatize(word)
+                if len(word_lemmatized) <= 1:
+                    continue
                 wordpos_file.write("%d %d %s$#word\n" % (init_pos, length, word_lemmatized))
                 if self.store_order:
                     self.vw_file.write(" " + word_lemmatized)
@@ -75,7 +78,10 @@ class WVBuilder:
         
         if not self.store_order:
             for word, count in bow.items():
-                self.vw_file.write(" %s:%d" % (word, count))
+                if count == 1:
+                    self.vw_file.write(" %s" % word)
+                else:
+                    self.vw_file.write(" %s:%d" % (word, count))
          
         if rel_name in self.meta_vw:
             self.vw_file.write(self.meta_vw[rel_name])
@@ -106,6 +112,6 @@ class WVBuilder:
         
  
 if __name__ == "__main__":
-    builder = WVBuilder("D:\\visartm\\data\\datasets\\postnauka")
-    builder.process()
+    parser = Parser("D:\\visartm\\data\\datasets\\postnauka")
+    parser.process()
 

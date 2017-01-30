@@ -18,12 +18,11 @@ class Dataset(models.Model):
 	owner = models.ForeignKey(User, null=True, blank=True, default = None)
 	terms_count = models.IntegerField(default = 0) 
 	documents_count = models.IntegerField(default = 0)
-	creation_time = models.DateTimeField(null=False, default = datetime.now)
-	language = models.CharField(max_length = 20, default = 'undefined') 
+	creation_time = models.DateTimeField(null=False, default = datetime.now) 
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
 
-	preprocessing = models.TextField(null=False, default = "")
+	preprocessing = models.TextField(null=False, default = "{}")
 	time_provided = models.BooleanField(null=False, default = True)
 	
 	def __str__(self):
@@ -51,18 +50,21 @@ class Dataset(models.Model):
 		except:
 			self.time_provided = False
 			self.docs_info = {}
-				
-		# Here invoke parsing of documents, if they are available
-			
 		
-		from algo.preprocessing.VocabFilter import VocabFilter
-		self.log("Filtering words...")
-		filter = VocabFilter(os.path.join(self.get_folder(), "vw.txt"))
-		self.log("Filtering initilized.")
-		filter.lower_bound = 3
-		filter.upper_bound_relative = 2
-		filter.save_vocabulary(os.path.join(self.get_folder(),"vocab.txt"))
-		self.log("Filtering done.")
+		try:
+			preprocessing_params = json.loads(self.preprocessing)
+			self.log(preprocessing_params)
+		except:
+			preprocessing_params = {}
+			self.log("Warning! Failed to load preprocessing parameters.")
+			
+		if "parse" in preprocessing_params:
+			self.preprocess_parse(preprocessing_params["parse"])
+		if "filter" in preprocessing_params:
+			self.preprocess_filter(preprocessing_params["filter"])
+			
+			
+			 
 		
 		
 		self.create_batches()
@@ -84,6 +86,32 @@ class Dataset(models.Model):
 		self.creation_time = datetime.now()
 		self.status = 0
 		self.save() 
+	
+	
+	def preprocess_parse(self, params):
+		self.log("Parsing documents...")
+		from algo.preprocessing.Parser import Parser
+		parser = Parser(self.get_folder())
+		if "store_order" in params:
+			parser.store_order = params["store_order"]
+		self.log("Parsing initialized.")
+		parser.process()
+		self.log("Parsing done.")
+		
+		
+	def preprocess_filter(self, params):		
+		from algo.preprocessing.VocabFilter import VocabFilter
+		self.log("Filtering words...")
+		filter = VocabFilter(os.path.join(self.get_folder(), "vw.txt"))
+		self.log("Filtering initilized.")
+		if "lower_bound" in params:
+			filter.lower_bound = params["lower_bound"]	
+		if "upper_bound" in params:
+			filter.upper_bound = params["upper_bound"]
+		if "upper_bound_relative" in params:
+			filter.upper_bound_relative = params["upper_bound_relative"]
+		filter.save_vocabulary(os.path.join(self.get_folder(),"vocab.txt"))
+		self.log("Filtering done.")
 	
 	def create_batches(self): 
 		self.log("Creating ARTM batches...")
@@ -325,7 +353,7 @@ class Document(models.Model):
 			if os.path.exists(wordpos_file):
 				self.word_index = bytes()
 				with open(wordpos_file, "r", encoding = "utf-8") as f2:
-					for line in f2:
+					for line in f2.readlines():
 						parsed = line.split()
 						try:
 							term_index_id = self.dataset.terms_index[parsed[2]].index_id

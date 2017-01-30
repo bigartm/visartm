@@ -4,11 +4,32 @@
 
 {% block content %}
 	<h1>Datasets</h1>
-	{% for dataset in datasets %}
-		<p> 
-			 <a href="/dataset?dataset={{dataset.text_id}}">{{ dataset.name }}</a> - {{ dataset.description }} ({{dataset.documents_count}} documents)
-		</p>
-	{% endfor %}
+	
+		<table class = "table table-bordered table-hover">
+			<thead>
+				<tr>
+					<td>Name</td>
+					<td>Description </td>
+					<td>Documents</td>
+					<td>Terms</td>
+					<td>Created</td>
+					<td>Owner</td>
+				</tr>
+			</thead>
+			<tbody>
+			{% for dataset in datasets %}
+			<tr>
+				<td>
+					<a href="/dataset?dataset={{dataset.text_id}}">{{ dataset.name }}</a>
+				</td>
+				<td>{{ dataset.description }}</td>
+				<td>{{dataset.documents_count}}</td>
+				<td>{{dataset.terms_count}}</td>
+				<td>{{dataset.creation_time}}</td>
+				<td><a href="/accounts/{{dataset.owner}}">{{dataset.owner}}</a></td>
+			</tr>
+			{% endfor %}
+		</table>
 {% endblock %}
 
 

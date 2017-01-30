@@ -1,0 +1,16 @@
+Log file created at: 2017/01/30 01:04:01
+Running on machine: FEDIMSER
+Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu threadid file:line] msg
+E0130 01:04:01.819453 11088 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:05:07.232848 18656 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:05:23.543954  8448 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:06:02.373870 19564 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:06:33.468730 25256 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:06:59.772245  2968 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:07:07.890887 19536 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:07:14.852852 23412 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:10:50.662549 10324 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:11:03.066074 18748 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:11:10.111004 17648 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:11:24.546079 17084 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order
+E0130 01:11:33.342368  2588 dictionary.cc:297] File D:\visartm\data\datasets\lenta\vocab.txt does not exist., dictionary will be gathered in random token order

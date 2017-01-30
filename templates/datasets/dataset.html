@@ -37,6 +37,9 @@
 		<li class="active"><a>Settings</a></li> 
 	{% endif %}
 	</ul> 
+	
+	<p></p>
+	
 {% if documents %}
 	{% for doc in documents %}
 		<a href = "/visual/document?id={{doc.id}}" >{{doc.title}}</a><br>
@@ -90,29 +93,20 @@
 		<div id="timeline_chart"></div>		 
 	{% endif %}
 {% elif settings %}
-	<!--
 	<form method = "post">
 		<div class="form-group row">
-			<label  class="col-sm-2 col-form-label">Word modality</label>
-			<div class="col-sm-3">
-				<select class="form-control" name="word_modality"  >
-					<option selected="selected">-----</option>
-					{% for modality in settings.modalities %}
-						<option {% if modality == dataset.word_modality %} selected="selected" {% endif %}>{{modality.name}}</option>
-					{% endfor %}
-				</select>
-			</div>
+			<label class="col-sm-2 col-form-label">Name</label>
+			<textarea name="name" cols="100" rows="1">{{dataset.name}}</textarea>
 		</div>
+
 		<div class="form-group row">
-			<label  class="col-sm-2 col-form-label">Tag modality</label>
-			<div class="col-sm-3">
-				<select class="form-control" name="tag_modality" value="{{dataset.tag_modality.name}}" >
-					<option selected="selected">-----</option>
-					{% for modality in settings.modalities %}
-						<option {% if modality == dataset.tag_modality %} selected="selected" {% endif %}>{{modality.name}}</option>
-					{% endfor %}
-				</select>
-			</div>
+			<label class="col-sm-2 col-form-label">Description</label>
+			<textarea name="description" cols="100" rows="5">{{dataset.description}}</textarea>
+		</div> 	
+		
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Preprocessing arguments</label>
+			<textarea name="preprocessing" cols="100" rows="5">{{dataset.preprocessing}}</textarea>
 		</div> 
 		
 		<input type = "hidden" name = "dataset" value = "{{dataset.text_id}}"/>
@@ -121,7 +115,6 @@
 		</div> 
  		{% csrf_token %}
 	</form>
-	-->
 {% endif %}
 
 {% endblock %}
