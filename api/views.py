@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from datasets.models import Dataset, Document, Modality
+from datasets.models import Dataset, Document, Modality, Term, TermInDocument
 from models.models import DocumentInTopic
 from visual.models import Polygon
 from django.http import HttpResponse
@@ -55,15 +55,26 @@ def get_documents(request):
 		#relations = Paginator(relations, count).page(offset // count + 1)
 		
 		
-		for relation in relations:
-			print("RELLL!!")
+		for relation in relations: 
 			doc = {
 				"id": relation.document.id,
 				"title": relation.document.title,
 				"weight": "{:0.2f}".format(100*relation.weight)
 			}
 			result.append(doc)
-	
+	elif 'term_id' in request.GET:
+		print("O,C" ,offset, count)
+		term = Term.objects.filter(id = request.GET["term_id"])[0]
+		relations = TermInDocument.objects.filter(term = term).order_by("-count")
+		relations = relations[offset : offset + count]
+		for relation in relations: 
+			doc = {
+				"id": relation.document.id,
+				"title": relation.document.title,
+				"count": relation.count,
+				"concordance": relation.document.get_concordance(term)
+			}
+			result.append(doc)
 			
 	response =  HttpResponse(json.dumps(result), content_type='application/json')  
 	_acao_response(response)

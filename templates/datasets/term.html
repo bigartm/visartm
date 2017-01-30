@@ -5,15 +5,9 @@
 {% block content %}
 	<h1> Term {{term.text}} </h1> 
 	<hr>
-	
-	{% if docs %}
-		{% for d in docs %}
-			<a href="/visual/document?id={{d.document.id}}">{{d.document}}</a> ({{d.count}}) <br> 
-		{% endfor %}
-	{% else %}
-		<a href = "/term?id={{term.id}}&docs=true">View documents</a>
-	{% endif %}
-	
+	<div id="documents"></div>
+	<p></p>
+	<p><a id = "morelink" onclick = "append(10)"></a></p>	
 {% endblock %}
  
  
@@ -30,7 +24,26 @@
  
 
 {% block javascript %}
+<script type="text/javascript">	
+	api = new ArtmApi();
+	counter = 0;
+	append(10);
+	
+	function append(count) {
+		api.getDocumentsByTerm({{term.id}}, counter, count, function(documents) {
+			documents.forEach(function(doc, i, arr) {
+				document.getElementById("documents").innerHTML += 
+					"<div style='margin-top:10px;'>"+
+					"<big><a href='/visual/document?id=" + doc.id + "'>" +
+					doc.title + "</a> (" + doc.count + ")</big> <br>" + 
+					doc.concordance + "</div>";
+			});
+			document.getElementById("morelink").innerHTML = ((documents.length == count) ? "More" : "");
+		});
+		counter += count;
+	}
 
+</script>
  
 {% endblock %}
 

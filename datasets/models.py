@@ -10,6 +10,7 @@ import numpy as np
 from django.db import transaction
 from shutil import rmtree
 import struct 
+import re
 
 class Dataset(models.Model):
 	name = models.CharField('Name', max_length=50)
@@ -471,11 +472,57 @@ class Document(models.Model):
 		ret = []
 		for i in range(count):
 			ret.append((
-				(struct.unpack('I', wi[9*i : 9*i+4]))[0],
-				(struct.unpack('B', wi[9*i+4 : 9*i+5]))[0],
-				(struct.unpack('I', wi[9*i+5 : 9*i+9]))[0]
+				struct.unpack('I', wi[9*i : 9*i+4])[0],
+				struct.unpack('B', wi[9*i+4 : 9*i+5])[0],
+				struct.unpack('I', wi[9*i+5 : 9*i+9])[0]
 			))
 		return ret
+		
+	def get_concordance(self, term):
+		text = self.text
+		wi = self.word_index
+		conc = ""
+		cur_pos = 0
+		for i in range(len(wi) // 9):
+			term_index_id = struct.unpack('I', wi[9*i+5 : 9*i+9])[0]
+			if term_index_id == term.index_id:
+				pos = struct.unpack('I', wi[9*i : 9*i+4])[0]
+				length = struct.unpack('B', wi[9*i+4 : 9*i+5])[0]
+				conc += text[cur_pos : pos] + "<b>" + text[pos : pos + length] + "</b>"
+				cur_pos = pos + length
+		conc += text[cur_pos:]		
+		sentences = filter(None, re.split("[!?.\n]+", conc))
+		conc = ""
+		ctr = 0
+		for sentence in sentences:
+			if "</b>" in sentence: 
+				ctr += 1
+				if ctr == 10:
+					conc += "<i>(Not all occurences are shown)</i><br>"
+					break
+				length = len(sentence)
+				pref = ""
+				suf = "."
+				fi = sentence.find("<b>") - 60
+				li = sentence.rfind("</b>") + 60
+				if fi < 0:
+					fi = 0
+				else:
+					while(fi!=0 and sentence[fi]!=' '):
+						fi -= 1
+					pref = "... "
+					
+				if li > length:
+					li = length
+				else:
+					while(li < length and sentence[li]!=' '):
+						li += 1
+					suf = " ..."
+					
+				
+				conc += pref + sentence[fi: li] + suf + "<br>"
+		
+		return conc[:-4]
 	
 	def __str__(self):
 		return self.title
@@ -513,7 +560,6 @@ class Term(models.Model):
 			count = document.count_term(self.index_id)
 			if count != 0:
 				relation = TermInDocument()
-				relation.dataset = self.dataset
 				relation.term = self
 				relation.document = document
 				relation.count = count
@@ -525,7 +571,6 @@ class Term(models.Model):
 	
 			
 class TermInDocument(models.Model):
-	dataset = models.ForeignKey(Dataset, null = False)
 	term = models.ForeignKey(Term, null = False)
 	document = models.ForeignKey(Document, null = False)
 	count = models.IntegerField(default=0)

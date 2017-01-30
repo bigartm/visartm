@@ -58,6 +58,18 @@ class ArtmApi {
 		xhttp.send();
 	}
 	
+	getDocumentsByTerm(termId, offset, count, callback) {
+		var xhttp = new XMLHttpRequest(); 
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				//alert(this.responseText);
+				callback(JSON.parse(this.responseText));
+			}
+		};
+		xhttp.open("GET", this.host + "/api/documents/get?term_id=" + termId + "&offset=" + offset + "&count=" + count, true);
+		xhttp.send();
+	}
+	
 	getPolygonChildren(polygonId, callback) {
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {

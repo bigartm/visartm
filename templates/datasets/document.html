@@ -33,10 +33,9 @@
 	<div>
 		<h4>Meta</h4>
 		Dataset: <a href="/dataset?dataset={{document.dataset.text_id}}">{{document.dataset}}</a><br>
-		{% if document.dataset.time_provided %}Time: {{document.time}}<br>{% endif %}
-		Original: <a href = {{document.url}}>link</a>
-		<br>
-		iid: {{document.index_id}}
+		{% if document.time %}Time: {{document.time}}<br>{% endif %}
+		{% if document.url %} <a href = {{document.url}}>View original</a><br>{% endif %}
+		index_id: {{document.index_id}}
 		
 	</div>
 	<hr>

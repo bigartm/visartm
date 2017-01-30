@@ -124,7 +124,7 @@ def visual_dataset(request):
 		if "search" in request.GET and len(search_query) >= 2: 
 			terms = terms.filter(text__icontains = search_query).order_by("text")
 		else:	
-			terms = terms.order_by("-token_tf")[:100] 
+			terms = terms.order_by("-token_tf")[:250] 
 		context['terms'] = terms
 	elif mode == 'stats':
 		from math import log
@@ -180,12 +180,7 @@ def visual_term(request):
 		dataset = Dataset.objects.filter(id = request.GET['ds'])[0]
 		term = Term.objects.filter(dataset = dataset, index_id = request.GET['iid'])[0]
 	context = {'term': term}
-	
-	if "docs" in request.GET and request.GET["docs"] == "true":
-		term.count_documents_index()
-		#return HttpResponse("FFF")
-		context["docs"] = TermInDocument.objects.filter(term = term).order_by("-count")
-		print(context["docs"])
+	term.count_documents_index()
 	
 	return render(request, 'datasets/term.html', Context(context)) 
 	
