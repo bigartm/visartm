@@ -41,7 +41,6 @@ class Dataset(models.Model):
 		Term.objects.filter(dataset = self).delete()
 		Document.objects.filter(dataset = self).delete()
 		Modality.objects.filter(dataset = self).delete()
-		TermInDocument.objects.filter(dataset = self).delete()
 		from models.models import ArtmModel	
 		ArtmModel.objects.filter(dataset = self).delete()
 		
@@ -113,6 +112,8 @@ class Dataset(models.Model):
 			filter.upper_bound = int(params["upper_bound"])
 		if "upper_bound_relative" in params:
 			filter.upper_bound_relative = int(params["upper_bound_relative"])
+		if "minimal_length" in params:
+			filter.minimal_length = int(params["minimal_length"])
 		filter.save_vocabulary(os.path.join(self.get_folder(),"vocab.txt"))
 		self.log("Filtering done.")
 	
@@ -203,7 +204,7 @@ class Dataset(models.Model):
 	@transaction.atomic
 	def load_documents(self):
 		vw_file_name = os.path.join(self.get_folder(), "vw.txt")
-		self.log("Loading documents in Vowpal Wabbit foramt from " + vw_file_name)		
+		self.log("Loading documents in Vowpal Wabbit format from " + vw_file_name)		
 		doc_id = 0
 		with open(vw_file_name, "r", encoding = "utf-8") as f:
 			for line in f:

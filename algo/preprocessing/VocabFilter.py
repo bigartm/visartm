@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-import os 
-import re
-import numpy as np
-from random import randint
-import pymorphy2
             
             
 class VocabFilter():
@@ -13,6 +8,7 @@ class VocabFilter():
         self.upper_bound_relative = 1000000
         self.documents_count = 0
         self.total_terms_count = 0
+        self.minimal_length = 1
         
         self.vocab = dict()
         with open(vw_file, "r", encoding = "utf-8") as f:
@@ -37,10 +33,12 @@ class VocabFilter():
                         self.total_terms_count += count
     
     def save_vocabulary(self, vocab_file):
+        print("min length is " + str(self.minimal_length))
+        
         with open(vocab_file, "w", encoding = "utf-8") as f:
+            upper_bound = min(self.upper_bound, self.upper_bound_relative*self.documents_count)
             for word, count in self.vocab.items():
-                upper_bound = min(self.upper_bound, self.upper_bound_relative*self.documents_count)
-                if count >= self.lower_bound and count <= upper_bound:
+                if count >= self.lower_bound and count <= upper_bound and len(word.split()[0]) >= self.minimal_length:
                     f.write(word + "\n")
         
 

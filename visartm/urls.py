@@ -33,8 +33,9 @@ urlpatterns = [
 	
 	
 	# Datasets	
-	url(r'^datasets/reload', datasets_views.datasets_reload),
-	url(r'^datasets/create', datasets_views.datasets_create),
+	url(r'^datasets/reload', datasets_views.dataset_reload),
+	url(r'^datasets/create', datasets_views.dataset_create),
+	url(r'^datasets/delete', datasets_views.dataset_delete),
     url(r'^datasets', datasets_views.datasets_list),
     url(r'^dataset', datasets_views.visual_dataset),
 	url(r'^term', datasets_views.visual_term),	

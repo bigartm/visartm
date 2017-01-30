@@ -106,7 +106,7 @@
 		
 		<div class="form-group row">
 			<label class="col-sm-2 col-form-label">Preprocessing arguments</label>
-			<textarea name="preprocessing" cols="100" rows="5">{{dataset.preprocessing}}</textarea>
+			<textarea name="preprocessing_params" cols="100" rows="5">{{dataset.preprocessing_params}}</textarea>
 		</div> 
 		
 		<input type = "hidden" name = "dataset" value = "{{dataset.text_id}}"/>
@@ -115,6 +115,9 @@
 		</div> 
  		{% csrf_token %}
 	</form>
+	
+	
+	
 {% endif %}
 
 {% endblock %}
@@ -131,11 +134,13 @@
 	Created: {{dataset.creation_time}}<br>
 	
 
-	
-	
 	{% if not user.is_anonymous %}
-		<a href = "/datasets/reload?dataset={{dataset.text_id}}">Reload</a>
+		<hr>
+		<a href = "/datasets/reload?dataset={{dataset.text_id}}">Reload</a><br>
+		<a href = "/datasets/delete?id={{dataset.id}}">Delete</a>
 	{% endif %}
+	
+
 	
 	<hr>
 	{% if documents %}
