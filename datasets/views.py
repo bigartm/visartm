@@ -55,25 +55,26 @@ def	datasets_create(request):
 	
 	dataset.name = dataset.text_id 
 	
-	preprocess_params = dict()
+	preprocessing_params = dict()
 	if 'parse' in request.POST:
-		preprocess_params['parse'] = {
-			'store_order' : ('store_order' in request.POST)
+		preprocessing_params['parse'] = {
+			'store_order' : ('store_order' in request.POST),
+			'hashtags' : ('hashtags' in request.POST),
+			'bigrams' : ('bigrams' in request.POST),
 		}
 		
 	if 'filter' in request.POST:
-		preprocess_params['filter'] = {
+		preprocessing_params['filter'] = {
 			'lower_bound' : request.POST['lower_bound'],
 			'upper_bound' : request.POST['upper_bound'],
 			'upper_bound_relative' : request.POST['upper_bound_relative'],
 		}
 	import json
-	dataset.preprocess = json.dumps(preprocess_params)	
-	#return HttpResponse(dataset.preprocess)
+	dataset.preprocessing_params = json.dumps(preprocessing_params)	
+	#return HttpResponse(dataset.preprocessing_params)
 	
 	
-	dataset.owner = request.user 
-	dataset.language = request.POST['lang']
+	dataset.owner = request.user  
 	if not dataset.check_can_load():
 		return HttpResponse(dataset.error_message)
 	dataset.status = 1

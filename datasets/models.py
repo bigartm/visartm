@@ -22,7 +22,7 @@ class Dataset(models.Model):
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
 
-	preprocessing = models.TextField(null=False, default = "{}")
+	preprocessing_params = models.TextField(null=False, default = "{}")
 	time_provided = models.BooleanField(null=False, default = True)
 	
 	def __str__(self):
@@ -52,7 +52,7 @@ class Dataset(models.Model):
 			self.docs_info = {}
 		
 		try:
-			preprocessing_params = json.loads(self.preprocessing)
+			preprocessing_params = json.loads(self.preprocessing_params)
 			self.log(preprocessing_params)
 		except:
 			preprocessing_params = {}
@@ -94,6 +94,8 @@ class Dataset(models.Model):
 		parser = Parser(self.get_folder())
 		if "store_order" in params:
 			parser.store_order = params["store_order"]
+		if "hashtags" in params:
+			parser.hashtags = params["hashtags"]
 		self.log("Parsing initialized.")
 		parser.process()
 		self.log("Parsing done.")
@@ -105,11 +107,11 @@ class Dataset(models.Model):
 		filter = VocabFilter(os.path.join(self.get_folder(), "vw.txt"))
 		self.log("Filtering initilized.")
 		if "lower_bound" in params:
-			filter.lower_bound = params["lower_bound"]	
+			filter.lower_bound = int(params["lower_bound"])	
 		if "upper_bound" in params:
-			filter.upper_bound = params["upper_bound"]
+			filter.upper_bound = int(params["upper_bound"])
 		if "upper_bound_relative" in params:
-			filter.upper_bound_relative = params["upper_bound_relative"]
+			filter.upper_bound_relative = int(params["upper_bound_relative"])
 		filter.save_vocabulary(os.path.join(self.get_folder(),"vocab.txt"))
 		self.log("Filtering done.")
 	
@@ -171,13 +173,15 @@ class Dataset(models.Model):
 				term.modality = modality
 				modality.terms_count += 1
 				
+				
 				term.save() 
 				self.terms_index[term.text + "$#" + term.modality.name] = term
 				self.terms_index[term.index_id] = term
 				if term_index_id % 10000 == 0:
 					self.log(str(term_index_id))
 					#print(term_index_id)
-					
+		
+		self.terms_count = term_index_id			
 					
 		self.log("Saving modalities...")
 		max_modality_size = 0

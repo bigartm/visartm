@@ -3,7 +3,7 @@ import os
 import json
 
 
-def download_wall(domain, dataset_folder):
+def download_wall(domain, dataset_folder, cut=1000000):
     session = vk.Session() #'c9a2edf19ed42f0ee1ba6a768ad6de25016971d24589165769987567a92cabbb2364bf3f4c050a868969f')
     api = vk.API(session)
     posts = api.wall.get(domain = 'lurkopub_alive', offset = 13700, count=100)
@@ -34,7 +34,7 @@ def download_wall(domain, dataset_folder):
         print (offset)
         if len(posts) != 101:
             break 
-        if offset == 1100:
+        if offset >= cut:
             break
         
     with open(os.path.join(dataset_folder, "meta", "meta.json"), "wb") as f: 
@@ -43,4 +43,4 @@ def download_wall(domain, dataset_folder):
 
      
 if __name__ == "__main__":
-    download_wall('lurkopub_alive', "D:\\visartm\\data\\datasets\\lurkopub1000")
+    download_wall('lurkopub_alive', "D:\\visartm\\data\\datasets\\lurkopub")

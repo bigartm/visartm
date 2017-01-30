@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import os 
-import re
-import numpy as np
-from random import randint
+import os   
 import pymorphy2
             
             
@@ -14,7 +11,10 @@ class Parser:
         self.morph = pymorphy2.MorphAnalyzer()
         self.vw_file = open(os.path.join(dataset_folder, "vw.txt"), "w", encoding = "utf-8")
         self.lemmatized = dict()
+        
         self.store_order = False
+        self.hashtags = False
+        
         self.ctr = 0
     
         self.meta_vw = dict()
@@ -24,6 +24,9 @@ class Parser:
                 for line in f:
                     pos = line.find(' ')
                     self.meta_vw[line[0:pos]] = line[pos:-1]
+
+
+        self.char_good = lambda c: c.isalpha()
             
                     
         
@@ -38,9 +41,7 @@ class Parser:
                 ans = self.morph.parse(word)[0].normal_form
             self.lemmatized[word] = ans
             return ans
-
-    def char_good(self, c):    
-        return (c.isalpha() or c in '#_')
+ 
     
     def process_document(self, rel_name, doc_name):
         file_name = os.path.join(self.documents_folder, rel_name)
@@ -49,6 +50,7 @@ class Parser:
             
         self.vw_file.write(rel_name + " |word")    
         bow = dict()
+        hashtags = list()
         wordpos_file = open(os.path.join(self.output_folder, rel_name), "w", encoding='utf-8')
         
         cur_pos = 0 
@@ -67,21 +69,29 @@ class Parser:
                 word_lemmatized = self.lemmatize(word)
                 if len(word_lemmatized) <= 1:
                     continue
-                wordpos_file.write("%d %d %s$#word\n" % (init_pos, length, word_lemmatized))
-                if self.store_order:
-                    self.vw_file.write(" " + word_lemmatized)
+                 
+                if word_lemmatized[0] == '#' and self.hashtags:
+                    wordpos_file.write("%d %d %s$#hashtag\n" % (init_pos, length, word_lemmatized))
+                    hashtags.append(word_lemmatized)
                 else:
-                    if word_lemmatized in bow:
-                        bow[word_lemmatized] += 1
-                    else: 
-                        bow[word_lemmatized] = 1
-        
+                    wordpos_file.write("%d %d %s$#word\n" % (init_pos, length, word_lemmatized))
+                    if self.store_order:
+                        self.vw_file.write(" " + word_lemmatized)
+                    else:
+                        if word_lemmatized in bow:
+                            bow[word_lemmatized] += 1
+                        else: 
+                            bow[word_lemmatized] = 1
+            
         if not self.store_order:
             for word, count in bow.items():
                 if count == 1:
                     self.vw_file.write(" %s" % word)
                 else:
                     self.vw_file.write(" %s:%d" % (word, count))
+                    
+        if len(hashtags) > 0:
+            self.vw_file.write(" |hashtag "+ ' '.join(hashtags))
          
         if rel_name in self.meta_vw:
             self.vw_file.write(self.meta_vw[rel_name])
@@ -95,6 +105,9 @@ class Parser:
             print(self.ctr)
             
     def process(self):
+        if self.hashtags:
+            self.char_good = lambda c: c.isalpha() or c in '#_'
+        
         root_path_length = len(self.documents_folder)
         for root, subdirs, files in os.walk(self.documents_folder):
             rel_foler_path = root[root_path_length+1:]
@@ -112,6 +125,8 @@ class Parser:
         
  
 if __name__ == "__main__":
-    parser = Parser("D:\\visartm\\data\\datasets\\postnauka")
+    parser = Parser("D:\\visartm\\data\\datasets\\lurkopub1000")
+    parser.hashtags = True
+    parser.store_order = False
     parser.process()
 
