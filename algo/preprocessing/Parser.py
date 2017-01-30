@@ -156,7 +156,7 @@ class Parser:
 if __name__ == "__main__":
     parser = Parser("D:\\visartm\\data\\datasets\\lurkopub1000")
     parser.hashtags = True
-    parser.bigrams = False
+    parser.bigrams = True
     parser.store_order = False
     
     parser.process()
