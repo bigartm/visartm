@@ -1,4 +1,4 @@
-from models.models import Topic, DocumentInTopic, TopicInTopic
+from models.models import Topic, TopicInTopic
 import json
 
 def visual(model, params):
@@ -9,9 +9,7 @@ def visual(model, params):
 def build_circles(model, topic):
 	answer = []
 	if topic.layer == model.layers_count:
-		relations = DocumentInTopic.objects.filter(topic = topic)
-		for relation in relations:
-			document = relation.document
+		for document in topic.get_documents():
 			answer.append({"id": document.id, "size":1})
 	else:
 		relations = TopicInTopic.objects.filter(parent = topic)

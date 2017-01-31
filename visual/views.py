@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context
 from datasets.models import Dataset, Document, Term, Modality
-from models.models import ArtmModel, Topic, TopTerm, TopicInDocument, TopicRelated, TopicInTerm, DocumentInTopic, TopicInTopic
+from models.models import ArtmModel, Topic, TopTerm, TopicInDocument, TopicRelated, TopicInTerm, TopicInTopic
 from django.http import HttpResponse, HttpResponseNotFound
 import os
 import json
@@ -15,6 +15,7 @@ import struct
 from threading import Thread
 from datetime import datetime
 import visartm.views as general_views
+from django.conf import settings
 
 	
 	
@@ -101,8 +102,7 @@ def visual_document(request):
 		highlight_terms = True
 		if ("highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false") or not wi:
 			highlight_terms = False
-		
-		print("WIIIIII",wi)
+		 
 		# Word highlight
 		if highlight_terms:
 			print(highlight_terms)
@@ -138,8 +138,7 @@ def visual_document(request):
 				cur_pos = text_length
 			text = new_text
 				
-		context['lines'] = text.split('\n')
-		context['lines'].append(str(entries))
+		context['lines'] = text.split('\n') 
 			
 		
 	# Related documents 
@@ -232,10 +231,14 @@ def visual_global(request):
 		visualization.model = model
 		visualization.status = 0
 		visualization.save()
-		   
-		t = Thread(target = GlobalVisualization.render, args = (visualization,), daemon = True)
-		t.start()
-	
+		
+		if settings.THREADING:
+			t = Thread(target = GlobalVisualization.render_untrusted, args = (visualization,), daemon = True)
+			t.start()
+		else:
+			#print("RENDER")
+			visualization.render()
+			
 	if visualization.status == 0:
 		return general_views.wait(request, "Pending...", visualization.start_time, period = "2") 
 	elif visualization.status == 2:

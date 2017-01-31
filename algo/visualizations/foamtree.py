@@ -1,4 +1,4 @@
-from models.models import Topic, DocumentInTopic, TopicInTopic
+from models.models import Topic, TopicInTopic
 import json
 		
 def visual(model, params):
@@ -11,10 +11,8 @@ def visual(model, params):
 	
 def build_foamtree(model, topic):	
 	answer = []
-	if topic.layer == model.layers_count:
-		relations = DocumentInTopic.objects.filter(topic = topic)
-		for relation in relations:
-			document = relation.document
+	if topic.layer == model.layers_count: 
+		for document in topic.get_documents(): 
 			answer.append({"label": document.title, "id": document.id})
 	else:
 		relations = TopicInTopic.objects.filter(parent = topic)

@@ -475,9 +475,7 @@ class Document(models.Model):
 			return None
 				
 		count = len(wi) // 9
-		last_pos = -1
-		print("WIIIIIIIIIIIICCCCCCC", count)
-		print(wi)
+		last_pos = -1 
 		ret = []
 		for i in range(count):
 			pos = struct.unpack('I', wi[9*i : 9*i+4])[0]

@@ -1,6 +1,6 @@
 from django.db import models
 from datasets.models import Document
-from models.models import ArtmModel, Topic, TopicInTopic, DocumentInTopic
+from models.models import ArtmModel, Topic, TopicInTopic
 from datetime import datetime
 import os
 from django.conf import settings
@@ -24,16 +24,8 @@ class GlobalVisualization(models.Model):
 		spec = importlib.util.spec_from_file_location("algo.visualizations." + params[0], script_file_name)
 		visual_module = importlib.util.module_from_spec(spec)
 		
-		
-		try:
-			spec.loader.exec_module(visual_module)
-			result = visual_module.visual(self.model, params)
-		except:
-			self.error_message = traceback.format_exc()
-			self.status = 2
-			self.finish_time = datetime.now()
-			self.save()
-			return 
+		spec.loader.exec_module(visual_module)
+		result = visual_module.visual(self.model, params)
 	
 		data_file_name = os.path.join(self.model.get_visual_folder(), self.name + ".txt")
 		with open(data_file_name, "w", encoding = 'utf-8') as f:
@@ -45,6 +37,15 @@ class GlobalVisualization(models.Model):
 		self.status = 1
 		self.save()
 		
+	def render_untrusted(self):
+		try:
+			self.render()
+		except:
+			self.error_message = traceback.format_exc()
+			self.status = 2
+			self.finish_time = datetime.now()
+			self.save()
+			
 class Polygon(models.Model):
 	#visualizaton = models.ForeignKey(GlobalVisualization, null = True)
 	points = models.TextField(null = True)
@@ -75,10 +76,10 @@ class Polygon(models.Model):
 			polygon.topic = relation.child
 			polygons.append(polygon)
 			
-		for relation in DocumentInTopic.objects.filter(topic = self.topic):
+		for document in self.topic.get_documents():
 			polygon = Polygon()
 			polygon.parent = self
-			polygon.document = relation.document 
+			polygon.document = document 
 			polygons.append(polygon)
 		
 		if len(polygons) >= 1:

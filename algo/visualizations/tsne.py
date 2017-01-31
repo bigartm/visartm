@@ -1,5 +1,5 @@
-from datasets.models import Document
-from models.models import DocumentInTopic
+from datasets.models import Document 
+from models.models import Topic
 import numpy as np 
 import json 
 import os
@@ -37,11 +37,17 @@ def visual(model, params):
 	print("max",border_1)
 	
 	print("coloring...")
+	doc_color = np.zeros(documents_count + 1)
+	for topic_index_id in range (model.lower_topics_count()):
+		topic = Topic.objects.get(model = model, layer = model.layers_count, index_id = topic_index_id)
+		for document_index_id in topic.get_documents_index_ids():
+			doc_color[document_index_id] = topic_index_id
+			
 	i = 0
 	for document in documents:
 		answer.append({"X": (tsne_matrix[i][0] - border_0[0]) / (border_1[0] - border_0[0]), 
 					   "Y": (tsne_matrix[i][1] - border_0[1]) / (border_1[1] - border_0[1]), 
-					   "color": DocumentInTopic.objects.filter(model = model, document = document)[0].topic.index_id,
+					   "color": doc_color[document.index_id],
 					   "id": document.id})
 		i += 1
 	print("colored")

@@ -25,7 +25,7 @@ SECRET_KEY = 'yj_fhwf$-8ws1%a_vl5c0lf($#ke@c3+lu3l-f733k(j-!q*57'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-CONSOLE_OUTPUT = True
+CONSOLE_OUTPUT = False
 THREADING = False
 
 ALLOWED_HOSTS = ["192.168.0.103","127.0.0.1"]

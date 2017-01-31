@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from datasets.models import Dataset, Document, Modality, Term, TermInDocument
-from models.models import DocumentInTopic
+from models.models import Topic
 from visual.models import Polygon
 from django.http import HttpResponse
 import json
 import os
+import struct
 from django.conf import settings
 #from django.core.paginator import Paginator
 
@@ -45,23 +46,19 @@ def get_documents(request):
 				doc["text"] = documnt.get_text()
 			result.append(doc)
 	elif 'topic_id' in request.GET:
-		print("O,C" ,offset, count)
-		topic_id = request.GET["topic_id"]
-		relations = DocumentInTopic.objects.filter(topic_id = topic_id).order_by("-weight")
-		
-		relations = relations[offset : offset + count]
-		#if offset % count != 0:
-		#	raise ValueError("Invalif page")
-		#relations = Paginator(relations, count).page(offset // count + 1)
-		
-		
-		for relation in relations: 
-			doc = {
-				"id": relation.document.id,
-				"title": relation.document.title,
-				"weight": "{:0.2f}".format(100*relation.weight)
-			}
-			result.append(doc)
+		topic = Topic.objects.get(id = request.GET["topic_id"])
+		if offset + count > topic.documents_count:
+			count = topic.documents_count - offset
+		dataset_id = topic.model.dataset.id
+		s = topic.documents[8 * offset : 8 * (offset + count)]
+		print(type(s))
+		for i in range(count): 
+			document = Document.objects.get(dataset_id = dataset_id, index_id = struct.unpack('I', s[8 * i : 8 * i + 4])[0])
+			result.append({
+				"id": document.id,
+				"title": document.title,
+				"weight": "{:0.2f}".format(100*(struct.unpack('f', s[8*i+4 : 8*i+8])[0]))
+			})	
 	elif 'term_id' in request.GET:
 		print("O,C" ,offset, count)
 		term = Term.objects.filter(id = request.GET["term_id"])[0]

@@ -14,6 +14,7 @@ import re
 from shutil import rmtree 
 from django.db import transaction
 import traceback
+import struct
 
 
 class ArtmModel(models.Model):
@@ -309,37 +310,32 @@ class ArtmModel(models.Model):
 		
 		#Extracting documents in topics
 		self.log("Extracting documents in topics...")
-		DocumentInTopic.objects.filter(model = self).delete()
-		
 		theta_t_low = theta_t[:, total_topics_count - topics_count[layers_count] : total_topics_count]
-		
-		for doc_id in range(0, documents_count):
-			distr = theta_t_low[doc_id]
+		document_bags = [[] for i in range(topics_count[layers_count])]
+		for doc_index_id in range(0, documents_count):
+			#doc_id = documents_index[doc_index_id].id 
+			distr = theta_t_low[doc_index_id]
 			best_topic_id = distr.argmax()
-			relation = DocumentInTopic()
-			relation.model = self
-			relation.document = documents_index[doc_id]
-			relation.topic = topics_index[layers_count][best_topic_id]
-			relation.weight = distr[best_topic_id]
-			topics_index[layers_count][best_topic_id].documents_count += 1
-			relation.save()
 			
+			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id + 1))
 			if self.threshold <= 50:
 				for topic_id in range(topics_count[layers_count]):
 					if distr[topic_id] > threshold and topic_id != best_topic_id:
-						relation = DocumentInTopic()
-						relation.model = self
-						relation.document = documents_index[doc_id]
-						relation.topic = topics_index[layers_count][topic_id]
-						relation.weight = distr[topic_id]
-						topics_index[layers_count][topic_id].documents_count += 1
-						relation.save()
-						
-			if doc_id % 1000 == 0:
-				self.log(str(doc_id)) 
+						document_bags[topic_id].append(distr[topic_id], doc_index_id + 1)
+			
+			if doc_index_id % 1000 == 0:
+				self.log(str(doc_index_id)) 
 		
+		
+		self.log("Saving topics...")
 		for topic_id in range(topics_count[layers_count]):
-			topics_index[layers_count][topic_id].save()
+			topic = topics_index[layers_count][topic_id]
+			topic.documents = bytes()
+			document_bags[topic_id].sort(reverse = True)
+			for weight, doc_index_id in document_bags[topic_id]:
+				topic.documents += struct.pack('I', doc_index_id) + struct.pack('f', weight) 
+			topic.documents_count = len(topic.documents) // 8
+			topic.save()
 		
 		self.creation_time = datetime.now()
 		self.arrange_topics()
@@ -363,9 +359,12 @@ class ArtmModel(models.Model):
 			f.write("<br>\n")
 			
 	def log(self, string):
-		with open(self.log_file_name, "a") as f:
-			f.write(string + "<br>\n")
-			
+		if settings.CONSOLE_OUTPUT:
+			print(string)
+		else:
+			with open(self.log_file_name, "a") as f:
+				f.write(string + "<br>\n")
+		
 	def read_log(self):
 		try:
 			with open(os.path.join(self.get_folder(), "log.txt"), "r") as f:
@@ -455,6 +454,8 @@ class ArtmModel(models.Model):
 	def get_psi(self, i):
 		return np.load(os.path.join(self.get_folder(), "psi" + str(i) + ".npy"))
 	
+	def lower_topics_count(self):
+		return int(self.topics_count.split()[-1])
 	
 	
 from django.db.models.signals import pre_delete
@@ -470,13 +471,14 @@ def remove_model_files(sender, instance, using, **kwargs):
 		pass
 				
 class Topic(models.Model):
-	model = models.ForeignKey(ArtmModel, null = False)
-	index_id = models.IntegerField(null = True)
+	model = models.ForeignKey(ArtmModel, null=False)
+	index_id = models.IntegerField(null=True)
 	title = models.TextField(null=False)
 	title_short = models.TextField(null=True) 
 	spectrum_index = models.IntegerField(null = True, default = 0) 
 	layer = models.IntegerField(default = 1) 
-	documents_count = models.IntegerField(default = 0)
+	documents = models.BinaryField(null=True) #[4 bytes - document.id][4 bytes - weight]
+	documents_count =  models.IntegerField(null=False, default=0)
 	
 	def __str__(self):
 		return self.title
@@ -486,6 +488,17 @@ class Topic(models.Model):
 		self.title_short = new_title[0:30]
 		self.save()
 		
+	def get_documents(self): 
+		all_documents = Document.objects.filter(dataset = self.model.dataset)
+		ret = []
+		for i in range(self.documents_count):
+			doc_index_id = struct.unpack('I', self.documents[8*i : 8*i+4])[0]
+			ret.append(all_documents.get(index_id = doc_index_id)) 
+		return ret
+		
+	def get_documents_index_ids(self):  
+		return [struct.unpack('I', self.documents[8*i : 8*i+4])[0] for i in range(self.documents_count)]
+			
 class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
 	document = models.ForeignKey(Document, null = False)
@@ -516,15 +529,6 @@ class TopicInTerm(models.Model):
 	weight = models.FloatField()
 	def __str__(self):
 		return str(self.term) + " " + str(self.topic) + "{0:.1f}%".format(100 * self.weight)		
-	
-class DocumentInTopic(models.Model):
-	model = models.ForeignKey(ArtmModel, null = False)
-	document = models.ForeignKey(Document, null = False)
-	topic = models.ForeignKey(Topic, null = False) 
-	weight = models.FloatField(null=False, default = 0)
-	
-	def __str__(self):
-		return str(self.document)
 		
 class TopTerm(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

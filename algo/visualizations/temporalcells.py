@@ -1,5 +1,6 @@
 #if __name__ != "__main__":
-from models.models import Topic, DocumentInTopic, TopicInTopic
+from datasets.models import Document
+from models.models import Topic, TopicInTopic
 
 import re
 import json
@@ -7,14 +8,14 @@ import json
 
 def visual(model, params): 		
 	group_by = params[1]
-	doc_topics = DocumentInTopic.objects.filter(model = model)
+	documents = Document.objects.filter(dataset = model.dataset)
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")
 	
 	dn = DatesNamer()
 	
 	dates_hashes = set()
-	for doc_topic in doc_topics:
-		dates_hashes.add(dn.date_hash(doc_topic.document.time, group_by))
+	for document in documents:
+		dates_hashes.add(dn.date_hash(document.time, group_by))
 	dates_hashes = list(dates_hashes)
 	dates_hashes.sort()
 	dates_send = []
@@ -30,12 +31,13 @@ def visual(model, params):
 	
 	
 	
-	for doc_topic in doc_topics:
-		cell_xy = (dates_reverse_index[dn.date_hash(doc_topic.document.time, group_by)], doc_topic.topic.spectrum_index)
-		if not cell_xy in cells:
-			cells[cell_xy] = []
-		cells[cell_xy].append(doc_topic.document.id)
-	
+	for topic in topics:
+		for document in topic.get_documents():
+			cell_xy = (dates_reverse_index[dn.date_hash(document.time, group_by)], topic.spectrum_index)
+			if not cell_xy in cells:
+				cells[cell_xy] = []
+			cells[cell_xy].append(document.id)
+		
 	max_intense = 0
 	cells_send = []
 	for key, value in cells.items():

@@ -7,7 +7,7 @@
 	<hr>
 	<div id="documents"></div>
 	<p></p>
-	<p><a id = "morelink" onclick = "append(10)"></a></p>	
+	<p><a id = "morelink" onclick = "append(20)"></a></p>	
 {% endblock %}
  
  
@@ -27,7 +27,7 @@
 <script type="text/javascript">	
 	api = new ArtmApi();
 	counter = 0;
-	append(10);
+	append(20);
 	
 	function append(count) {
 		api.getDocumentsByTerm({{term.id}}, counter, count, function(documents) {

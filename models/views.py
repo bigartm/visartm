@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from datasets.models import Dataset, Modality
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
-from models.models import ArtmModel, Topic, DocumentInTopic, TopTerm, TopicRelated, TopicInTopic
+from models.models import ArtmModel, Topic, TopTerm, TopicRelated, TopicInTopic
 from visual.models import GlobalVisualization
 from django.contrib.auth.decorators import login_required, permission_required
 import visartm.views as general_views
