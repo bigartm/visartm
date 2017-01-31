@@ -4,6 +4,5 @@
 /temp
 *.FEDIMSER.*
 *.batch
-*/migrations
-*/__pycache__
+**/migrations/**
 
