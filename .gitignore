@@ -4,5 +4,8 @@
 /temp
 *.FEDIMSER.*
 *.batch
+
 **/migrations/**
+!**/migrations
+!**/migrations/__init__.py
 
