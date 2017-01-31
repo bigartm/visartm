@@ -1,6 +1,9 @@
+*.pyc
+
 /.idea
 /cpp
 /data/datasets
+!/data/datasets/example
 /temp
 *.FEDIMSER.*
 *.batch
