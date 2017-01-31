@@ -2,8 +2,8 @@
 
 /.idea
 /cpp
-/data/datasets/**
-!/data/datasets/example/**
+/data/datasets/*
+!/data/datasets/example
 /temp
 *.FEDIMSER.*
 *.batch
