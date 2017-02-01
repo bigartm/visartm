@@ -5,8 +5,13 @@
 /data/datasets/*
 !/data/datasets/example
 /temp
+/doc
+/ve
+
+
 *.FEDIMSER.*
 *.batch
+start.bat
 
 **/migrations/**
 !**/migrations
