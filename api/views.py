@@ -59,9 +59,14 @@ def get_documents(request):
 				"title": document.title,
 				"weight": "{:0.2f}".format(100*(struct.unpack('f', s[8*i+4 : 8*i+8])[0]))
 			})	
-	elif 'term_id' in request.GET:
-		print("O,C" ,offset, count)
-		term = Term.objects.filter(id = request.GET["term_id"])[0]
+	elif 'dataset_id' in request.GET: 
+		for document in Document.objects.filter(dataset_id = request.GET["dataset_id"]).order_by("index_id")[offset : offset + count]:
+			result.append({
+				"id": document.id,
+				"title": document.title
+			})
+	elif 'term_id' in request.GET:  
+		term = Term.objects.get(id = request.GET["term_id"])
 		relations = TermInDocument.objects.filter(term = term).order_by("-count")
 		relations = relations[offset : offset + count]
 		for relation in relations: 

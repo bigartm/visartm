@@ -64,20 +64,23 @@
 {% block javascript %}
 <script type="text/javascript">	
 	api = new ArtmApi();
+	busy = false;
 	counter = 0;
 	append(100);
 	
 	function append(count) {
+		if (busy) return;
+		busy = true;
 		api.getDocumentsByTopic({{topic.id}}, counter, count, function(documents) {
 			documents.forEach(function(doc, i, arr) {
 				document.getElementById("documents").innerHTML += "<a href='/document?id=" + doc.id + "'>" + 
 					doc.title + "</a> (" + doc.weight + "%)<br>";
 			});
 			document.getElementById("morelink").innerHTML = ((documents.length == count) ? "More" : "");
+			busy = false;
 		});
 		counter += count;
 	}
-
 </script>
 {% endblock %}
 

@@ -136,6 +136,7 @@ def visual_dataset(request):
 		print("End term query")
 		if "search" in request.GET and len(search_query) >= 2: 
 			terms = terms.filter(text__icontains = search_query).order_by("text")
+			context['search'] = True
 		else:	
 			terms = terms.order_by("-token_tf")[:250] 
 		context['terms'] = terms
@@ -176,10 +177,11 @@ def visual_dataset(request):
 	elif mode == 'docs':
 		docs = Document.objects.filter(dataset = dataset)
 		if "search" in request.GET and len(search_query) >= 2: 
-			docs = docs.filter(title__icontains = search_query) 
+			context['documents'] = docs.filter(title__icontains = search_query) 
+			context['search'] = True
 		else:	
-			docs = docs[:100] 
-		context['documents'] = docs
+			context['documents'] = True
+			
 	
 	context['models'] = ArtmModel.objects.filter(dataset = dataset)
 	context['active_model'] = get_model(request, dataset)

@@ -1,6 +1,7 @@
 class ArtmApi {
 	constructor() {
 		this.host = window.location.protocol + "//" + window.location.host;
+		this.busy = false;
 	}
 
 	getDocument(documentId, callback) {
@@ -57,6 +58,18 @@ class ArtmApi {
 		xhttp.open("GET", this.host + "/api/documents/get?topic_id=" + topicId + "&offset=" + offset + "&count=" + count, true);
 		xhttp.send();
 	}
+	
+	getDocumentsByDataset(datasetId, offset, count, callback) {
+		var xhttp = new XMLHttpRequest(); 
+		xhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				callback(JSON.parse(this.responseText));
+			}
+		};
+		xhttp.open("GET", this.host + "/api/documents/get?dataset_id=" + datasetId + "&offset=" + offset + "&count=" + count, true);
+		xhttp.send();
+	}
+	
 	
 	getDocumentsByTerm(termId, offset, count, callback) {
 		var xhttp = new XMLHttpRequest(); 

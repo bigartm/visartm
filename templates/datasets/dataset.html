@@ -41,9 +41,14 @@
 	<p></p>
 	
 {% if documents %}
-	{% for doc in documents %}
-		<a href = "/visual/document?id={{doc.id}}" >{{doc.title}}</a><br>
-	{% endfor %}
+	{% if search %}
+		{% for doc in documents %}
+			<a href = "/visual/document?id={{doc.id}}" >{{doc.title}}</a><br>
+		{% endfor %}
+	{% else %}
+		<div id="documents"></div>
+		<p><a id = "morelink" onclick = "append(100)"></a></p>
+	{% endif %}
 {% elif terms %}
 	{% for term in terms %}
 		<a href = "/term?id={{term.id}}" >{{term}}</a> ({{term.token_tf}})<br>
@@ -204,6 +209,30 @@
 	}
 	
 	var api = new ArtmApi(); 
+	
+	
+	{% if documents %}
+		{% if search %}
+		{% else %}
+			busy = false;
+			counter = 0;
+			append(100);
+			
+			function append(count) {
+				if (busy) return;
+				busy = true;
+				api.getDocumentsByDataset({{dataset.id}}, counter, count, function(documents) {
+					documents.forEach(function(doc, i, arr) {
+						document.getElementById("documents").innerHTML += "<a href='/document?id=" + doc.id + "'>" + 
+							doc.title + "</a><br>";
+					});
+					document.getElementById("morelink").innerHTML = ((documents.length == count) ? "More" : "");
+					busy = false;
+				});
+				counter += count;
+			} 
+		{% endif %}
+	{% endif %}
 	
 	{% if stats %}
 	var freq_chart = c3.generate({
