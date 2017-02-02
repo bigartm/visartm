@@ -54,7 +54,8 @@ def account_view(request, user_name):
 	account = User.objects.filter(username = user_name)[0]
 	
 	context = Context({"account": account,
-					   "datasets": Dataset.objects.filter(owner = account),
+					   "public_datasets": Dataset.objects.filter(owner = account, is_public = True),
+					   "private_datasets": Dataset.objects.filter(owner = account, is_public = False),
 					   "models": ArtmModel.objects.filter(author = account)})
 					   
 	return render(request, 'accounts/account.html', context) 

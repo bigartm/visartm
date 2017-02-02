@@ -16,7 +16,7 @@ class Dataset(models.Model):
 	name = models.CharField('Name', max_length=50)
 	text_id = models.TextField(unique=True, null=False)
 	description = models.TextField('Description') 
-	owner = models.ForeignKey(User, null=True, blank=True, default = None)
+	owner = models.ForeignKey(User, null=False, default=0)
 	terms_count = models.IntegerField(default = 0) 
 	documents_count = models.IntegerField(default = 0)
 	creation_time = models.DateTimeField(null=False, default = datetime.now) 
@@ -25,6 +25,7 @@ class Dataset(models.Model):
 
 	preprocessing_params = models.TextField(null=False, default = "{}")
 	time_provided = models.BooleanField(null=False, default = True)
+	is_public = models.BooleanField(null=False, default = True)
 	
 	def __str__(self):
 		return self.name 
@@ -284,11 +285,10 @@ class Dataset(models.Model):
 			f.write("<br>\n")
 			
 	def log(self, string):
-		if settings.CONSOLE_OUTPUT:
-			print(string)
-		else:
-			with open(self.log_file_name, "a") as f:
-				f.write(string + "<br>\n")
+		if not settings.THREADING:
+			print(string)		
+		with open(self.log_file_name, "a") as f:
+			f.write(string + "<br>\n")
 				
 	def read_log(self):
 		try:

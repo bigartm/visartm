@@ -73,19 +73,27 @@
 {% endblock %}
 
 {% block javascript %}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-<script src="/static/js/d3.v3.min.js"></script>
 <script src="/static/js/d3pie.min.js"></script>
  
-<script type="text/javascript">
+<script type="text/javascript"> 
 
-	try{
-		document.getElementById("square0").style.color = THEME_pieColor0;
-		document.getElementById("square1").style.color = THEME_pieColor1;
-		document.getElementById("square2").style.color = THEME_pieColor2;
-		document.getElementById("square3").style.color = THEME_pieColor3;
-		document.getElementById("square4").style.color = THEME_pieColor4;
-	} catch (e) {;}
+	var background_rgb = getRgb(theme.backgroundColor);
+	
+	function initColor(i) {
+		color = theme.palette(i);
+		document.getElementById("square"+i).style.color = color;
+		rgb = getRgb(color);  
+		color = $c.rgb2hex( 
+			~~(0.2*rgb[0]+0.8*background_rgb[0]), 
+			~~(0.2*rgb[1]+0.8*background_rgb[1]),
+			~~(0.2*rgb[2]+0.8*background_rgb[2])
+		);
+		$(".tpc" + i).css("background-color", color);
+	}
+	
+	{% for topic in topics %}
+		initColor({{topic.i}});
+	{% endfor %}
 	
 	var styleSheets = window.document.styleSheets;
 	
@@ -123,7 +131,7 @@
 					"label": "{{topic.topic.title}}",
 					"value": {{topic.weight}},
 					"url": "{{topic.url}}",
-					"color" : THEME_pieColor{{topic.i}},
+					"color" : theme.palette({{topic.i}}),
 				}, 
 				{% endfor %}
 			]
@@ -175,6 +183,14 @@
 			}
 		},
 	});
+	
+	function getRgb(color) {
+		if (color[0] == "#") return $c.hex2rgb(color).a;
+		else return $c.name2rgb(color).a;
+	}
+	
+	
+	
 	
 	/*
 	{% if document.dataset.tag_modality %}

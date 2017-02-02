@@ -24,6 +24,15 @@
 <!-- Custom styles for this template -->
 <link href="/static/css/navbar-static-top.css" rel="stylesheet">
 
+
+<!-- JS Scripts -->
+<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> -->
+<script src="/static/js/d3.v3.min.js"></script>
+<script src="/static/jquery-1.11.3/jquery.min.js"></script>
+<script src="/static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+<script src="/static/js/artmonlineapi.js?version={% now 'U' %}"></script>
+<script src="/static/js/colors.min.js"></script>
+
 {% load extra_tags %}
 <!-- Color theme -->
 <!-- ?version={% now 'U' %} -->
@@ -109,9 +118,7 @@
 
 </body>
 
-<script src="/static/jquery-1.11.3/jquery.min.js"></script>
-<script src="/static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-<script src="/static/js/artmonlineapi.js?version={% now 'U' %}"></script>
+
 {% block javascript %}
 {% endblock %}
 

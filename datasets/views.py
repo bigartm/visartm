@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from datasets.models import Dataset, Document, Term, TermInDocument, Modality
 from models.models import ArtmModel
 from visual.views import get_model
@@ -10,19 +10,19 @@ import visartm.views as general_views
 from threading import Thread
 from datetime import datetime
  
-def datasets_list(request): 
-	current_user = request.user
-	datasets = Dataset.objects.filter(owner__isnull = True)
+def datasets_list(request):  
+	datasets = Dataset.objects.filter(is_public = True)
 	if request.user.is_authenticated == True:
-		datasets |= Dataset.objects.filter(owner = current_user) 
+		datasets |= Dataset.objects.filter(owner = request.user) 
 		
-	context = Context({'datasets': datasets, 
-					   'user': current_user})
+	context = Context({'datasets': datasets})
 	return render(request, 'datasets/datasets_list.html', context)
 	
 	
 def	dataset_reload(request):	
-	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
+	dataset = Dataset.objects.get(text_id = request.GET['dataset'])
+	if request.user != dataset.owner:
+		return HttpResponseForbidden("You are not owner.")
 	dataset.status = 1
 	dataset.creation_time = datetime.now()
 	dataset.save()	
@@ -38,7 +38,9 @@ def	dataset_reload(request):
 	
 
 def dataset_delete(request):
-	dataset = Dataset.objects.filter(id = request.GET['id'])[0]
+	dataset = Dataset.objects.get(id = request.GET['id'])
+	if request.user != dataset.owner:
+		return HttpResponseForbidden("You are not owner.")
 	
 	if 'sure' in request.GET and request.GET['sure'] == 'yes': 
 		dataset.delete()
@@ -104,15 +106,16 @@ def	dataset_create(request):
 def visual_dataset(request):  
 	if request.method == "POST":
 		print(request.POST)
-		dataset = Dataset.objects.filter(text_id = request.POST['dataset'])[0]
+		dataset = Dataset.objects.get(text_id = request.POST['dataset'])
 		dataset.name = request.POST['name']
 		dataset.description = request.POST['description']
-		dataset.preprocessing_params = request.POST['preprocessing_params']		
+		dataset.preprocessing_params = request.POST['preprocessing_params']	
+		dataset.is_public = ("is_public" in request.POST)
 		dataset.save() 
 		return redirect("/dataset/?dataset=" + request.POST['dataset'] + "&mode=settings")
 	
 	
-	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
+	dataset = Dataset.objects.get(text_id = request.GET['dataset'])
 	if dataset.status == 1:
 		return general_views.wait(request, dataset.read_log() + \
 			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>", dataset.creation_time)
@@ -174,6 +177,33 @@ def visual_dataset(request):
 		context['modalities'] = Modality.objects.filter(dataset = dataset).order_by('-terms_count')
 	elif mode == 'settings':
 		context['settings'] = {'modalities': Modality.objects.filter(dataset = dataset)}
+	elif mode == 'assessment':
+		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
+		from django.contrib.auth.models import User
+		
+		assessment_types = ['segments']
+		context['assessment'] = dict()
+		
+		if request.user == dataset.owner:
+			supervised_problems = AssessmentProblem.objects.filter(dataset=dataset)
+			supervised_problems_send = []
+			problems_to_create = assessment_types
+			for problem in supervised_problems:
+				problems_to_create.remove(problem.type)
+				not_assessors = [x.username for x in User.objects.all()]
+				assessors = [x.assessor.username for x in ProblemAssessor.objects.filter(problem = problem)]
+				for assessor in assessors:
+					not_assessors.remove(assessor)
+				supervised_problems_send.append({
+					"problem": problem,
+					"assessors": assessors,
+					"not_assessors": not_assessors,
+				})
+				
+			context['assessment']['supervised_problems'] = supervised_problems_send
+			context['assessment']['problems_to_create'] = problems_to_create
+			
+		context['assessment']['problems_to_assess'] = ProblemAssessor.objects.filter(assessor=request.user,problem__dataset=dataset)
 	elif mode == 'docs':
 		docs = Document.objects.filter(dataset = dataset)
 		if "search" in request.GET and len(search_query) >= 2: 

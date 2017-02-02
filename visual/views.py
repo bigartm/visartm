@@ -44,8 +44,7 @@ def visual_document(request):
 		theta_t = theta.transpose()
 		documents_count = dataset.documents_count
 			 
-
-		topics_hl_count = 4 
+  
 		hl_topics = [0 for i in range(0, topics_count[target_layer])]
 	
 	# Topics distribution in document (actually, column form Theta)
@@ -67,23 +66,22 @@ def visual_document(request):
 		for (weight, topic_id) in topics_list:
 			if other_weight < 0.05:
 				break
-			idx +=1 
-			if idx <= topics_hl_count:
-				topic = topics_index[topic_id] 
-				hl_topics[topic.index_id] = idx
-				other_weight -= weight
-				topics.append({
-					"i" : idx, 
-					"title": topic.title, 
-					"weight": weight,  
-					"url": "/visual/topic?id=" + str(topic.id),
-				})
+			idx +=1  
+			topic = topics_index[topic_id] 
+			hl_topics[topic.index_id] = idx
+			other_weight -= weight
+			topics.append({
+				"i" : idx, 
+				"title": topic.title, 
+				"weight": weight,  
+				"url": "/visual/topic?id=" + str(topic.id),
+			})
 		
 		topics.append({
 				"i" : 0, 
 				"title": "Other", 
 				"weight": other_weight,  
-				"url": "/visual/doc_all_topics?id=" + str(document.id), 
+				"url": "/visual/doc_all_topics?id=" + str(document.id) + "&model_id=" + str(model.id), 
 			})
 	context['topics'] = topics
 	
@@ -184,10 +182,16 @@ def visual_document_all_topics(request):
 
 # from cookies
 def get_model(request, dataset):
+	if "model_id" in request.GET:
+		try:
+			return ArtmModel.objects.get(id = request.GET["model_id"])
+		except:
+			pass
+			
 	key = "model_" + str(dataset.id)
 	
 	try:
-		return ArtmModel.objects.filter(id = int(request.COOKIES[key]))[0]
+		return ArtmModel.objects.get(id = int(request.COOKIES[key]))
 	except:
 		pass
 		

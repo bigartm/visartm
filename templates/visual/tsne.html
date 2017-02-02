@@ -28,9 +28,7 @@
 	var svgHeight = window.innerHeight-100; 
 	var margin = 5;
 	var circleRadius = 4;
-	var scaledCircleRadius = circleRadius;
-	
-	var color_range = d3.scale.category10();
+	var scaledCircleRadius = circleRadius; 
 
 	document.getElementById('picture').setAttribute("width", svgWidth);
 	document.getElementById('picture').setAttribute("height", svgHeight);
@@ -78,10 +76,10 @@
 		})
 		.attr("r", circleRadius)
 		.attr("stroke-width","0")
-		.attr("stroke",THEME_activeColor)
+		.attr("stroke",theme.activeColor)
 		.attr("vector-effect","non-scaling-stroke")
 		.attr("fill", function(d, i) {
-			return color_range(d["color"]);
+			return theme.palette(d["color"] + 1);
 		})
 		.on("mouseover", function(d, i) {
 			d3.select(this)

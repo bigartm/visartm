@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Segmentation assessment problem {% endblock %}
+
+{% block content %}
+	<h1> Segmentation assessment problem for {{problem.dataset}} </h1>
+	<hr>
+	<h3>Topics</h3>
+	{% for topic in params.topics %}
+		<form id="formTopic{{forloop.counter}}" method="POST" action="/assessment/problem">
+			{{topic}} (<a onclick = "formSubmit('formTopic{{forloop.counter}}');">delete</a>)
+			<input type="hidden" name='delete_topic' value="{{topic}}"> </input>
+			<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+			{% csrf_token %}
+		</form>
+	{% endfor %}
+	
+	<form id = "formAddTopic"  method="POST" action="/assessment/problem">
+		<input type="text" name='add_topic' class="" placeholder = "Topic name" value=""></input>
+		<a onclick = "formSubmit('formAddTopic');">Add topic</a>
+		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+		{% csrf_token %}
+	</form>
+	<hr>
+{% endblock %}
+ 
+
+{% block right %}
+{% endblock %}
+
+{% block javascript %}
+<script type = "text/javascript">
+	function formSubmit(formId) {
+		document.getElementById(formId).submit();
+	}
+</script>
+{% endblock %}
+
+

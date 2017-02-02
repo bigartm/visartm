@@ -359,11 +359,11 @@ class ArtmModel(models.Model):
 			f.write("<br>\n")
 			
 	def log(self, string):
-		if settings.CONSOLE_OUTPUT:
+		if not settings.THREADING:
 			print(string)
-		else:
-			with open(self.log_file_name, "a") as f:
-				f.write(string + "<br>\n")
+		with open(self.log_file_name, "a") as f:
+			f.write(string + "<br>\n")
+			
 		
 	def read_log(self):
 		try:

@@ -57,6 +57,11 @@
 	*/
 	var svgWidth = 0.73 * window.innerWidth;
 	var svgHeight = square_size * topics_count + date_label_width; 
+	
+	var topColor = getRgb(theme.temporalSquares_TopColor);
+	var bottomColor = getRgb(theme.temporalSquares_BottomColor);
+	var activeColor = getRgb(theme.temporalSquares_ActiveColor);
+	var emptyColor = getRgb(theme.temporalSquares_EmptyColor);
 
 	document.getElementById('picture').setAttribute("width", svgWidth);
 	document.getElementById('picture').setAttribute("height", svgHeight);
@@ -110,13 +115,13 @@
 		}) 
 		.on("mouseover", function(d, i) {
 			//d3.select(this) 
-			//	.attr("stroke", THEME_textColor)
+			//	.attr("stroke", theme.textColor)
 				
 		})
 		.on("mouseout", function(d, i) { 
 			if (this != selected_cell) {
 				//d3.select(this) 
-				//	.attr("stroke", THEME_backgroundColor) 
+				//	.attr("stroke", theme.backgroundColor) 
 			}
 		})
 		.on("click", clicked)
@@ -134,7 +139,7 @@
 			   return d["name"];
 			}  
 		})
-		.attr("fill", THEME_textColor)
+		.attr("fill", theme.textColor)
 		.attr("text-anchor", "end")
 		.attr("x", get_label_x) 
 		.attr("y", function(d, i) { 
@@ -155,7 +160,7 @@
 			.text(function(d, i) {
 				return d["name"]
 			})
-			.attr("fill", THEME_textColor)
+			.attr("fill", theme.textColor)
 			.attr("text-anchor", "end");
 			
 	var connection_lines = group_high_topic_labels.selectAll('line')
@@ -170,7 +175,7 @@
 			.attr("y2",  function(d) {
 				return 9 + square_size * d["to_y"];
 			})
-			.attr("stroke", THEME_textColor)
+			.attr("stroke", theme.textColor)
 			.attr("stroke-width", 2);
 			
 			
@@ -186,7 +191,7 @@
 		.text(function(d, i) {
 			return d["name"];
 		})
-		.attr("fill", THEME_textColor)
+		.attr("fill", theme.textColor)
 		.attr("text-anchor", "end");
 	
 	 
@@ -300,21 +305,30 @@
 		return monthes[parseInt(d["month"])-1] + " " + d["year"];
 	}
 	*/
+	
+	function getRgb(color) {
+		if (color[0] == "#") return $c.hex2rgb(color).a;
+		else return $c.name2rgb(color).a;
+	}
+	
+	
+	
+	
 	function get_color(intense, y) {
 		ky = (y / topics_count);
 		kz = intense / max_intense;
 		if ({% temporal_spectrum %}) {
-			R = THEME_temporalSquares_TopColor[0] * (1 - ky) + THEME_temporalSquares_BottomColor[0] * ky; 
-			G = THEME_temporalSquares_TopColor[1] * (1 - ky) + THEME_temporalSquares_BottomColor[1] * ky;  
-			B = THEME_temporalSquares_TopColor[2] * (1 - ky) + THEME_temporalSquares_BottomColor[2] * ky;  
+			R = topColor[0] * (1 - ky) + bottomColor[0] * ky; 
+			G = topColor[1] * (1 - ky) + bottomColor[1] * ky;  
+			B = topColor[2] * (1 - ky) + bottomColor[2] * ky;  
 		} else {
-			R = THEME_temporalSquares_ActiveColor[0]; 
-			G = THEME_temporalSquares_ActiveColor[1]; 
-			B = THEME_temporalSquares_ActiveColor[2]; 
+			R = activeColor[0]; 
+			G = activeColor[1]; 
+			B = activeColor[2]; 
 		}
-		return d3.rgb(R * kz + THEME_temporalSquares_EmptyColor[0] * (1 - kz),
-					  G * kz + THEME_temporalSquares_EmptyColor[1] * (1 - kz),
-					  B * kz + THEME_temporalSquares_EmptyColor[2] * (1 - kz));
+		return d3.rgb(R * kz + emptyColor[0] * (1 - kz),
+					  G * kz + emptyColor[1] * (1 - kz),
+					  B * kz + emptyColor[2] * (1 - kz));
 	} 
 	
 

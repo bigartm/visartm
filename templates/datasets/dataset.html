@@ -7,34 +7,46 @@
 <ul class="nav nav-tabs">
 	{% if documents %}
 		<li class="active"><a>Documents</a></li> 
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
 	{% elif terms %}
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
+		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
 		<li class="active"><a>Terms</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
 	{% elif modalities %}
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
 		<li class="active"><a>Modalities</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
 	{% elif stats %}
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
 		<li class="active"><a>Statistics</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=settings')">Settings</a></li>
-	{% else %}
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}')">Documents</a></li> 
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=terms')">Terms</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=modalities')">Modalities</a></li>
-		<li><a href="#" onclick="window.location.replace('/dataset?dataset={{dataset.text_id}}&mode=stats')">Statistics</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
+	{% elif settings %}
+		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
 		<li class="active"><a>Settings</a></li> 
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
+	{% elif assessment %}
+		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
+		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
+		<li class="active"><a>Assessment</a></li> 
 	{% endif %}
 	</ul> 
 	
@@ -114,15 +126,55 @@
 			<textarea name="preprocessing_params" cols="100" rows="5">{{dataset.preprocessing_params}}</textarea>
 		</div> 
 		
+		<div class="form-group row" style="margin-left:30px;">
+			<input type="checkbox" name="is_public" {% if dataset.is_public %}checked = "checked"{% endif %}>Public</input>
+		</div>
+		
 		<input type = "hidden" name = "dataset" value = "{{dataset.text_id}}"/>
 		<div class="offset-sm-2 col-sm-10">
 			<button type="submit" class="btn btn-primary">Save</button>
 		</div> 
  		{% csrf_token %}
 	</form>
+{% elif assessment %}
+	{% if assessment.supervised_problems %}
+		
+		<h3>Supervised problems</h3>
+		{% for entry in assessment.supervised_problems %}
+			<h4><a href = "/assessment/problem?problem_id={{entry.problem.id}}">{{entry.problem.type}}</a></h4>
+			<p>
+				Assessors:
+				{% for user in entry.assessors %}
+				<a href = "/assessment/delete_assessor?problem_id={{entry.problem.id}}&username={{user}}">{{user}}</a>
+				{% endfor %}
+			</p>
+			<p>
+				Not assessors:
+				{% for user in entry.not_assessors %}
+				<a href = "/assessment/add_assessor?problem_id={{entry.problem.id}}&username={{user}}">{{user}}</a>
+				{% endfor %}
+			</p>
+		{% endfor %}
+		<hr>
+	{% endif %}
 	
+	{% if assessment.problems_to_create %}
+		<h3>Create assessment problem</h3>
+		{% for problem in assessment.problems_to_create %}
+			<a href = "/assessment/problem?dataset_id={{dataset.id}}&type={{problem}}">{{problem}}</a>
+			<br>
+		{% endfor %}
+		<hr>
+	{% endif %}
 	
-	
+	{% if assessment.problems_to_assess %}
+		<h3>Problems to assess</h3>
+		{% for problem in assessment.problems_to_assess %}
+			<a href = "/assessment/get_task?problem_id={{problem.problem.id}}">{{problem.problem.type}}</a>
+			<br>
+		{% endfor %} 
+		<hr>
+	{% endif %} 
 {% endif %}
 
 {% endblock %}
@@ -190,7 +242,7 @@
 	<a href = "/models/create?dataset={{dataset.text_id}}">Create new model...</a>
 	<br>
 	<a href = "/models/delete_all_models?dataset={{dataset.text_id}}">Clear</a>
-	
+	 
 {% endblock %}
 
 {% block javascript %}

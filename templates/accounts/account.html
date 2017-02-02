@@ -9,9 +9,20 @@
   {% for model in models %}
 	<p> <a href="/visual/model?model={{model.id}}">{{model.dataset}}/{{model}}</a></p>
   {% endfor %} 
-  <hr>
-  <h3>Private datasets</h3>
-  {% for dataset in datasets %}
-		<p> <a href="/dataset?dataset={{dataset.text_id}}">{{dataset}}</a></p>
-  {% endfor %} 
+  
+  {% if public_datasets %}
+	  <hr>
+	  <h3>Public datasets</h3>
+	  {% for dataset in public_datasets %}
+			<p> <a href="/dataset?dataset={{dataset.text_id}}">{{dataset}}</a></p>
+	  {% endfor %} 
+  {% endif %}
+  
+  {% if private_datasets %}
+	  <hr>
+	  <h3>Private datasets</h3>
+	  {% for dataset in private_datasets %}
+			<p> <a href="/dataset?dataset={{dataset.text_id}}">{{dataset}}</a></p>
+	  {% endfor %} 
+  {% endif %}
 {% endblock %}

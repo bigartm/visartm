@@ -7,6 +7,8 @@ import visual.views as visual_views
 import models.views as models_views
 import accounts.views as accounts_views
 import api.views as api_views
+import assessment.views as assessment_views
+
 
  
 urlpatterns = [
@@ -65,5 +67,10 @@ urlpatterns = [
 	url(r'^api/polygons/children', api_views.get_polygon_children),
 	url(r'^api/settings/set', api_views.set_parameter),
 	
-	
+	# Assessment
+	url(r'^assessment/problem', assessment_views.problem),
+	url(r'^assessment/task', assessment_views.task),
+	url(r'^assessment/get_task', assessment_views.get_task),	
+	url(r'^assessment/add_assessor', assessment_views.add_assessor),	
+	url(r'^assessment/delete_assessor', assessment_views.delete_assessor),	
 ]
