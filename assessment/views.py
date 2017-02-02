@@ -18,6 +18,7 @@ def problem(request):
 	
 	if "problem_id" in request.GET:
 		problem = AssessmentProblem.objects.get(id = request.GET["problem_id"])
+		problem.refresh()
 		if problem.dataset.owner != request.user:
 			return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can see assessment problem.")
 		return render(request, "assessment/superviser/" + problem.type + ".html", Context(problem.get_view_context()))
@@ -46,6 +47,7 @@ def problem(request):
 @login_required
 def get_task(request):
 	problem = AssessmentProblem.objects.get(id = request.GET["problem_id"])	
+	problem.refresh()
 		
 	if len(ProblemAssessor.objects.filter(problem=problem, assessor=request.user))!=0:
 		task = problem.create_task()

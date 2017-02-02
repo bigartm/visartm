@@ -111,7 +111,7 @@ class ArtmModel(models.Model):
 		layers = [0 for i in range(layers_count)]
 
 		layers[0] = model.add_level(num_topics = num_topics[1],
-                            topic_names=[str(t) for t in range(num_topics[1])] )
+                            topic_names=["topic" + str(t) for t in range(num_topics[1])] )
 		layers[0].initialize(dictionary=dictionary)
 		self.log("Layer 0 initialized.")
 		layers[0].fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = iter_count)   
@@ -121,7 +121,7 @@ class ArtmModel(models.Model):
 			layers[layer_id] = model.add_level(
 				parent_level_weight = 0.1, 
 				num_topics = num_topics[layer_id + 1],
-				topic_names=[str(t) for t in range(num_topics[layer_id + 1])]
+				topic_names=["topic" + str(t) for t in range(num_topics[layer_id + 1])]
 			)
 			layers[layer_id].initialize(dictionary=dictionary)
 			self.log("Layer " + str(layer_id) + " initialized.")
@@ -135,13 +135,12 @@ class ArtmModel(models.Model):
 	def save_matrices(self, artm_object):
 		self.log ("Saving matrices for model " + str(self.id) + "...")
 		# vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
-		model_path = self.get_folder() 
 		
 		self.log ("Saving matrix theta...") 
-		artm_object.get_theta().to_pickle(os.path.join(model_path, "theta"))
+		artm_object.get_theta().to_pickle(os.path.join(self.get_folder(), "theta"))
 		
 		self.log("Saving matrix phi...") 
-		artm_object.get_phi().to_pickle(os.path.join(model_path, "phi"))
+		artm_object.get_phi().to_pickle(os.path.join(self.get_folder(), "phi"))
 		 
 		is_hierarchial = True
 		try:
@@ -155,24 +154,66 @@ class ArtmModel(models.Model):
 		if is_hierarchial: 
 			print("Saving matrices psi...")
 			for layer_id in range(1, self.layers_count): 
-				psi = layers[layer_id].get_psi().to_pickle(os.path.join(model_path, "psi" + str(layer_id)))
-				
+				psi = layers[layer_id].get_psi().to_pickle(os.path.join(self.get_folder(), "psi" + str(layer_id)))
+		
+	def gather_phi(self):
+		self.log("Loading matrix phi...")
+		phi_path = os.path.join(self.get_folder(), "phi")
+		if os.path.exists(phi_path):
+			phi_raw = pd.read_pickle(os.path.join(self.get_folder(), "phi"))
+			if phi_raw.shape[0] == self.dataset.terms_count:
+				self.log("Considering that rows in phi are indexed according to dictionary.")
+				phi = phi_raw.values
+			else: 
+				self.log("WARNING! Not all words are in phi. Will restore. In case of equal terms result can be wrong.")
+				topics_count = phi_raw.shape[1]
+				phi = np.zeros((self.dataset.terms_count, topics_count))
+				terms_index = self.dataset.get_terms_index()
+				for row in phi_raw.iterrows():
+					term_text = row[0]
+					try:
+						term_matrix_id = terms_index[term_text] - 1
+					except:
+						self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
+						continue
+					for j in range(topics_count):
+						phi[term_matrix_id][j] = row[1][j]
+		else:
+			self.log("WARNING! Phi wasn't detected. Will try load from matrices for modalities.")
+			for modality in Modality.objects.get(dataset=self.dataset):
+				phi_path = os.path.join(self.get_folder(), "phi_" +  modality.name)
+				if os.path.exists(phi_path):
+					self.log("Found matrix for modality " + modality.name + ". Will load.")
+					terms_index = self.dataset.get_terms_index(modality=modality)
+					for row in phi_raw.iterrows():
+						term_text = row[0]
+						try:
+							term_matrix_id = terms_index[term_text] - 1
+						except:
+							self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
+							continue
+						for j in range(topics_count):
+							phi[term_matrix_id][j] = row[1][j]
+				else:
+					self.log("Matrix for modality " + modality.name + " wasn't found.")
+		self.log("Matrix phi loaded.")
+		np.save(os.path.join(self.get_folder(), "phi.npy"), phi)
+		self.log("Matrix phi saved in numpy format.")
 				
 	@transaction.atomic
 	def reload(self):  
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
-		model_path = self.get_folder()
 		self.log("Reloading model " + str(self.id) + "...")
 		
 		# Loading matrices
-		self.log("Loading matrix phi...")
-		phi = pd.read_pickle(os.path.join(model_path, "phi")).values
-		np.save(os.path.join(model_path, "phi.npy"), phi)	
+		self.gather_phi()
+		phi = np.load(os.path.join(self.get_folder(), "phi.npy"))
 		phi_t = phi.transpose()
 			
-		self.log("Loading matrix phi...")
-		theta = pd.read_pickle(os.path.join(model_path, "theta")).sort_index(axis = 1).values
-		np.save(os.path.join(model_path, "theta.npy"), theta)	
+		self.log("Loading matrix theta...")
+		theta_raw = pd.read_pickle(os.path.join(self.get_folder(), "theta")) #.sort_index(axis = 1)
+		theta = theta_raw.values
+		np.save(os.path.join(self.get_folder(), "theta.npy"), theta)	
 		theta_t = theta.transpose()
 		
 		layers_count = self.layers_count
@@ -180,8 +221,8 @@ class ArtmModel(models.Model):
 			self.log("Loading matrix psi...")
 			psi = [0 for i in range(layers_count)]		
 			for i in range(1, self.layers_count):
-				psi[i] = pd.read_pickle(os.path.join(model_path, "psi" + str(i))).values
-				np.save(os.path.join(model_path, "psi"+ str(i) + ".npy"), psi[i])
+				psi[i] = pd.read_pickle(os.path.join(self.get_folder(), "psi" + str(i))).values
+				np.save(os.path.join(self.get_folder(), "psi"+ str(i) + ".npy"), psi[i])
 		
 		self.log("Counting topics...")			
 		if layers_count == 1: 
@@ -195,6 +236,13 @@ class ArtmModel(models.Model):
 		documents_count = self.dataset.documents_count		
 		topics_count = [int(x) for x in self.topics_count.split()]
 		total_topics_count = sum(topics_count)-1
+		
+		# Extracting topic names from theta index
+		topic_names = [[] for i in range(layers_count + 1)]
+		offset = 0
+		for layer_id in range(1, layers_count + 1):
+			topic_names[layer_id] = theta_raw.index[offset : offset + topics_count[layer_id]]
+		offset += topics_count[layer_id]
 		
 		# Building temporary index for terms
 		self.log("Building temporary index for words...")
@@ -258,9 +306,14 @@ class ArtmModel(models.Model):
 							terms_to_title.append(term.text)
 						if ctr == top_terms_size:
 							break
-						
-				topic.title = ', '.join(terms_to_title)
-				topic.title_multiline = '\n'.join(terms_to_title)
+				
+				if 'topic' in topic_names[layer_id][topic_id]:
+					topic.title = ', '.join(terms_to_title)
+					topic.title_multiline = '\n'.join(terms_to_title)
+				else:
+					topic.title = topic_names[layer_id][topic_id]
+					topic.title_multiline = '\n'.join(topic.title.split())
+					
 				topic.title_short = topic.title[0:20]			
 				topic.save()
 				

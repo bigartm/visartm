@@ -1,3 +1,14 @@
 a:hover {
 	cursor:pointer;
 }
+
+.nolink{
+  cursor: pointer;
+  text-decoration: none;
+  color: black; 
+} 
+
+.nolink:hover{ 
+  text-decoration: none;
+  color: blue; 
+} 

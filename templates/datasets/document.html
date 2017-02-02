@@ -81,7 +81,9 @@
 	
 	function initColor(i) {
 		color = theme.palette(i);
-		document.getElementById("square"+i).style.color = color;
+		square = document.getElementById("square"+i);
+		if (square) square.style.color = color;
+		
 		rgb = getRgb(color);  
 		color = $c.rgb2hex( 
 			~~(0.2*rgb[0]+0.8*background_rgb[0]), 
@@ -91,6 +93,7 @@
 		$(".tpc" + i).css("background-color", color);
 	}
 	
+	initColor(0);
 	{% for topic in topics %}
 		initColor({{topic.i}});
 	{% endfor %}

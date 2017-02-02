@@ -85,20 +85,26 @@ def	dataset_create(request):
 			'upper_bound_relative' : request.POST['upper_bound_relative'],
 			'minimal_length' : request.POST['minimal_length']
 		}
+		
+	if 'custom_vocab' in request.POST:
+		preprocessing_params['custom_vocab'] = True
+		
+	
 	import json
 	dataset.preprocessing_params = json.dumps(preprocessing_params)	
 	#return HttpResponse(dataset.preprocessing_params)
 	
 	
 	dataset.owner = request.user  
-	if not dataset.check_can_load():
-		return HttpResponse(dataset.error_message)
 	dataset.status = 1
 	dataset.creation_time = datetime.now()	
 	dataset.save()	
 	
-	t = Thread(target = Dataset.reload, args = (dataset, ), daemon = True)
-	t.start()
+	if settings.THREADING:
+		t = Thread(target = Dataset.reload, args = (dataset, ), daemon = True)
+		t.start()
+	else:
+		dataset.reload()
 	
 	return redirect("/dataset?dataset=" + dataset.text_id) 
 	

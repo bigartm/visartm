@@ -54,7 +54,7 @@ class Dataset(models.Model):
 		
 		try:
 			preprocessing_params = json.loads(self.preprocessing_params)
-			self.log(preprocessing_params)
+			self.log("Preprocessing params:" + str(preprocessing_params))
 		except:
 			preprocessing_params = {}
 			self.log("Warning! Failed to load preprocessing parameters.")
@@ -63,13 +63,15 @@ class Dataset(models.Model):
 			self.preprocess_parse(preprocessing_params["parse"])
 		if "filter" in preprocessing_params:
 			self.preprocess_filter(preprocessing_params["filter"])
-			
-			
+			custom_vocab = True
+		if "custom_vocab" in preprocessing_params:
+			self.log("Will use custom vocab.txt")
+			custom_vocab = True
 			 
 		
 		
 		self.create_batches()
-		self.gather_dictionary(filtered=True)
+		self.gather_dictionary(custom_vocab=custom_vocab)
 		self.load_documents()
 			 
 		
@@ -136,11 +138,11 @@ class Dataset(models.Model):
 		)
 			
 	@transaction.atomic	
-	def gather_dictionary(self, filtered=False):
+	def gather_dictionary(self, custom_vocab=False):
 		self.log("Creating ARTM dictionary...")
 		dictionary = artm.Dictionary(name="dictionary")
 		batches_folder = os.path.join(self.get_folder(), "batches")
-		if filtered:
+		if custom_vocab:
 			dictionary.gather(batches_folder, vocab_file_path=os.path.join(self.get_folder(), "vocab.txt"))
 		else:
 			dictionary.gather(batches_folder)
@@ -269,16 +271,19 @@ class Dataset(models.Model):
 		return batch_vectorizer, dictionary
 		 
 		 
-	def get_tag_index(self):
-		return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "tgi.npy"))
+	#def get_tag_index(self):
+	#	return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "tgi.npy"))
 	
 	
+	
+	'''
 	def check_can_load(self):
 		#if not self.uci_provided:
 		#	self.error_message = "Cannot load without UCI vocabulary and docword files."
 		#	return False
 		return True
-		
+	'''
+	
 	def prepare_log(self):
 		self.log_file_name = os.path.join(settings.DATA_DIR, "datasets", self.text_id, "log.txt")
 		with open(self.log_file_name, "w") as f:
@@ -302,6 +307,15 @@ class Dataset(models.Model):
 		if not os.path.exists(path): 
 			os.makedirs(path) 
 		return path	 
+	
+	def get_terms_index(self, modality=None):
+		terms_index = dict()
+		query_set = Term.objects.filter(dataset=self)
+		if modality:
+			query_set = query_set.objects.filter(modality=modality)
+		for term in query_set:
+				terms_index[term.text] = term.index_id
+		return terms_index
  
 	
 class Document(models.Model):
@@ -401,6 +415,8 @@ class Document(models.Model):
 		bow = self.bag_of_words
 		left = 0
 		right = len(bow) // 7
+		if right == 0:
+			return 0
 		while True:
 			pos = (left + right) // 2
 			bow_iid = struct.unpack('I', bow[7 * pos : 7*pos+4])[0]

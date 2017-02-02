@@ -2,14 +2,5 @@ body {
     background-color: white;
 }
 
-.nolink{
-  cursor: pointer;
-  text-decoration: none;
-  color: black; 
-} 
 
-.nolink:hover{ 
-  text-decoration: none;
-  color: blue; 
-} 
  

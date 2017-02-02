@@ -1,13 +1,15 @@
 from django.db import models 
 from datasets.models import Dataset, Document
 from django.contrib.auth.models import User	
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 class AssessmentProblem(models.Model):
 	type = models.TextField() 
 	dataset = models.ForeignKey(Dataset)
 	params = models.TextField(null=False, default = "{}")
+	last_refreshed = models.DateTimeField(null=False, default=datetime.now) 
+	timeout = models.IntegerField(null=False, default=1800)
 	
 	def __str__(self):
 		return self.dataset.name + "/" + self.type
@@ -57,6 +59,19 @@ class AssessmentProblem(models.Model):
 	# Merge all results in file
 	def get_results(self, request):
 		pass
+		
+		
+	# Delete all 'dead' tasks
+	def refresh(self):
+		now = datetime.now()
+		if (now - self.last_refreshed).seconds < 300:
+			return
+		deadline = now - timedelta(self.timeout)
+		AssessmentTask.objects.filter(problem=self, status=1, creation_time__lte=deadline).delete()
+		self.last_refreshed = now
+		self.save()
+			
+	
 	
 class AssessmentTask(models.Model):
 	problem = models.ForeignKey(AssessmentProblem, null=False)
@@ -65,7 +80,7 @@ class AssessmentTask(models.Model):
 	result = models.TextField()
 	creation_time = models.DateTimeField(null=False, default = datetime.now) 
 	completion_time = models.DateTimeField(null=True)
-	status = models.IntegerField(null=False, default = 0)  # 1-issued, 2-completed, 3-timed out
+	status = models.IntegerField(null=False, default = 0)  # 1-issued, 2-completed
 	
 	# Get assessor view
 	def get_view_context(self):
