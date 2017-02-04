@@ -4,6 +4,11 @@
 /cpp
 /data/datasets/*
 !/data/datasets/example
+/data/datasets/example/*
+!/data/datasets/example/vw.txt
+!/data/datasets/example/vocab.txt
+!/data/datasets/example/wordpos
+!/data/datasets/example/documents
 /temp
 /doc
 /ve
