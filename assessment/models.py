@@ -127,16 +127,17 @@ class AssessmentProblem(models.Model):
 			
 	
 # TODO: to separate file
-def text_to_span(text, start, end, class_id, bold_chars=set()): 
-	ret = "<span class='tpc%d' offset=%d>" % ( class_id, start)
+def text_to_span(text, start, end, class_id, css):
+	cur_css = css[start]
+	ret = "<span class='tpc%d %s' offset=%d>" % (class_id, cur_css, start)
 	for pos in range(start, end):
 		if text[pos]=='\n':
-			ret += "</span><br><span class='tpc%d' offset=%d>" % (class_id, pos + 1)
+			ret += "</span><br><span class='tpc%d %s' offset=%d>" % (class_id, cur_css,  pos + 1)
 		else:
-			if pos in bold_chars:
-				ret += "<b>" + text[pos] + "</b>"
-			else:
-				ret += text[pos]
+			if pos != start and css[pos] != cur_css:
+				cur_css = css[pos]
+				ret += "</span><span class='tpc%d %s' offset=%d>" % (class_id, cur_css, pos)
+			ret += text[pos]
 	return ret + "</span>"
 		
 class AssessmentTask(models.Model):
@@ -173,26 +174,28 @@ class AssessmentTask(models.Model):
 				i += 1
 				topics_class_ids[topic.id] = i
 			
+			# Get the text
+			text = self.document.text
+			
 			# Find which terms are keywords (should be marekd as tags), they will be bold
 			tags_ids = self.document.get_tags_ids()
-			bold_chars = set()
+			css = ['' for i in range(len(text))]
 			if tags_ids:
 				word_index = self.document.get_word_index()
 				for start_pos, length, term_index_id in word_index:
 					if term_index_id in tags_ids:
 						for i in range(start_pos, start_pos + length):
-							bold_chars.add(i)
+							css[i] = "kwrd"
 				
 			# Deal with text
-			text = self.document.text
 			cur_pos = 0
 			new_text = "<span offset='-20'>====================</span><br>"
 			for sel in answer["selections"]:
 				if sel[2] in topics_class_ids:
-					new_text += text_to_span(text, cur_pos, sel[0], -1, bold_chars=bold_chars)
-					new_text += text_to_span(text, sel[0], sel[1], topics_class_ids[sel[2]], bold_chars=bold_chars)
+					new_text += text_to_span(text, cur_pos, sel[0], -1, css)
+					new_text += text_to_span(text, sel[0], sel[1], topics_class_ids[sel[2]], css)
 					cur_pos = sel[1] 
-			new_text += text_to_span(text, cur_pos, len(text), -1, bold_chars=bold_chars)
+			new_text += text_to_span(text, cur_pos, len(text), -1, css)
 			new_text += "<br><span offset=%d>====================</span>" % cur_pos
 			context["text"] = new_text
 			
