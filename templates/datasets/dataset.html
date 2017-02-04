@@ -140,22 +140,10 @@
 	{% if assessment.supervised_problems %}
 		
 		<h3>Supervised problems</h3>
-		{% for entry in assessment.supervised_problems %}
-			<h4><a href = "/assessment/problem?problem_id={{entry.problem.id}}">{{entry.problem.type}}</a></h4>
-			<p>
-				Assessors:
-				{% for user in entry.assessors %}
-				<a href = "/assessment/delete_assessor?problem_id={{entry.problem.id}}&username={{user}}">{{user}}</a>
-				{% endfor %}
-			</p>
-			<p>
-				Not assessors:
-				{% for user in entry.not_assessors %}
-				<a href = "/assessment/add_assessor?problem_id={{entry.problem.id}}&username={{user}}">{{user}}</a>
-				{% endfor %}
-			</p>
+		{% for problem in assessment.supervised_problems %}
+			<p><a href = "/assessment/problem?problem_id={{problem.id}}">{{problem}}</a></p>
 		{% endfor %}
-		<hr>
+	<hr>
 	{% endif %}
 	
 	{% if assessment.problems_to_create %}

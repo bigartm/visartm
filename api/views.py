@@ -43,7 +43,7 @@ def get_documents(request):
 				doc["date"] = time.strftime("%x");
 				doc["time"] = time.strftime("%X")
 			if "text" in fields:
-				doc["text"] = documnt.get_text()
+				doc["text"] = document.get_text()
 			result.append(doc)
 	elif 'topic_id' in request.GET:
 		topic = Topic.objects.get(id = request.GET["topic_id"])

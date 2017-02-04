@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Assessment problem {{problem}}{% endblock %}
+
+{% block content %}	
+	<h1>Assessment problem {{problem}}</h1>
+	<hr>
+	<h3>Assessors</h3>
+	<p>
+		Assessors:
+		{% for user in assessors %}
+		<a href = "/assessment/delete_assessor?problem_id={{problem.id}}&username={{user}}">{{user}}</a>
+		{% endfor %}
+	</p>
+	<p>
+		Not assessors:
+		{% for user in not_assessors %}
+		<a href = "/assessment/add_assessor?problem_id={{problem.id}}&username={{user}}">{{user}}</a>
+		{% endfor %}
+	</p>
+	<hr>
+	<h3>Tasks in progress:</h3>
+	{% if tasks_in_progress %}
+		<table class = "table table-bordered table-hover">
+			<thead><tr><td>Assessor</td><td>Task</td><td>Duration</td></tr></thead>
+			<tbody>
+			{% for task in tasks_in_progress %}
+				<tr>
+					<td>{{task.assessor.username}}</td>
+					<td>{{task}}</td>
+					<td>{{task.get_duration}}</td>
+				</tr>
+			{% endfor %}
+			</tbody>
+		</table> 
+	{% else %}
+		<p>No tasks in progress</p>
+	{% endif %}
+{% endblock %}
+
+{% block right %}
+	<h3>Tasks</h3>
+	Completed: {{count_tasks.done}}<br>
+	Current: {{count_tasks.current}}<br>
+	Left: {{count_tasks.estimate}}
+	
+	<hr>
+	<p><a href="/assessment/problem?problem_id={{problem.id}}&mode=settings">Specific settings</a></p>
+	<p><a href="/assessment/get_results?problem_id={{problem.id}}">Get results</a></p>
+{% endblock %}
+			
+			

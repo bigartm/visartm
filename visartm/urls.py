@@ -44,11 +44,12 @@ urlpatterns = [
 	url(r'^modality', datasets_views.visual_modality),	
 	url(r'^search', datasets_views.global_search),	
 	
+	# Documents
+	url(r'^document', datasets_views.visual_document),
+	url(r'^visual/document', datasets_views.visual_document),
+	url(r'^visual/doc_all_topics', datasets_views.visual_document_all_topics),
 	
 	# Visualization
-	url(r'^document', visual_views.visual_document),
-	url(r'^visual/document', visual_views.visual_document),
-	url(r'^visual/doc_all_topics', visual_views.visual_document_all_topics),
 	url(r'^visual/global', visual_views.visual_global),  
 	
 	# Models and topics
@@ -73,4 +74,6 @@ urlpatterns = [
 	url(r'^assessment/get_task', assessment_views.get_task),	
 	url(r'^assessment/add_assessor', assessment_views.add_assessor),	
 	url(r'^assessment/delete_assessor', assessment_views.delete_assessor),	
+	url(r'^assessment/get_results', assessment_views.get_results),
+	url(r'^assessment/instructions', assessment_views.instructions)	
 ]

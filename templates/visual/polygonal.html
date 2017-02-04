@@ -101,8 +101,8 @@
 			container 
 			.append("polygon")
 			.attr("points", item["points"])
-			.attr("fill", THEME_backgroundColor)
-			.attr("stroke", THEME_textColor)
+			.attr("fill", theme.backgroundColor)
+			.attr("stroke", theme.textColor)
 			.attr("stroke-width", baseStrokeWidth)
 			.attr("vector-effect","non-scaling-stroke")
 			.datum(item)
@@ -112,20 +112,20 @@
 				d3.select(this)
 					.transition()
 					.duration(1000)
-					.attr("fill", THEME_selectionColor);
+					.attr("fill", theme.selectionColor);
 			})
 			.on("mouseleave", function(d, i) {
 				if (this != selected_cell) {
 					d3.select(this)
 						.transition()
 						.duration(1000)
-						.attr("fill", THEME_backgroundColor); 
+						.attr("fill", theme.backgroundColor); 
 				}
 			})
 			;
 			
 			d3plus.textwrap()
-			.container(container.append("text").attr("pointer-events","none").attr("fill", THEME_textColor).datum(item))
+			.container(container.append("text").attr("pointer-events","none").attr("fill", theme.textColor).datum(item))
 			.shape("square")
 			.resize(true)
 			.size(Array(1,10000))
@@ -195,14 +195,14 @@
 		d3.select(d)
 			.transition()
 			.duration(1000)
-			.attr("fill", THEME_activeColor);
+			.attr("fill", theme.activeColor);
 	}
 		
 	function unselect(d) {
 		d3.select(d)
 			.transition()
 			.duration(1000)
-			.attr("fill", THEME_backgroundColor);
+			.attr("fill", theme.backgroundColor);
 	}	
 	 
 	function zoomed() {

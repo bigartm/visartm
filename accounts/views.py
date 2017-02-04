@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from models.models import ArtmModel
 from datasets.models import Dataset
+from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
 
 def login_view(request):
 	if request.method == 'GET':
@@ -53,9 +54,19 @@ def signup(request):
 def account_view(request, user_name):
 	account = User.objects.filter(username = user_name)[0]
 	
+	assessment_problems = []
+	for entry in ProblemAssessor.objects.filter(assessor=account):
+		assessment_problems.append({
+			"problem": entry.problem,
+			"tasks": AssessmentTask.objects.filter(assessor=account, problem=entry.problem, status=1),
+			"supervise": (entry.problem.dataset.owner == account)
+	})
+		
+	
 	context = Context({"account": account,
 					   "public_datasets": Dataset.objects.filter(owner = account, is_public = True),
-					   "private_datasets": Dataset.objects.filter(owner = account, is_public = False),
+					   "private_datasets": Dataset.objects.filter(owner = account, is_public = False), 
+					   "assessment_problems": assessment_problems,
 					   "models": ArtmModel.objects.filter(author = account)})
 					   
 	return render(request, 'accounts/account.html', context) 

@@ -15,6 +15,7 @@ from shutil import rmtree
 from django.db import transaction
 import traceback
 import struct
+import time
 
 
 class ArtmModel(models.Model):

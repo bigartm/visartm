@@ -2,13 +2,12 @@ from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from datasets.models import Dataset, Document, Term, TermInDocument, Modality
-from models.models import ArtmModel
-from visual.views import get_model
-import os
+from models.models import ArtmModel, Topic
 from django.conf import settings
 import visartm.views as general_views
 from threading import Thread
 from datetime import datetime
+import os
  
 def datasets_list(request):  
 	datasets = Dataset.objects.filter(is_public = True)
@@ -184,10 +183,8 @@ def visual_dataset(request):
 	elif mode == 'settings':
 		context['settings'] = {'modalities': Modality.objects.filter(dataset = dataset)}
 	elif mode == 'assessment':
-		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
-		from django.contrib.auth.models import User
-		
-		assessment_types = ['segments']
+		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor	
+		assessment_types = ['segmentation']
 		context['assessment'] = dict()
 		
 		if request.user == dataset.owner:
@@ -195,20 +192,10 @@ def visual_dataset(request):
 			supervised_problems_send = []
 			problems_to_create = assessment_types
 			for problem in supervised_problems:
-				problems_to_create.remove(problem.type)
-				not_assessors = [x.username for x in User.objects.all()]
-				assessors = [x.assessor.username for x in ProblemAssessor.objects.filter(problem = problem)]
-				for assessor in assessors:
-					not_assessors.remove(assessor)
-				supervised_problems_send.append({
-					"problem": problem,
-					"assessors": assessors,
-					"not_assessors": not_assessors,
-				})
-				
-			context['assessment']['supervised_problems'] = supervised_problems_send
-			context['assessment']['problems_to_create'] = problems_to_create
-			
+				if problem.type in problems_to_create: 
+					problems_to_create.remove(problem.type)				
+			context['assessment']['supervised_problems'] = supervised_problems
+			context['assessment']['problems_to_create'] = problems_to_create			
 		context['assessment']['problems_to_assess'] = ProblemAssessor.objects.filter(assessor=request.user,problem__dataset=dataset)
 	elif mode == 'docs':
 		docs = Document.objects.filter(dataset = dataset)
@@ -220,8 +207,189 @@ def visual_dataset(request):
 			
 	
 	context['models'] = ArtmModel.objects.filter(dataset = dataset)
-	context['active_model'] = get_model(request, dataset)
+	try:
+		context['active_model'] = ArtmModel.objects.get(id=request.COOKIES["model_" + str(dataset.id)])
+	except:
+		pass
 	return render(request, 'datasets/dataset.html', Context(context)) 
+	
+	
+import numpy as np
+from scipy.spatial.distance import euclidean, cosine
+def visual_document(request): 
+	if 'id' in request.GET:
+		document = Document.objects.get(id = request.GET['id'])
+		dataset = document.dataset
+	else:
+		dataset = Dataset.objects.get(text_id = request.GET['dataset'])
+		document = Document.objects.get(dataset = dataset, index_id = int(request.GET['iid']))
+	
+	model = None
+	if "model_id" in request.GET:
+		if request.GET["model_id"] != "-1":
+			model = ArtmModel.objects.get(id = request.GET["model_id"])  
+	else:
+		key = "model_" + str(dataset.id)
+		if key in request.COOKIES and not "mode" in request.GET:
+			return redirect("/document?id=" + str(document.id) + "&model_id=" + request.COOKIES[key])
+			
+	context = {'document': document}
+	context['model'] = model	
+	context['tags'] = document.fetch_tags()
+	context['models'] = ArtmModel.objects.filter(dataset=dataset)
+
+	if not model is None:
+		topics_count = [int(x) for x in model.topics_count.split()]
+		target_layer = model.layers_count
+		#model_folder = os.path.join(settings.DATA_DIR, "models", str(model.id))
+		phi = model.get_phi()
+		theta = model.get_theta()
+		theta_t = theta.transpose()
+		documents_count = dataset.documents_count
+			 
+  
+		hl_topics = [0 for i in range(0, topics_count[target_layer])]
+	
+	# Topics distribution in document (actually, column form Theta)
+	topics = []
+	if not model is None:
+		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
+		shift = 0
+		for i in range(1, target_layer):
+			shift += topics_count[i]
+		topics_list = []
+		document_matrix_id = document.index_id - 1
+		for topic_id in range(0, topics_count[target_layer]):
+			topics_list.append((theta[shift + topic_id, document_matrix_id], topic_id))
+		topics_list.sort(reverse = True) 
+		
+		topics = []
+		idx = 0
+		other_weight = 1
+		for (weight, topic_id) in topics_list:
+			if other_weight < 0.05:
+				break
+			idx +=1  
+			topic = topics_index[topic_id] 
+			hl_topics[topic.index_id] = idx
+			other_weight -= weight
+			topics.append({
+				"i" : idx, 
+				"title": topic.title, 
+				"weight": weight,  
+				"url": "/visual/topic?id=" + str(topic.id),
+			})
+		
+		topics.append({
+				"i" : 0, 
+				"title": "Other", 
+				"weight": other_weight,  
+				"url": "/datasets/doc_all_topics?id=" + str(document.id) + "&model_id=" + str(model.id), 
+			})
+	context['topics'] = topics
+	
+
+
+		
+	if 'mode' in request.GET and request.GET['mode'] == 'bow':
+		cut_bow = 1
+		if "cut_bow" in request.COOKIES:
+			cut_bow = int(request.COOKIES["cut_bow"])
+		context['bow'] = document.fetch_bow(cut_bow)
+	else:			
+		text = document.get_text()
+		
+		wi = document.get_word_index()
+		highlight_terms = True
+		if ("highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false") or not wi:
+			highlight_terms = False
+		 
+		# Word highlight
+		if highlight_terms:
+			print(highlight_terms)
+			if not model is None: 
+				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
+				theta_t_layer = theta_t[document_matrix_id, shift : shift + topics_count[target_layer]]
+			
+			entries = []
+			
+
+			for start_pos, length, term_index_id in wi:
+				if model is None:
+					entries.append((start_pos, length, term_index_id, 0)) 
+				else:
+					term_matrix_id = term_index_id - 1
+					topic_id = np.argmax(phi_layer[term_matrix_id] * theta_t_layer)	
+					if phi_layer[term_matrix_id][topic_id] < 1e-9:
+						# If term wasn't included to model
+						class_id = -1
+					else:
+						class_id = hl_topics[topic_id]
+					entries.append((start_pos, length, term_index_id, class_id)) 
+		
+			new_text = ""
+			cur_pos = 0
+			text_length = len(text)
+			for (start_pos, length, term_index_id, class_id) in entries:
+				if (cur_pos < start_pos):
+					new_text += text[cur_pos : start_pos]
+					cur_pos = start_pos
+				new_text += "<a href = '/term?ds=" + str(dataset.id) + "&iid=" + str(term_index_id) + "' class = 'nolink tpc" + str(class_id) + "'>"
+				new_text += text[cur_pos : cur_pos + length]
+				new_text += "</a>"
+				cur_pos += length
+			
+			if (cur_pos < text_length):
+				new_text += text[cur_pos : text_length]
+				cur_pos = text_length
+			text = new_text
+				
+		context['lines'] = text.split('\n') 
+			
+		
+	# Related documents 
+	if not model is None:
+		documents_index = Document.objects.filter(dataset = dataset).order_by("index_id")
+		dist = np.zeros(documents_count)
+		self_distr = theta_t[document_matrix_id]
+		for other_document_id in range(0, documents_count):
+			dist[other_document_id] = euclidean(self_distr, theta_t[other_document_id])
+		
+		idx = np.argsort(dist)[1:21]		
+		context['related_documents'] = [documents_index[int(i)] for i in idx] 
+					 
+	response = render(request, 'datasets/document.html', Context(context))
+	if "model_id" in request.GET:
+		response.set_cookie("model_" + str(dataset.id), request.GET["model_id"])
+	return response
+	
+def visual_document_all_topics(request): 	
+	document = Document.objects.filter(id = request.GET['id'])[0]
+	model = get_model(request, document.dataset)
+	topics_count = [int(x) for x in model.topics_count.split()] 
+	target_layer = model.layers_count
+	 
+	theta_file_name = os.path.join(model.get_folder(), "theta.npy")
+	theta = np.load(theta_file_name) 
+	
+	  
+	topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
+	shift = 0
+	for i in range(1, target_layer):
+		shift += topics_count[i]
+	
+	topics_list = []
+	for topic_id in range(0, topics_count[target_layer]):
+		topics_list.append((theta[shift + topic_id, document.index_id - 1], topics_index[topic_id]))
+	
+	topics_list.sort(reverse = True)
+	 
+		  
+	context = Context({'document': document,  
+					   'topics': [{"weight": 100*i[0], "topic": i[1]} for i in topics_list]})
+					   
+	return render(request, 'visual/document_all_topics.html', context) 
+ 	
 	
 	
 def visual_term(request):

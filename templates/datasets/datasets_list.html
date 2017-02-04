@@ -17,18 +17,19 @@
 				</tr>
 			</thead>
 			<tbody>
-			{% for dataset in datasets %}
-			<tr>
-				<td>
-					<a href="/dataset?dataset={{dataset.text_id}}">{{ dataset.name }}</a>
-				</td>
-				<td>{{dataset.description }}</td>
-				<td>{{dataset.documents_count}}</td>
-				<td>{{dataset.terms_count}}</td>
-				<td>{{dataset.creation_time}}</td>
-				<td><a href="/accounts/{{dataset.owner}}">{{dataset.owner}}</a></td>
-			</tr>
-			{% endfor %}
+				{% for dataset in datasets %}
+				<tr>
+					<td>
+						<a href="/dataset?dataset={{dataset.text_id}}">{{ dataset.name }}</a>
+					</td>
+					<td>{{dataset.description }}</td>
+					<td>{{dataset.documents_count}}</td>
+					<td>{{dataset.terms_count}}</td>
+					<td>{{dataset.creation_time}}</td>
+					<td><a href="/accounts/{{dataset.owner}}">{{dataset.owner}}</a></td>
+				</tr>
+				{% endfor %}
+			</tbody>
 		</table>
 {% endblock %}
 

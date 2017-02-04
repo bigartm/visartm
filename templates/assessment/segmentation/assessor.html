@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Assessment task {% endblock %}
+
+{% block style %}
+<style>
+	#visartm-content {
+		float: left; 
+		width:100%;
+		height: 100%;
+		overflow-y: scroll;
+		height:75%;
+	}
+</style>
+{% endblock %}
+
+{% block content %}
+	<div  onmouseup="rememberSelection()">
+		<p>Assesment task #{{task.id}}</p>
+		<p>{{task}}.</p>
+		  
+	 
+		<div id="text">
+		  {% autoescape off %}{{text}}{% endautoescape %}
+		</div>		
+	</div>
+	
+	
+	
+	
+{% endblock %}
+ 
+
+{% block right %} 
+	<div> 
+		<div>
+			{% for topic in topics_out %}
+				<a 
+					onClick="sendSelection({{topic.id}})"
+					data-toggle="tooltip" 
+					data-placement="bottom" 
+					title="{{topic.description_html}}"
+					data-html="true"
+				>{{topic.name}}</a>
+				<br>
+			{% endfor %}  	
+		</div>
+		<form id = "formAddTopic" method="POST" action="/assessment/problem">
+			<input type="text" name='name' placeholder = "Topic name"></input>
+			<button type="submit">Add topic</button>
+			<input type="hidden" name='problem_id' value="{{task.problem.id}}"> </input>
+			<input type="hidden" name='action' value="add_topic"> </input>
+			<input type="hidden" name='next' value="/assessment/task?task_id={{task.id}}"> </input> 
+			{% csrf_token %}
+		</form>
+		<hr>
+		 
+		
+ 
+
+			
+		<a id = "topic0" onClick="sendSelection(-1);">No topic</a><br>
+		{% for topic in topics_in %}
+			<a 
+				id = "topic{{forloop.counter}}" 
+				onClick="sendSelection({{topic.id}});"
+				data-toggle="tooltip" 
+				data-placement="bottom" 
+				title="{% autoescape off %}{{topic.description_html}}{% endautoescape %}"
+				data-html="true"
+			>{{topic.name}}</a><sup><a onClick="notUseTopic({{topic.id}});">x</a></sup></span> 
+		{% endfor %}  	
+		<hr>
+		
+		
+		<form method="POST">
+			<button type="submit" class="btn btn-primary">Finish assesment</button>
+			<input type="hidden" name="task_id" value="{{task.id}}" />
+			<input type="hidden" name="finished" />
+			{% csrf_token %}
+		</form> 
+	</div>
+ 
+	
+	<form id="formMain" method="POST">
+		<input type="hidden" name="task_id" value="{{task.id}}" />
+		<input type="hidden" id="selection_end" name="selection_end" value="0"/>
+		<input type="hidden" id="selection_start" name="selection_start" value="0"/>
+		<input type="hidden" id="scroll_top" name="scroll_top" value="0"/>
+		<input type="hidden" id="action" name="action" value="selection"/>
+		<input type="hidden" id="topic_id" name="topic_id" value="0"/>	
+		{% csrf_token %}
+	</form>
+
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+	
+	// Enable all tooltips
+	$(document).ready(function(){
+		$('[data-toggle="tooltip"]').tooltip(); 
+	});
+	
+	var background_rgb = getRgb(theme.backgroundColor);
+	for (i = 0; i <= {{topics_count}}; ++i){
+		color = theme.palette(i);
+		document.getElementById("topic"+i).style.color = color;
+		
+		rgb = getRgb(color);  
+		color = $c.rgb2hex( 
+			~~(0.2*rgb[0]+0.8*background_rgb[0]), 
+			~~(0.2*rgb[1]+0.8*background_rgb[1]),
+			~~(0.2*rgb[2]+0.8*background_rgb[2])
+		);
+		$(".tpc" + i).css("background-color", color);
+	}
+	
+	document.getElementById('visartm-content').scrollTop = {{scroll_top}};
+	document.getElementById("visartm-content").onscroll = function(){
+		scroll_top = document.getElementById('visartm-content').scrollTop;
+		document.getElementById("sf_scroll_top").value = scroll_top;
+		document.getElementById("mf_scroll_top").value = scroll_top;
+	};
+	
+	var somethingSelected = false;
+	
+	function rememberSelection() {
+		selection = window.getSelection();
+		selectedText = selection.toString(); 
+		if (selectedText.length > 1) {
+			anchorPos = parseInt(selection.anchorNode.parentNode.attributes["offset"].value) + selection.anchorOffset;
+			focusPos = parseInt(selection.focusNode.parentNode.attributes["offset"].value) + selection.focusOffset;
+			//alert(anchorPos + "/" + focusPos);
+			document.getElementById("selection_start").value = Math.min(anchorPos, focusPos);
+			document.getElementById("selection_end").value  = Math.max(anchorPos, focusPos);
+			somethingSelected = true;
+		} else {
+			somethingSelected = false;
+		}
+	}
+	
+	function sendSelection(topic_id) {
+		if (somethingSelected) {
+			document.getElementById("action").value = "selection";
+			document.getElementById("topic_id").value = topic_id;
+			document.getElementById("formMain").submit();
+		} else {
+			document.getElementById("action").value = "topic_use";
+			document.getElementById("topic_id").value = topic_id;
+			document.getElementById("formMain").submit();
+		}
+	}  
+	
+	function notUseTopic(topic_id, action) {
+		document.getElementById("action").value = "topic_not_use";
+		document.getElementById("topic_id").value = topic_id;
+		document.getElementById("formMain").submit();
+	}
+	
+</script>
+{% endblock %}
+
+

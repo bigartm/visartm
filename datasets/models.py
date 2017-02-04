@@ -58,7 +58,9 @@ class Dataset(models.Model):
 		except:
 			preprocessing_params = {}
 			self.log("Warning! Failed to load preprocessing parameters.")
-			
+		
+		# Preprocessing
+		custom_vocab = False
 		if "parse" in preprocessing_params:
 			self.preprocess_parse(preprocessing_params["parse"])
 		if "filter" in preprocessing_params:
@@ -459,6 +461,20 @@ class Document(models.Model):
 			ret.append({"name": tag_names[tag_id], "string": tag_string})
 		return ret
 		
+	# Returns set of index_id's of words in this document which are modlitiees
+	def get_tags_ids(self):
+		tag_ids = set()
+		ret = set()
+		for modality in Modality.objects.filter(dataset = self.dataset, is_tag = True):
+			tag_ids.add(modality.index_id)
+		bow = self.bag_of_words 
+		for i in range(len(bow) // 7 ):
+			modality_iid = struct.unpack('B', bow[7*i+6 : 7*i+7])[0]
+			if modality_iid in tag_ids:
+				ret.add(struct.unpack('I', bow[7*i : 7*i+4])[0])
+		return ret
+	
+		
 	def fetch_bow(self, cut_bow):
 		bow = self.bag_of_words
 		unique_terms_count = len(bow) // 7 		
@@ -484,7 +500,8 @@ class Document(models.Model):
 	
 	def get_text(self):
 		return self.text
-		
+	
+	# returns positions of terms as list of triples: (position, length, term.index_id)
 	def get_word_index(self, no_overlap=True):
 		wi = self.word_index
 		if wi is None:

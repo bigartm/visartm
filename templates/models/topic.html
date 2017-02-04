@@ -73,7 +73,7 @@
 		busy = true;
 		api.getDocumentsByTopic({{topic.id}}, counter, count, function(documents) {
 			documents.forEach(function(doc, i, arr) {
-				document.getElementById("documents").innerHTML += "<a href='/document?id=" + doc.id + "'>" + 
+				document.getElementById("documents").innerHTML += "<a href='/document?id=" + doc.id + "&model_id={{topic.model.id}}'>" + 
 					doc.title + "</a> (" + doc.weight + "%)<br>";
 			});
 			document.getElementById("morelink").innerHTML = ((documents.length == count) ? "More" : "");

@@ -30,14 +30,22 @@
  
 
 {% block right %}
-	<div>
-		<h4>Meta</h4>
 		Dataset: <a href="/dataset?dataset={{document.dataset.text_id}}">{{document.dataset}}</a><br>
 		{% if document.time %}Time: {{document.time}}<br>{% endif %}
 		{% if document.url %} <a href = {{document.url}}>View original</a><br>{% endif %}
 		index_id: {{document.index_id}}
-		
-	</div>
+	
+	{% if models %}
+		<div >
+			Model: 
+			<select  name="unreg_name" id = "model_selector" onchange="changeModel();">
+				<option {% if not model %}selected="selected"{% endif %} href="/document?id={{document.id}}&model_id=-1">None</option>
+				{% for x in models %}
+					<option {% if model == x %}selected="selected"{% endif %} href="/document?id={{document.id}}&model_id={{x.id}}">{{x}}</option>
+				{% endfor %}								
+			</select>
+		</div>
+	{% endif %}
 	<hr>
 	{% if model %}
 		<div>
@@ -77,8 +85,8 @@
  
 <script type="text/javascript"> 
 
-	var background_rgb = getRgb(theme.backgroundColor);
 	
+	var background_rgb = getRgb(theme.backgroundColor);
 	function initColor(i) {
 		color = theme.palette(i);
 		square = document.getElementById("square"+i);
@@ -93,6 +101,8 @@
 		$(".tpc" + i).css("background-color", color);
 	}
 	
+	
+	initColor(-1);
 	initColor(0);
 	{% for topic in topics %}
 		initColor({{topic.i}});
@@ -187,13 +197,13 @@
 		},
 	});
 	
-	function getRgb(color) {
-		if (color[0] == "#") return $c.hex2rgb(color).a;
-		else return $c.name2rgb(color).a;
+
+	
+	
+	function changeModel() {
+		selector = document.getElementById("model_selector");
+		window.location = selector.selectedOptions[0].attributes["href"].value;
 	}
-	
-	
-	
 	
 	/*
 	{% if document.dataset.tag_modality %}
