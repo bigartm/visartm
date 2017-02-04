@@ -123,8 +123,7 @@
 	document.getElementById('visartm-content').scrollTop = {{scroll_top}};
 	document.getElementById("visartm-content").onscroll = function(){
 		scroll_top = document.getElementById('visartm-content').scrollTop;
-		document.getElementById("sf_scroll_top").value = scroll_top;
-		document.getElementById("mf_scroll_top").value = scroll_top;
+		document.getElementById("scroll_top").value = scroll_top; 
 	};
 	
 	var somethingSelected = false;
