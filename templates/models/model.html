@@ -8,7 +8,7 @@
 	{% for layer in topics_layers %}
 		<h3>Level {{layer.i}} topics</h3>
 		{% for topic in layer.topics %}
-			<a href = "/visual/topic?id={{topic.id}}" > {{topic}}</a><br>
+			<a href = "/topic?id={{topic.id}}" > {{topic}}</a><br>
 		{% endfor %}
 	{% endfor %}
 {% endblock %}

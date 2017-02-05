@@ -45,16 +45,14 @@ urlpatterns = [
 	url(r'^search', datasets_views.global_search),	
 	
 	# Documents
-	url(r'^document', datasets_views.visual_document),
-	url(r'^visual/document', datasets_views.visual_document),
-	url(r'^visual/doc_all_topics', datasets_views.visual_document_all_topics),
+	url(r'^document', datasets_views.visual_document), 
 	
 	# Visualization
 	url(r'^visual/global', visual_views.visual_global),  
 	
 	# Models and topics
-	url(r'^visual/topic', models_views.visual_topic),
-	url(r'^visual/model', models_views.visual_model),
+	url(r'^topic', models_views.visual_topic),
+	url(r'^model', models_views.visual_model),
 	url(r'^models/reload_model', models_views.reload_model),
 	url(r'^models/arrange_topics', models_views.arrange_topics),	
 	url(r'^models/reset_visuals', models_views.reset_visuals),	

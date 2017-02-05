@@ -55,7 +55,7 @@
 {% if documents %}
 	{% if search %}
 		{% for doc in documents %}
-			<a href = "/visual/document?id={{doc.id}}" >{{doc.title}}</a><br>
+			<a href = "/document?id={{doc.id}}" >{{doc.title}}</a><br>
 		{% endfor %}
 	{% else %}
 		<div id="documents"></div>
@@ -205,25 +205,10 @@
 		<hr>
 	{% endif %}
 	
-	
-	<!---
-	<h4>Visualizations</h4>
-	<a href = "/visual/global?type=htmltree&dataset={{dataset.text_id}}">HTML tree</a> <br>
-	<a href = "/visual/global?type=temporaldots&dataset={{dataset.text_id}}">Temporal dots</a> <br>
-	<a href = "/visual/global?type=temporalcells_month&dataset={{dataset.text_id}}">Temporal cells (by month)</a> <br>
-	<a href = "/visual/global?type=temporalcells_day&dataset={{dataset.text_id}}">Temporal cells (by day)</a> <br>
-	<a href = "/visual/global?type=polygonal&dataset={{dataset.text_id}}">Polygonal</a> <br>
-	<a href = "/visual/global?type=foamtree&dataset={{dataset.text_id}}">FoamTree</a> <br>
-	<a href = "/visual/global?type=foamtree_light&dataset={{dataset.text_id}}">FoamTree (light)</a> <br>
-	<a href = "/visual/global?type=circles&dataset={{dataset.text_id}}">Circles</a> <br>
-	<a href = "/visual/global?type=tsne&dataset={{dataset.text_id}}">t-SNE</a> <br>
-	<hr>
-	-->
-	
 	<h4>Models</h4>
 	{% for model in models %}
 		<input type="radio" name="cb_model" onClick = "useModel({{model.id}});" {% if model == active_model %}checked = "checked"{% endif %}/>
-		<a href = "/visual/model?model={{model.id}}" onClick = "useModel({{model.id}});"> {{model}}</a>
+		<a href = "/model?model={{model.id}}" onClick = "useModel({{model.id}});"> {{model}}</a>
 		<br>
 	{% endfor %}
 	<br>

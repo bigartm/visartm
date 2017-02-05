@@ -82,7 +82,7 @@
 			//doc_date.innerHTML = "";
 		})
 		.on("click", function(d, i) {
-			window.open("/visual/document?id=" + d["id"]);
+			window.open("/document?model_id={{model.id}}&id=" + d["id"]);
 		})
 		.attr("fill", theme.textColor);
 		

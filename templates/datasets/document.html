@@ -38,7 +38,7 @@
 	{% if models %}
 		<div >
 			Model: 
-			<select  name="unreg_name" id = "model_selector" onchange="changeModel();">
+			<select id = "model_selector" onchange="changeModel();">
 				<option {% if not model %}selected="selected"{% endif %} href="/document?id={{document.id}}&model_id=-1">None</option>
 				{% for x in models %}
 					<option {% if model == x %}selected="selected"{% endif %} href="/document?id={{document.id}}&model_id={{x.id}}">{{x}}</option>

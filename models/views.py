@@ -52,7 +52,7 @@ def reload_model(request):
 	t = Thread(target = ArtmModel.reload_untrusted, args = (model, ), daemon = True)
 	t.start()
 	
-	return redirect("/visual/model?model=" + str(model.id))
+	return redirect("/model?model=" + str(model.id))
 
 @login_required
 def arrange_topics(request):
@@ -67,13 +67,13 @@ def arrange_topics(request):
 	t = Thread(target = ArtmModel.arrange_topics, args = (model, request.GET['mode'],), daemon = True)
 	t.start()
 	
-	return redirect("/visual/model?model=" + str(model.id))
+	return redirect("/model?model=" + str(model.id))
 
 @login_required
 def reset_visuals(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
 	GlobalVisualization.objects.filter(model = model).delete()
-	return general_views.message(request, "Resetted. <a href ='/visual/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
+	return general_views.message(request, "Resetted. <a href ='/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
 	
 @login_required
@@ -116,7 +116,7 @@ def create_model(request):
 	t = Thread(target = ArtmModel.create_generic, args = (model, request.POST, ), daemon = True)
 	t.start()
 	
-	return redirect("/visual/model?model=" + str(model.id))
+	return redirect("/model?model=" + str(model.id))
 	
 @login_required
 def delete_model(request):
@@ -168,4 +168,4 @@ def	visual_topic(request):
 def rename_topic(request):
 	topic = Topic.objects.filter(id = request.POST['id'])[0]
 	topic.rename(request.POST['new_title'])
-	return redirect("/visual/topic?id=" + request.POST['id'])	
+	return redirect("/topic?id=" + request.POST['id'])	

@@ -213,6 +213,7 @@ def visual_dataset(request):
 		pass
 	return render(request, 'datasets/dataset.html', Context(context)) 
 	
+
 	
 import numpy as np
 from scipy.spatial.distance import euclidean, cosine
@@ -224,69 +225,84 @@ def visual_document(request):
 		dataset = Dataset.objects.get(text_id = request.GET['dataset'])
 		document = Document.objects.get(dataset = dataset, index_id = int(request.GET['iid']))
 	
+	# Detemine model - from request get parameter model_id, or from cookies
 	model = None
-	if "model_id" in request.GET:
-		if request.GET["model_id"] != "-1":
+	if "model_id" in request.GET:	
+		try:
 			model = ArtmModel.objects.get(id = request.GET["model_id"])  
+		except:
+			pass
 	else:
 		key = "model_" + str(dataset.id)
 		if key in request.COOKIES and not "mode" in request.GET:
 			return redirect("/document?id=" + str(document.id) + "&model_id=" + request.COOKIES[key])
 			
-	context = {'document': document}
-	context['model'] = model	
+	context = {'document': document, 'model': model}
+	
+	if 'mode' in request.GET and request.GET['mode'] == 'all_topics':
+		topics_count = [int(x) for x in model.topics_count.split()] 
+		target_layer = model.layers_count
+		theta = model.get_theta()
+		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
+		shift = 0
+		for i in range(1, target_layer):
+			shift += topics_count[i]
+		topics_list = []
+		for topic_index_id in range(0, topics_count[target_layer]):
+			topics_list.append((theta[shift + topic_index_id, document.index_id - 1], topic_index_id))
+		topics_list.sort(reverse = True)
+		context['topics'] = [{"weight": 100*i[0], "topic": topics_index[i[1]]} for i in topics_list]
+		return render(request, 'datasets/document_all_topics.html', Context(context)) 
+ 	
+	
 	context['tags'] = document.fetch_tags()
 	context['models'] = ArtmModel.objects.filter(dataset=dataset)
 
+	# Topics distribution in document (actually, column form Theta)
 	if not model is None:
 		topics_count = [int(x) for x in model.topics_count.split()]
 		target_layer = model.layers_count
-		#model_folder = os.path.join(settings.DATA_DIR, "models", str(model.id))
 		phi = model.get_phi()
 		theta = model.get_theta()
 		theta_t = theta.transpose()
 		documents_count = dataset.documents_count
-			 
-  
+		
 		hl_topics = [0 for i in range(0, topics_count[target_layer])]
-	
-	# Topics distribution in document (actually, column form Theta)
-	topics = []
-	if not model is None:
+		topics = []
 		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
 		shift = 0
 		for i in range(1, target_layer):
 			shift += topics_count[i]
 		topics_list = []
 		document_matrix_id = document.index_id - 1
-		for topic_id in range(0, topics_count[target_layer]):
-			topics_list.append((theta[shift + topic_id, document_matrix_id], topic_id))
+		for topic_index_id in range(0, topics_count[target_layer]):
+			topics_list.append((theta[shift + topic_index_id, document_matrix_id], topic_index_id))
 		topics_list.sort(reverse = True) 
 		
 		topics = []
 		idx = 0
 		other_weight = 1
-		for (weight, topic_id) in topics_list:
+		for (weight, topic_index_id) in topics_list:
 			if other_weight < 0.05:
 				break
 			idx +=1  
-			topic = topics_index[topic_id] 
+			topic = topics_index[topic_index_id] 
 			hl_topics[topic.index_id] = idx
 			other_weight -= weight
 			topics.append({
 				"i" : idx, 
 				"title": topic.title, 
 				"weight": weight,  
-				"url": "/visual/topic?id=" + str(topic.id),
+				"url": "/topic?id=" + str(topic.id),
 			})
 		
 		topics.append({
 				"i" : 0, 
 				"title": "Other", 
 				"weight": other_weight,  
-				"url": "/datasets/doc_all_topics?id=" + str(document.id) + "&model_id=" + str(model.id), 
+				"url": "/document?mode=all_topics&id=" + str(document.id) + "&model_id=" + str(model.id), 
 			})
-	context['topics'] = topics
+		context['topics'] = topics
 	
 
 
@@ -361,35 +377,8 @@ def visual_document(request):
 	response = render(request, 'datasets/document.html', Context(context))
 	if "model_id" in request.GET:
 		response.set_cookie("model_" + str(dataset.id), request.GET["model_id"])
-	return response
+	return response 
 	
-def visual_document_all_topics(request): 	
-	document = Document.objects.filter(id = request.GET['id'])[0]
-	model = get_model(request, document.dataset)
-	topics_count = [int(x) for x in model.topics_count.split()] 
-	target_layer = model.layers_count
-	 
-	theta_file_name = os.path.join(model.get_folder(), "theta.npy")
-	theta = np.load(theta_file_name) 
-	
-	  
-	topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
-	shift = 0
-	for i in range(1, target_layer):
-		shift += topics_count[i]
-	
-	topics_list = []
-	for topic_id in range(0, topics_count[target_layer]):
-		topics_list.append((theta[shift + topic_id, document.index_id - 1], topics_index[topic_id]))
-	
-	topics_list.sort(reverse = True)
-	 
-		  
-	context = Context({'document': document,  
-					   'topics': [{"weight": 100*i[0], "topic": i[1]} for i in topics_list]})
-					   
-	return render(request, 'visual/document_all_topics.html', context) 
- 	
 	
 	
 def visual_term(request):
@@ -398,8 +387,42 @@ def visual_term(request):
 	else:
 		dataset = Dataset.objects.filter(id = request.GET['ds'])[0]
 		term = Term.objects.filter(dataset = dataset, index_id = request.GET['iid'])[0]
-	context = {'term': term}
+	
+	try:
+		model = ArtmModel.objects.get(id = request.GET["model_id"])  
+	except:
+		model = None
+	
+	context = {'term': term, 'model': model}
+	context['models'] = ArtmModel.objects.filter(dataset=term.dataset)
 	term.count_documents_index()
+	
+	# Get distribution over topics (row from phi)
+	if model:
+		topics_count = [int(x) for x in model.topics_count.split()]
+		shift = 0
+		for i in range(1, model.layers_count):
+			shift += topics_count[i]
+		
+		phi_row = model.get_phi()[term.index_id - 1]
+		
+		total_weight = 0
+		topics = []
+		topics_list = []
+		topics_index = Topic.objects.filter(model = model, layer = model.layers_count).order_by("index_id")
+		
+		for topic_index_id in range(0, topics_count[model.layers_count]):
+			topics_list.append((phi_row[shift + topic_index_id], topic_index_id))
+			total_weight += phi_row[shift + topic_index_id]
+		topics_list.sort(reverse = True) 
+		
+		for (weight, topic_index_id) in topics_list:
+			topics.append({
+				"topic": topics_index[topic_index_id], 
+				"weight": weight,
+				"show": (weight >= 0.05 * total_weight)
+			})
+		context['topics'] = topics
 	
 	return render(request, 'datasets/term.html', Context(context)) 
 	

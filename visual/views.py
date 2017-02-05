@@ -58,6 +58,7 @@ def visual_global(request):
 	with open(data_file_name, "r", encoding = 'utf-8') as f:
 		data = f.read()
 	context = Context({'dataset': dataset,
+	                   'model': model,
 						'data': data,
 						'no_footer': True})				   
 	return render(request, "visual/" + visual_name.split('_')[0] + ".html", context)

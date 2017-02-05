@@ -180,7 +180,7 @@
 				document.getElementById("doc_title").innerHTML = doc["title"];
 				document.getElementById("doc_snippet").innerHTML = doc["snippet"]; 
 				document.getElementById("doc_date").innerHTML = doc["time"] + " " + doc["date"]; 
-				document.getElementById("link").href = "/visual/document?id=" + docId;
+				document.getElementById("link").href = "/document?model_id={{model.id}}&id=" + docId;
 				document.getElementById("orig").href = doc["url"];	
 				document.getElementById("text").innerHTML = doc["text"];				
 			}); 
