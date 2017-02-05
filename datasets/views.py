@@ -108,6 +108,7 @@ def	dataset_create(request):
 	return redirect("/dataset?dataset=" + dataset.text_id) 
 	
 	
+from django.conf import settings
 def visual_dataset(request):  
 	if request.method == "POST":
 		print(request.POST)
@@ -184,7 +185,7 @@ def visual_dataset(request):
 		context['settings'] = {'modalities': Modality.objects.filter(dataset = dataset)}
 	elif mode == 'assessment':
 		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor	
-		assessment_types = ['segmentation']
+		assessment_types = settings.ASSESSMENT_TYPES
 		context['assessment'] = dict()
 		
 		if request.user == dataset.owner:

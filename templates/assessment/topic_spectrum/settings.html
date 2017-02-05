@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Artm Online | Segmentation assessment problem {% endblock %}
+
+{% block content %}
+	<h1> Segmentation assessment problem for {{problem.dataset}} </h1>
+	<hr>
+	<h3>Topics</h3>
+	<table class = "table table-bordered">
+		<thead>
+			<tr>
+				<td>Name</td>
+				<td>Description </td>
+				<td></td> 
+			</tr>
+		</thead>
+		<tbody>
+			{% for topic in topics %}
+			<tr>
+				<form method="POST" action="/assessment/problem" id="formAlterTopic{{topic.id}}">
+					<td>
+						<input 
+							type="text" 
+							name='name' 
+							value="{{topic.name}}" 
+							onkeydown="showItem('btnUpd{{topic.id}}');"
+						</input>
+					</td>
+					<td>
+						<textarea
+							cols="60" 
+							rows="5" 
+							name='description'  
+							onkeydown="showItem('btnUpd{{topic.id}}');"
+						>{{topic.description}}</textarea>
+					</td>
+					<td><button type="submit" class="btn btn-success" id="btnUpd{{topic.id}}" style="visibility:hidden;">Update</button>
+					<p></p>
+					<input type="hidden" name='topic_id' value="{{topic.id}}"> </input>
+					<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+					<input type="hidden" name='action' value="alter_topic"> </input>
+					<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}&mode=settings"> </input> 
+					{% csrf_token %}
+				</form>
+				<form method="POST" action="/assessment/problem">
+					<button type="submit" class="btn btn-danger">Delete</button></td>
+					<input type="hidden" name='topic_id' value="{{topic.id}}"> </input>
+					<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+					<input type="hidden" name='action' value="delete_topic"> </input>
+					<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}&mode=settings"> </input> 
+					{% csrf_token %}
+				</form>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	
+	<form id = "formAddTopic"  method="POST" action="/assessment/problem">
+		<button type="submit" class="btn btn-primary">Add topic</button>
+		<input type="hidden" name='name' value="New topic"> </input>
+		<input type="hidden" name='action' value="add_topic"> </input>
+		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+		<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}&mode=settings"> </input>
+		{% csrf_token %}
+	</form> 
+{% endblock %}
+ 
+
+{% block right %}
+{% endblock %}
+
+{% block javascript %}
+<script type = "text/javascript">
+ 	function showItem(id) {
+		document.getElementById(id).style.visibility = "visible";
+	}
+</script>
+{% endblock %}
+
+

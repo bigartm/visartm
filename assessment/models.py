@@ -1,12 +1,14 @@
 from django.db import models 
 from datasets.models import Dataset, Document, Term
+from models.models import ArtmModel, Topic
 from django.contrib.auth.models import User	
 from datetime import datetime, timedelta
 import json
 
 class AssessmentProblem(models.Model):
 	type = models.TextField() 
-	dataset = models.ForeignKey(Dataset)
+	dataset = models.ForeignKey(Dataset, null=False)
+	model = models.ForeignKey(ArtmModel, null=True)
 	params = models.TextField(null=False, default = "{}")
 	last_refreshed = models.DateTimeField(null=False, default=datetime.now) 
 	timeout = models.IntegerField(null=False, default=3600)
@@ -37,6 +39,8 @@ class AssessmentProblem(models.Model):
 			if not document_to_assess:
 				return  None
 			task.document = document_to_assess
+		else:
+			return None
 			
 		task.problem = self
 		task.status = 1
