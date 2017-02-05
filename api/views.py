@@ -9,10 +9,17 @@ import struct
 from django.conf import settings
 #from django.core.paginator import Paginator
 
-def _acao_response(response):
-	response['Access-Control-Allow-Origin'] = '*'
-	response['Access-Control-Allow-Methods'] = 'GET'
 
+def allow(func):
+	def wrapped(request):
+		response = func(request)
+		response['Access-Control-Allow-Origin'] = '*'
+		response['Access-Control-Allow-Methods'] = 'GET'
+		return response
+	return wrapped
+	
+	
+@allow
 def get_documents(request):
 	result = []
 		
@@ -79,9 +86,9 @@ def get_documents(request):
 			result.append(doc)
 			
 	response =  HttpResponse(json.dumps(result), content_type='application/json')  
-	_acao_response(response)
 	return response
 	 
+@allow
 def get_polygon_children(request):
 	print("API for" + request.GET['id'])
 	polygon = Polygon.objects.filter(id = request.GET['id'])[0]
@@ -92,7 +99,8 @@ def get_polygon_children(request):
 	response =  HttpResponse(json.dumps(result), content_type='application/json')  
 	_acao_response(response)
 	return response
-	
+
+@allow
 def set_parameter(request):
 	if request.GET['entity'] == 'Modality':
 		target = Modality.objects.filter(id = request.GET['id'])[0]

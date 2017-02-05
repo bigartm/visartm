@@ -544,11 +544,9 @@ class Topic(models.Model):
 		
 	def get_documents(self): 
 		all_documents = Document.objects.filter(dataset = self.model.dataset)
-		ret = []
 		for i in range(self.documents_count):
 			doc_index_id = struct.unpack('I', self.documents[8*i : 8*i+4])[0]
-			ret.append(all_documents.get(index_id = doc_index_id)) 
-		return ret
+			yield all_documents.get(index_id = doc_index_id) 
 		
 	def get_documents_index_ids(self):  
 		return [struct.unpack('I', self.documents[8*i : 8*i+4])[0] for i in range(self.documents_count)]
