@@ -28,9 +28,9 @@ urlpatterns = [
 	 
 	
 	# auth
-	url(r'^accounts/login$', accounts_views.login_view),
-	url(r'^accounts/logout$', accounts_views.logout_view),
-	url(r'^accounts/signup$', accounts_views.signup),
+	url(r'^accounts/login', accounts_views.login_view),
+	url(r'^accounts/logout', accounts_views.logout_view),
+	url(r'^accounts/signup', accounts_views.signup),
 	url(r'^accounts/(?P<user_name>\w+)/$', accounts_views.account_view),
 	
 	

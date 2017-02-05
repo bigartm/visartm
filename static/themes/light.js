@@ -1,7 +1,8 @@
 var theme_category_colors = [
 	"#00ff00", "#0000ff", "#ff0000", 
 	"#ff00ff", "#ffff00", "#00ffff",
-	"#80ff80", "#8080ff", "#ff8080",
+	"#F4A460", "#FFD700", "#7FFFD4",
+	"#80ff80", "#8080ff", "#ff8080", "#A52A2A",
 	"#ff80ff", "#ffff80", "#80ffff",
 	"#ff8000", "#ff0080", "#80ff00",
 	"#8000ff", "#00ff80", "#0080ff",
@@ -29,6 +30,6 @@ var theme =	{
 	"palette" : function(i) {
 		if (i == -1) return "white";
 		if (i == 0) return "grey";
-		return theme_category_colors[i-1];
+		return theme_category_colors[(i-1)%theme_category_colors.length];
 	}
 }

@@ -68,7 +68,7 @@
 			<li><a href="/accounts/{{ user.get_username }}">{{ user.get_username }}</a></li>
 			<li><a href="/accounts/logout">Log out</a></li>
 		{% else %}
-			<li><a href="/accounts/login">Log in</a></li>
+			<li><a href="/accounts/login?next={{request.get_full_path|urlencode}}">Log in</a></li>
 			<li><a href="/accounts/signup">Register</a></li>   
 		{% endif %} 
       </ul>
@@ -79,7 +79,7 @@
 
 <div class='container-fluid'>
 	<div class="col-sm-9">
-		<div id="visartm-content">
+		<div id="visartm-content">			
 			{% block content %} 
 			{% endblock %}
 		</div>

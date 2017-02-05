@@ -23,7 +23,7 @@ def problem(request):
 		if "next" in request.POST:
 			return redirect(request.POST["next"])
 		else:
-			return HttpResponse("OK") 
+			return redirect("/assessment/problem?problem_id=" + str(problem.id) + "&mode=settings")
 		
 	
 	if "problem_id" in request.GET:

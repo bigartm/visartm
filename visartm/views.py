@@ -3,15 +3,13 @@ from django.template import RequestContext, Context, loader
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from datetime import datetime
+from django.conf import settings
  
 def start_page(request):
     return render(request, 'index.html', Context({'no_footer' : True}))
 
-def settings_page(request):
-	template = loader.get_template('settings.html')
-	themes = ["dark", "light"]
-	context = Context({'themes': themes, 
-						'user':request.user})
+def settings_page(request): 
+	context = Context({'themes': settings.THEMES})
 	return render(request, 'settings.html', context)  
 	
 def	help_page(request):

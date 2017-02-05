@@ -18,9 +18,38 @@ class AssessmentProblem(models.Model):
 
 	# Get superviser/instructions view. Returns view context as dict.
 	def get_view_context(self):
-		ret = {"problem": self, "params": json.loads(self.params)}
+		params = json.loads(self.params)
+		ret = {"problem": self, "params": params}
 		if self.type == "segmentation":
 			ret["topics"] = Segmentation_Topic.objects.filter(problem=self).order_by("id")
+		elif self.type == "topic_spectrum":
+			ret["models"] = ArtmModel.objects.filter(dataset=self.dataset)
+			if self.model:
+				topics = Topic.objects.filter(model=self.model, layer=self.model.layers_count).order_by("index_id")
+				ret["topics"] = topics  
+				graph = dict()
+				graph["nodes"] = [{"id":topic.index_id, "group":1} for topic in topics]
+				graph["links"] = []
+				
+				'''
+				topics_count = len(topics)
+				for i in range (topics_count):
+					for j in range(i+1, topics_count):
+						key = str(i) + "," + str(j)
+						try: 
+							weight = params["links"][key]
+						except:
+							weight = 0.01
+						graph["links"].append({"source": i, "target": j, "value": weight})
+				'''
+				
+				for key, weight in params["links"].items():
+					topic1, topic2 = key.split(',')
+					graph["links"].append({"source": int(topic1), "target": int(topic2), "value": weight})
+				
+				
+				ret["graph"] = json.dumps(graph)
+				print(json.dumps(graph))
 		return ret
 	
 	# Create Task instance, initialize it and save it	
@@ -52,16 +81,15 @@ class AssessmentProblem(models.Model):
 	def initialize(self):
 		if self.type == "segmentation":
 			pass
+		elif self.type == "topic_spectrum":
+			pass
 		self.save()
 		
 	# Allows superviser or assessor alter some global parameters of assessment problem
 	def alter(self, POST):
 		print("ALTER PROBLEM", POST)
 		params = json.loads(self.params) 
-		if self.type == "segmentation":
-			if not "topics" in params:
-					params["topics"] = []
-				
+		if self.type == "segmentation":				
 			if POST["action"] == "add_topic":
 				print("ADD TOPIC")
 				target = POST["name"]
@@ -82,6 +110,32 @@ class AssessmentProblem(models.Model):
 				
 			elif POST["action"] == "delete_topic":
 				Segmentation_Topic.objects.filter(id=POST["topic_id"]).delete()
+		elif self.type == "topic_spectrum":
+			if "links" in params:
+				links = params["links"]
+			else:
+				links = {}
+				
+			if POST["action"] == "change_model":
+				try:
+					self.model = ArtmModel.objects.get(id=POST["model_id"])
+				except:
+					self.model = None
+			if POST["action"] == "alter_link":
+				topic1 = int(POST["topic1"])
+				topic2 = int(POST["topic2"])
+				if topic1 == topic2:
+					return
+				if topic1 > topic2:
+					topic1, topic2 = topic2, topic1
+				key = str(topic1) + "," + str(topic2)
+				weight = float(POST["weight"])	
+				if weight == 0:
+					if key in links:
+						del links[key]
+				else:
+					links[key] = float(POST["weight"])	
+			params["links"] = links
 			
 		self.params = json.dumps(params)
 		self.save()

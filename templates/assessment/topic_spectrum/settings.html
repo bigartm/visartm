@@ -1,79 +1,186 @@
 {% extends 'base.html' %}
 
-{% block title %}Artm Online | Segmentation assessment problem {% endblock %}
+{% block title %}VisARTM | Assesment{% endblock %}
+
+
+{% block style %}
+<style>
+.links line {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-	<h1> Segmentation assessment problem for {{problem.dataset}} </h1>
-	<hr>
-	<h3>Topics</h3>
-	<table class = "table table-bordered">
-		<thead>
-			<tr>
-				<td>Name</td>
-				<td>Description </td>
-				<td></td> 
-			</tr>
-		</thead>
-		<tbody>
-			{% for topic in topics %}
-			<tr>
-				<form method="POST" action="/assessment/problem" id="formAlterTopic{{topic.id}}">
-					<td>
-						<input 
-							type="text" 
-							name='name' 
-							value="{{topic.name}}" 
-							onkeydown="showItem('btnUpd{{topic.id}}');"
-						</input>
-					</td>
-					<td>
-						<textarea
-							cols="60" 
-							rows="5" 
-							name='description'  
-							onkeydown="showItem('btnUpd{{topic.id}}');"
-						>{{topic.description}}</textarea>
-					</td>
-					<td><button type="submit" class="btn btn-success" id="btnUpd{{topic.id}}" style="visibility:hidden;">Update</button>
-					<p></p>
-					<input type="hidden" name='topic_id' value="{{topic.id}}"> </input>
-					<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
-					<input type="hidden" name='action' value="alter_topic"> </input>
-					<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}&mode=settings"> </input> 
-					{% csrf_token %}
-				</form>
-				<form method="POST" action="/assessment/problem">
-					<button type="submit" class="btn btn-danger">Delete</button></td>
-					<input type="hidden" name='topic_id' value="{{topic.id}}"> </input>
-					<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
-					<input type="hidden" name='action' value="delete_topic"> </input>
-					<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}&mode=settings"> </input> 
-					{% csrf_token %}
-				</form>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+	<h1> Topic spectrum assesment problem {{problem.dataset}} </h1>
 	
-	<form id = "formAddTopic"  method="POST" action="/assessment/problem">
-		<button type="submit" class="btn btn-primary">Add topic</button>
-		<input type="hidden" name='name' value="New topic"> </input>
-		<input type="hidden" name='action' value="add_topic"> </input>
+	<form method="POST" action="/assessment/problem">
+		<div>
+			Model: 
+			<select name="model_id">
+				<option value="-1" {% if not model %}selected="selected"{% endif %}>None</option>
+				
+				{% for x in models %}
+					<option value="{{x.id}}"{% if problem.model == x %}selected="selected"{% endif %}>{{x}}</option>
+				{% endfor %}								
+			</select>
+			<button type="submit">Change model</button>
+		</div>
+		<input type="hidden" name='action' value="change_model"> </input>
 		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
-		<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}&mode=settings"> </input>
 		{% csrf_token %}
 	</form> 
+	
+	<form method="POST" action="/assessment/problem">
+		<div>
+			<select name="topic1" id="topic1"> 
+				{% for x in topics %}
+					<option value="{{x.index_id}}">{{x}}</option>
+				{% endfor %}								
+			</select>
+			<select name="topic2" id="topic2"> 
+				{% for x in topics %}
+					<option value="{{x.index_id}}">{{x}}</option>
+				{% endfor %}								
+			</select> 
+			<input name="weight" placeholder="weight"></input>
+			<button type="submit">Add link</button>
+		</div>
+		<input type="hidden" name='action' value="alter_link"> </input>
+		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+		{% csrf_token %}
+	</form> 
+	
+	<hr>
+	<div style="width:300px; height:300px; border-color: #000000; border-style: solid;">
+		<svg width="300" height="300"></svg>
+	</div>
+	<hr>
+	Params: {{params}}
+	
+
+	
+	
+
 {% endblock %}
  
 
 {% block right %}
+	<h3>Topics</h3>
+	{% for topic in topics %}
+		<a class="tpc{{forloop.counter}}" href = "/topic?id={{topic.id}}">{{topic}}</a><br>
+	{% endfor %}
 {% endblock %}
 
 {% block javascript %}
+<script src="/static/js/d3.v4.min.js"></script>
 <script type = "text/javascript">
- 	function showItem(id) {
-		document.getElementById(id).style.visibility = "visible";
+ 
+{% for topic in topics %}
+	$(".tpc{{forloop.counter}}").css("color", theme.palette({{forloop.counter}}));
+{% endfor %} 
+ 
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+var simulation = d3.forceSimulation()
+    .force("link", d3.forceLink().id(function(d) {return d.id; }))
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2));
+
+	var graph = {% autoescape off %}{{graph}}{% endautoescape %}
+
+	var link = svg.append("g")
+		.attr("class", "links")
+		.selectAll("line")
+		.data(graph.links)
+		.enter().append("line")
+		.attr("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+	var node = svg.append("g")
+		.attr("class", "nodes")
+		.selectAll("circle")
+		.data(graph.nodes)
+		.enter().append("circle")
+			.attr("r", 5)
+			.attr("fill", function(d) { return theme.palette(d.id + 1); })
+			.on("click", function(d) {
+				selectTopic(d.id);
+			})
+			.call(d3.drag()
+				.on("start", dragstarted)
+				.on("drag", dragged)
+				.on("end", dragended));
+
+	node.append("title")
+		.text(function(d) { return d.id; });
+
+	simulation
+		.nodes(graph.nodes)
+		.on("tick", ticked);
+
+	simulation.force("link")
+		.links(graph.links);
+
+	var ticks = 0;
+	function ticked() {
+		ticks+=1;
+		if (ticks<=20) {
+			link
+				.attr("x1", function(d) { return bounder(d.source.x, width); })
+				.attr("y1", function(d) { return bounder(d.source.y, height); })
+				.attr("x2", function(d) { return bounder(d.target.x, width); })
+				.attr("y2", function(d) { return bounder(d.target.y, height); });
+
+			node
+				.attr("cx", function(d) { return bounder(d.x, width) })
+				.attr("cy", function(d) { return bounder(d.y, height) });
+		}
+	} 
+
+	function dragstarted(d) {
+	  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+	  d.fx = d.x;
+	  d.fy = d.y;
 	}
+
+	function dragged(d) {
+	  d.fx = d3.event.x;
+	  d.fy = d3.event.y;
+	}
+
+	function dragended(d) {
+	  if (!d3.event.active) simulation.alphaTarget(0);
+	  d.fx = null;
+	  d.fy = null;
+	}
+	
+	function bounder(x, max_x) {
+		if (x < 5) return 5;
+		if (x > max_x - 5) return max_x-5;
+		return x;
+	}
+	
+	var selectMode = 0;
+	function selectTopic(id) {
+		if (selectMode == 0) {
+			document.getElementById("topic1").selectedIndex = id;
+			selectMode = 1;
+		} else {
+			document.getElementById("topic2").selectedIndex = id;
+			selectMode = 0;
+		}
+	}
+
 </script>
 {% endblock %}
 

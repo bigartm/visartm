@@ -118,7 +118,7 @@ def visual_dataset(request):
 		dataset.preprocessing_params = request.POST['preprocessing_params']	
 		dataset.is_public = ("is_public" in request.POST)
 		dataset.save() 
-		return redirect("/dataset/?dataset=" + request.POST['dataset'] + "&mode=settings")
+		return redirect("/dataset?dataset=" + request.POST['dataset'] + "&mode=settings")
 	
 	
 	dataset = Dataset.objects.get(text_id = request.GET['dataset'])
@@ -226,6 +226,13 @@ def visual_document(request):
 		dataset = Dataset.objects.get(text_id = request.GET['dataset'])
 		document = Document.objects.get(dataset = dataset, index_id = int(request.GET['iid']))
 	
+	try:
+		mode = request.GET['mode']
+	except:
+		mode = 'text'
+	
+	context = {'document': document, 'mode': mode}
+	
 	# Detemine model - from request get parameter model_id, or from cookies
 	model = None
 	if "model_id" in request.GET:	
@@ -236,11 +243,11 @@ def visual_document(request):
 	else:
 		key = "model_" + str(dataset.id)
 		if key in request.COOKIES and not "mode" in request.GET:
-			return redirect("/document?id=" + str(document.id) + "&model_id=" + request.COOKIES[key])
-			
-	context = {'document': document, 'model': model}
+			return redirect("/document?id=" + str(document.id) + "&mode=" + mode + "&model_id=" + request.COOKIES[key])
 	
-	if 'mode' in request.GET and request.GET['mode'] == 'all_topics':
+	context["model"] = model
+	
+	if mode == 'all_topics':
 		topics_count = [int(x) for x in model.topics_count.split()] 
 		target_layer = model.layers_count
 		theta = model.get_theta()
@@ -308,12 +315,12 @@ def visual_document(request):
 
 
 		
-	if 'mode' in request.GET and request.GET['mode'] == 'bow':
+	if mode  == 'bow':
 		cut_bow = 1
 		if "cut_bow" in request.COOKIES:
 			cut_bow = int(request.COOKIES["cut_bow"])
 		context['bow'] = document.fetch_bow(cut_bow)
-	else:			
+	elif mode == 'text':		
 		text = document.get_text()
 		
 		wi = document.get_word_index()
