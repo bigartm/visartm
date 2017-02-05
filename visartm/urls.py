@@ -28,50 +28,50 @@ urlpatterns = [
 	 
 	
 	# auth
-	url(r'^accounts/login', accounts_views.login_view),
-	url(r'^accounts/logout', accounts_views.logout_view),
-	url(r'^accounts/signup', accounts_views.signup),
+	url(r'^accounts/login$', accounts_views.login_view),
+	url(r'^accounts/logout$', accounts_views.logout_view),
+	url(r'^accounts/signup$', accounts_views.signup),
 	url(r'^accounts/(?P<user_name>\w+)/$', accounts_views.account_view),
 	
 	
 	# Datasets	
-	url(r'^datasets/reload', datasets_views.dataset_reload),
-	url(r'^datasets/create', datasets_views.dataset_create),
-	url(r'^datasets/delete', datasets_views.dataset_delete),
-    url(r'^datasets', datasets_views.datasets_list),
-    url(r'^dataset', datasets_views.visual_dataset),
-	url(r'^term', datasets_views.visual_term),	
-	url(r'^modality', datasets_views.visual_modality),	
-	url(r'^search', datasets_views.global_search),	
+	url(r'^datasets/reload$', datasets_views.dataset_reload),
+	url(r'^datasets/create$', datasets_views.dataset_create),
+	url(r'^datasets/delete$', datasets_views.dataset_delete),
+    url(r'^datasets$', datasets_views.datasets_list),
+    url(r'^dataset$', datasets_views.visual_dataset),
+	url(r'^term$', datasets_views.visual_term),	
+	url(r'^modality$', datasets_views.visual_modality),	
+	url(r'^search$', datasets_views.global_search),	
 	
 	# Documents
-	url(r'^document', datasets_views.visual_document), 
+	url(r'^document$', datasets_views.visual_document), 
 	
 	# Visualization
-	url(r'^visual/global', visual_views.visual_global),  
+	url(r'^visual/global$', visual_views.visual_global),  
 	
 	# Models and topics
-	url(r'^topic', models_views.visual_topic),
-	url(r'^model', models_views.visual_model),
-	url(r'^models/reload_model', models_views.reload_model),
-	url(r'^models/arrange_topics', models_views.arrange_topics),	
-	url(r'^models/reset_visuals', models_views.reset_visuals),	
-	url(r'^models/create', models_views.create_model),
-	url(r'^models/delete_model', models_views.delete_model),
-	url(r'^models/delete_all_models', models_views.delete_all_models),
-	url(r'^topics/rename', models_views.rename_topic),
+	url(r'^topic$', models_views.visual_topic),
+	url(r'^model$', models_views.visual_model),
+	url(r'^models/reload_model$', models_views.reload_model),
+	url(r'^models/arrange_topics$', models_views.arrange_topics),	
+	url(r'^models/reset_visuals$', models_views.reset_visuals),	
+	url(r'^models/create$', models_views.create_model),
+	url(r'^models/delete_model$', models_views.delete_model),
+	url(r'^models/delete_all_models$', models_views.delete_all_models),
+	url(r'^topics/rename$', models_views.rename_topic),
 	
 	# API
-	url(r'^api/documents/get', api_views.get_documents),
-	url(r'^api/polygons/children', api_views.get_polygon_children),
-	url(r'^api/settings/set', api_views.set_parameter),
+	url(r'^api/documents/get$', api_views.get_documents),
+	url(r'^api/polygons/children$', api_views.get_polygon_children),
+	url(r'^api/settings/set$', api_views.set_parameter),
 	
 	# Assessment
-	url(r'^assessment/problem', assessment_views.problem),
-	url(r'^assessment/task', assessment_views.task),
-	url(r'^assessment/get_task', assessment_views.get_task),	
-	url(r'^assessment/add_assessor', assessment_views.add_assessor),	
-	url(r'^assessment/delete_assessor', assessment_views.delete_assessor),	
-	url(r'^assessment/get_results', assessment_views.get_results),
-	url(r'^assessment/instructions', assessment_views.instructions)	
+	url(r'^assessment/problem$', assessment_views.problem),
+	url(r'^assessment/task$', assessment_views.task),
+	url(r'^assessment/get_task$', assessment_views.get_task),	
+	url(r'^assessment/add_assessor$', assessment_views.add_assessor),	
+	url(r'^assessment/delete_assessor$', assessment_views.delete_assessor),	
+	url(r'^assessment/get_results$', assessment_views.get_results),
+	url(r'^assessment/instructions$', assessment_views.instructions)	
 ]

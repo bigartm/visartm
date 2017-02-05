@@ -98,14 +98,28 @@ class AssessmentProblem(models.Model):
 		results = dict()
 		
 		if self.type == "segmentation":
-			results["topics"] = params["topics"]
+			term_index = Term.objects.filter(dataset=self.dataset).order_by("index_id")
+			topics_index = {-1:"-1"}
+			result_topics = []
+			i = 0
+			for topic in Segmentation_Topic.objects.filter(problem=self):
+				result_topics.append(topic.name)
+				topics_index[topic.id] = str(i)				
+				i += 1
+				
+			results["topics"] = result_topics
 			results["documents"] = []
 			for task in AssessmentTask.objects.filter(problem=self):
 				if task.status == 2:
-					answer = json.loads(task.answer) 
+					answer = json.loads(task.answer)
+					terms_assessions = answer["terms_assessions"]
+					word_index = task.document.get_word_index()
+					terms = ""
+					for i in range(len(word_index)):
+						terms += term_index[word_index[i][2]-1].text + ":" + topics_index[terms_assessions[i]] + " "
 					results["documents"].append({
 						"title" : task.document.title,
-						"answer" : answer 
+						"terms" : terms 
 					})
 		return results
     
@@ -128,6 +142,8 @@ class AssessmentProblem(models.Model):
 	
 # TODO: to separate file
 def text_to_span(text, start, end, class_id, css):
+	if start >= end:
+		return ""
 	cur_css = css[start]
 	ret = "<span class='tpc%d %s' offset=%d>" % (class_id, cur_css, start)
 	for pos in range(start, end):

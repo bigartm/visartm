@@ -136,8 +136,11 @@ def get_results(request):
 	problem = AssessmentProblem.objects.get(id=request.GET["problem_id"])
 	if request.user != problem.dataset.owner:
 		return HttpResponseForbidden("You are not owner.") 
-	return HttpResponse(json.dumps(problem.get_results()), content_type='application/json')
-		
+	response =  HttpResponse(json.dumps(problem.get_results()), content_type='application/json')
+	timestamp = datetime.now().strftime("%d%m%y_%H%M%S") 
+	response['Content-Disposition'] = 'attachment; filename="%s_%s_%s.json"' % ((problem.dataset.text_id, problem.type, timestamp))
+	return response
+	
 @login_required
 def instructions(request):
 	problem = AssessmentProblem.objects.get(id = request.GET["problem_id"]) 
