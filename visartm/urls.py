@@ -8,7 +8,7 @@ import models.views as models_views
 import accounts.views as accounts_views
 import api.views as api_views
 import assessment.views as assessment_views
-
+import research.views as research_views
 
  
 urlpatterns = [
@@ -73,5 +73,11 @@ urlpatterns = [
 	url(r'^assessment/add_assessor$', assessment_views.add_assessor),	
 	url(r'^assessment/delete_assessor$', assessment_views.delete_assessor),	
 	url(r'^assessment/get_results$', assessment_views.get_results),
-	url(r'^assessment/instructions$', assessment_views.instructions)	
+	url(r'^assessment/instructions$', assessment_views.instructions),
+	
+	# Research
+	url(r'^research/create$', research_views.create_research),
+	url(r'^research/rerun$', research_views.rerun_research),
+	url(r'^research/(?P<research_id>\d+)/$', research_views.show_research),
+	url(r'^research/(?P<research_id>\d+)/pic/(?P<pic_id>\d+).png$', research_views.get_picture)	
 ]

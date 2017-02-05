@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from models.models import ArtmModel
 from datasets.models import Dataset
 from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
+from research.models import Research
+
 
 def login_view(request):
 	if request.method == 'GET':
@@ -67,7 +69,8 @@ def account_view(request, user_name):
 					   "public_datasets": Dataset.objects.filter(owner = account, is_public = True),
 					   "private_datasets": Dataset.objects.filter(owner = account, is_public = False), 
 					   "assessment_problems": assessment_problems,
-					   "models": ArtmModel.objects.filter(author = account)})
+					   "models": ArtmModel.objects.filter(author = account),
+					   "researches": Research.objects.filter(researcher = account).order_by("id")})
 					   
 	return render(request, 'accounts/account.html', context) 
 	

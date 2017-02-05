@@ -179,10 +179,11 @@
 	Created: {{dataset.creation_time}}<br>
 	
 
-	{% if not user.is_anonymous %}
+	{% if request.user == dataset.owner %}
 		<hr>
 		<a href = "/datasets/reload?dataset={{dataset.text_id}}">Reload</a><br>
-		<a href = "/datasets/delete?id={{dataset.id}}">Delete</a>
+		<a href = "/datasets/delete?id={{dataset.id}}">Delete</a><br>
+		<a href = "/research/create?dataset_id={{dataset.id}}">Research</a>
 	{% endif %}
 	
 

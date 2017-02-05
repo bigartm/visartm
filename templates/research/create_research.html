@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}New research{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+	<h1>Create new research</h1>
+	<hr>
+	<form method="post">			  
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Dataset</label>
+			<div class="col-sm-2">{{dataset}}</div>
+			<input type="hidden" name="dataset_id" value="{{dataset.id}}" />
+		</div> 
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Model</label>
+			<div class="col-sm-3">
+				<select class="form-control" name="model_id">
+					<option value="-1">None</option>
+					{% for model in models %}
+						<option value="{{model.id}}">{{model}}</option>
+					{% endfor %}							
+				</select>
+			</div>
+		</div>
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Assesment problem</label>
+			<div class="col-sm-3">
+				<select class="form-control" name="problem_id">
+					<option value="-1">None</option>
+					{% for problem in problems %}
+						<option value="{{problem.id}}">{{problem}}</option>
+					{% endfor %}							
+				</select>
+			</div>
+		</div> 	
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Assesment problem</label>
+			<div class="col-sm-3">
+				<select class="form-control" name="script_name">
+					{% for name in script_names %}
+						<option value="{{name}}">{{name}}</option>
+					{% endfor %}							
+				</select>
+			</div>
+		</div> 		
+		
+		<button type="submit" class="btn btn-primary">Create</button>
+		{% csrf_token %}
+	</form>
+ 
+{% endblock %}
+
+{% block javascript %}
+<script type = "text/javascript">
+ 
+</script>
+{% endblock %}

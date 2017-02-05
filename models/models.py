@@ -483,7 +483,6 @@ class ArtmModel(models.Model):
 				i += 1
 		self.status = 0
 		self.save()
-		
 	
 
 	 

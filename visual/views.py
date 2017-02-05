@@ -7,6 +7,7 @@ import os
 from datasets.models import Dataset
 from models.models import ArtmModel
 from visual.models import GlobalVisualization
+import visartm.views as general_views
 
 def visual_global(request):
 	if 'dataset' in request.GET:

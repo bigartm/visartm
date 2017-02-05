@@ -59,7 +59,7 @@ def	dataset_create(request):
 		context = Context({"unreg": unreg})
 		return render(request, "datasets/create_dataset.html", context) 
 	
-	print(request.POST)
+	#print(request.POST)
 	dataset = Dataset()
 	if request.POST['mode'] == 'upload':
 		dataset.upload_from_archive(request.FILES['archive'])

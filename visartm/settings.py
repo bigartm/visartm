@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 	'visual',
 	'models',
 	'assessment',
+	'research',
 ]
 
 MIDDLEWARE = [

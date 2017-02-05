@@ -9,7 +9,7 @@
 	<ul class="nav nav-tabs">
 	{% if lines %}
 		<li class="active"><a>Text</a></li> 
-		<li><a href="#" onclick="window.location.replace('/document?id={{document.id}}&mode=bow')">Bag of words</a></li>
+		<li><a href="/document?id={{document.id}}&mode=bow{% if model %}&model_id={{model.id}}{% endif %}">Bag of words</a></li>
 	{% else %}
 		<li><a href="/document?id={{document.id}}&mode=text{% if model %}&model_id={{model.id}}{% endif %}">Text</a></li> 
 		<li  class="active"><a>Bag of words</a></li>

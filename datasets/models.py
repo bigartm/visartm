@@ -184,8 +184,11 @@ class Dataset(models.Model):
 				
 				
 				term.save() 
+				
+				self.terms_index[term.text] = term
 				self.terms_index[term.text + "$#" + term.modality.name] = term
 				self.terms_index[term.index_id] = term
+				
 				if term_index_id % 10000 == 0:
 					self.log(str(term_index_id))
 					#print(term_index_id)
