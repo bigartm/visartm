@@ -189,7 +189,7 @@ def visual_dataset(request):
 		if request.user == dataset.owner:
 			supervised_problems = AssessmentProblem.objects.filter(dataset=dataset)
 			supervised_problems_send = []
-			problems_to_create = settings.ASSESSMENT_TYPES
+			problems_to_create = [x for x in settings.ASSESSMENT_TYPES]
 			for problem in supervised_problems:
 				if problem.type in problems_to_create: 
 					problems_to_create.remove(problem.type)				
