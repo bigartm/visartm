@@ -3,6 +3,7 @@
 /.idea
 /cpp
 /data/datasets/*
+/data/research/*
 !/data/datasets/example
 /data/datasets/example/*
 !/data/datasets/example/vw.txt
