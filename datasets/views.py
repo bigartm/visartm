@@ -185,13 +185,11 @@ def visual_dataset(request):
 		context['settings'] = {'modalities': Modality.objects.filter(dataset = dataset)}
 	elif mode == 'assessment':
 		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor	
-		assessment_types = settings.ASSESSMENT_TYPES
 		context['assessment'] = dict()
-		
 		if request.user == dataset.owner:
 			supervised_problems = AssessmentProblem.objects.filter(dataset=dataset)
 			supervised_problems_send = []
-			problems_to_create = assessment_types
+			problems_to_create = settings.ASSESSMENT_TYPES
 			for problem in supervised_problems:
 				if problem.type in problems_to_create: 
 					problems_to_create.remove(problem.type)				
