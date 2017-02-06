@@ -33,11 +33,11 @@ def jaccard(P, Q):
 	return (1.0 * intersection) / union
 	
 	
-def filter_tails(matrix, enough):
+def filter_tails(matrix, start, end):
 	for row in matrix:
 		s = 0
 		for j in np.argsort(row)[::-1]:
 			s += row[j]
-			if s > enough:
+			if s < start or s > end:
 				row[j] = 0
 	return matrix

@@ -592,35 +592,27 @@ class Term(models.Model):
 	token_value = models.FloatField(default=0)
 	token_tf = models.IntegerField(default=0)
 	token_df = models.IntegerField(default=0)
-	documents_indexed = models.BooleanField(null = False, default = False)
+	documents = models.BinaryField(null=True)
 
 	def __str__(self):
 		return self.text	
 	
-	@transaction.atomic
+	
 	def count_documents_index(self):
-		if self.documents_indexed:
+		if self.documents:
 			return
-			
+		self.documents = bytes()
+		self.save()
+		relations = []
 		documents = Document.objects.filter(dataset = self.dataset)
 		for document in documents:
 			count = document.count_term(self.index_id)
 			if count != 0:
-				relation = TermInDocument()
-				relation.term = self
-				relation.document = document
-				relation.count = count
-				relation.save()
-			
-		self.documents_indexed = True
+				relations.append((count, document.index_id))
+		relations.sort(reverse=True)
+		for count, document_index_id in relations:
+			self.documents += struct.pack('I', document_index_id) + struct.pack('H', count) 
 		self.save()
-	
-	
-			
-class TermInDocument(models.Model):
-	term = models.ForeignKey(Term, null = False)
-	document = models.ForeignKey(Document, null = False)
-	count = models.IntegerField(default=0)
  
 	
 from django.contrib import admin

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from datasets.models import Dataset, Document, Modality, Term, TermInDocument
+from datasets.models import Dataset, Document, Modality, Term
 from models.models import Topic
 from visual.models import Polygon
 from django.http import HttpResponse
@@ -74,16 +74,20 @@ def get_documents(request):
 			})
 	elif 'term_id' in request.GET:  
 		term = Term.objects.get(id = request.GET["term_id"])
-		relations = TermInDocument.objects.filter(term = term).order_by("-count")
-		relations = relations[offset : offset + count]
-		for relation in relations: 
-			doc = {
-				"id": relation.document.id,
-				"title": relation.document.title,
-				"count": relation.count,
-				"concordance": relation.document.get_concordance(term)
-			}
-			result.append(doc)			
+		term.count_documents_index()
+		docs_index = term.documents
+		length = len(docs_index) // 6
+		if offset + count > length:
+			count = length - offset 
+		for i in range(offset, offset + count):
+			doc_iid = struct.unpack('I', docs_index[6*i: 6*i+4])[0]
+			document = Document.objects.get(dataset_id=term.dataset_id, index_id=doc_iid) 
+			result.append({
+				"id": document.id,
+				"title": document.title,
+				"count": struct.unpack('H', docs_index[6*i+4: 6*i+6])[0],
+				"concordance": document.get_concordance(term)
+			})			
 	return HttpResponse(json.dumps(result), content_type='application/json')  
 	 
 	 

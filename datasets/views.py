@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
-from datasets.models import Dataset, Document, Term, TermInDocument, Modality
+from datasets.models import Dataset, Document, Term, Modality
 from models.models import ArtmModel, Topic
 from django.conf import settings
 import visartm.views as general_views
@@ -403,7 +403,6 @@ def visual_term(request):
 	
 	context = {'term': term, 'model': model}
 	context['models'] = ArtmModel.objects.filter(dataset=term.dataset)
-	term.count_documents_index()
 	
 	# Get distribution over topics (row from phi)
 	if model:
@@ -432,6 +431,7 @@ def visual_term(request):
 			})
 		context['topics'] = topics
 	
+	term.count_documents_index()
 	return render(request, 'datasets/term.html', Context(context)) 
 	
 	
