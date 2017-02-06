@@ -17,9 +17,16 @@
 </style>
 {% endblock %}
 
-{% block content %}
-	<h1> Topic spectrum assesment problem {{problem.dataset}} </h1>
-	
+{% block content %} 
+
+	<div style="width:900px; height:500px; border-color: #000000; border-style: solid;">
+		<svg id="picture" width="900" height="500"></svg>
+	</div> 
+ 
+{% endblock %}
+ 
+
+{% block right %}
 	<form method="POST" action="/assessment/problem">
 		<div>
 			Model: 
@@ -38,149 +45,133 @@
 	</form> 
 	
 	<form method="POST" action="/assessment/problem">
-		<div>
-			<select name="topic1" id="topic1"> 
-				{% for x in topics %}
-					<option value="{{x.index_id}}">{{x}}</option>
-				{% endfor %}								
-			</select>
-			<select name="topic2" id="topic2"> 
-				{% for x in topics %}
-					<option value="{{x.index_id}}">{{x}}</option>
-				{% endfor %}								
-			</select> 
-			<input name="weight" placeholder="weight"></input>
-			<button type="submit">Add link</button>
-		</div>
-		<input type="hidden" name='action' value="alter_link"> </input>
+		<button class="btn btn-primary" type="submit">Save changes</button>
+		<input type="hidden" name='action' value="change_links"> </input>
+		<input type="hidden" name='topics' id="topics_field" value=""> </input>
+		<input type="hidden" name='links' id="links_field" value=""> </input>		
 		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
 		{% csrf_token %}
 	</form> 
 	
-	<hr>
-	<div style="width:300px; height:300px; border-color: #000000; border-style: solid;">
-		<svg width="300" height="300"></svg>
-	</div>
-	<hr>
-	Params: {{params}}
 	
-
-	
-	
-
-{% endblock %}
- 
-
-{% block right %}
-	<h3>Topics</h3>
-	{% for topic in topics %}
-		<a class="tpc{{forloop.counter}}" href = "/topic?id={{topic.id}}">{{topic}}</a><br>
-	{% endfor %}
 {% endblock %}
 
-{% block javascript %}
-<script src="/static/js/d3.v4.min.js"></script>
+{% block javascript %}  
+<script src="/static/js/d3.v3.min.js"></script> 
+<script src="/static/js/d3plus.js"></script>  
 <script type = "text/javascript">
  
-{% for topic in topics %}
-	$(".tpc{{forloop.counter}}").css("color", theme.palette({{forloop.counter}}));
-{% endfor %} 
+//{% for topic in topics %}
+//	$(".tpc{{forloop.counter}}").css("color", theme.palette({{forloop.counter}}));
+//{% endfor %} 
+	var radius = 25;
+
+	var topics = {% autoescape off %}{{topics}}{% endautoescape %};
+	N = topics.length;
+	
+	var svg = d3.select("#picture")
+				.append("svg");
+	
+	container = svg.append("g");
+	
+	var drag = d3.behavior.drag()
+        .on("drag", function(d) {
+            d.x += d3.event.dx;
+            d.y += d3.event.dy;
+			refresh();
+        });
  
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
-
-var color = d3.scaleOrdinal(d3.schemeCategory20);
-
-var simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(function(d) {return d.id; }))
-    .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width / 2, height / 2));
-
-	var graph = {% autoescape off %}{{graph}}{% endautoescape %}
-
-	var link = svg.append("g")
-		.attr("class", "links")
-		.selectAll("line")
-		.data(graph.links)
-		.enter().append("line")
-		.attr("stroke-width", function(d) { return Math.sqrt(d.value); });
-
-	var node = svg.append("g")
-		.attr("class", "nodes")
-		.selectAll("circle")
-		.data(graph.nodes)
-		.enter().append("circle")
-			.attr("r", 5)
-			.attr("fill", function(d) { return theme.palette(d.id + 1); })
-			.on("click", function(d) {
-				selectTopic(d.id);
+	refresh();
+	
+	function refresh() {
+		//lines
+		links = [];
+		for (i = 0; i < N; ++i) {
+			for (j =i+1; j < N; ++j) {
+				k =  (sqr(topics[i].x-topics[j].x) + sqr(topics[i].y-topics[j].y)) / (radius*radius);
+				if (k < 16) {
+					links.push({"id1":i, "id2": j, "weight": 2});
+				} else if (k < 25) {
+					links.push({"id1":i, "id2": j, "weight": 1});
+				}
+			}
+		}
+		
+		container.selectAll("line")
+			.remove();
+			 
+		container
+			.selectAll("line") 
+			.data(links) 
+			.enter()
+			.append("line")
+			.attr("x1", function(d){return topics[d.id1].x;})
+			.attr("y1", function(d){return topics[d.id1].y;})
+			.attr("x2", function(d){return topics[d.id2].x;})
+			.attr("y2", function(d){return topics[d.id2].y;})
+			.attr("fill", theme.backgroundColor	)
+			.attr("stroke", theme.textColor)
+			.attr("stroke-width", function(d){return sqr(sqr(d.weight))/5;})
+			;
+		
+		// circles
+		container
+			.selectAll("circle")
+			.remove();
+		
+		container
+			.selectAll("circle") 
+			.data(topics) 
+			.enter()
+			.append("circle") 
+			.attr("cx", function(d) {return d.x;})
+			.attr("cy", function(d) {return d.y;})
+			.attr("r", radius)
+			.attr("fill", theme.backgroundColor	)
+			.attr("stroke", theme.textColor)
+			.on("mouseover", function(d) {
+				d3.select(this)
+					.transition()
+					.duration(1000)
+					.attr("fill", theme.selectionColor);
 			})
-			.call(d3.drag()
-				.on("start", dragstarted)
-				.on("drag", dragged)
-				.on("end", dragended));
-
-	node.append("title")
-		.text(function(d) { return d.id; });
-
-	simulation
-		.nodes(graph.nodes)
-		.on("tick", ticked);
-
-	simulation.force("link")
-		.links(graph.links);
-
-	var ticks = 0;
-	function ticked() {
-		ticks+=1;
-		if (ticks<=20) {
-			link
-				.attr("x1", function(d) { return bounder(d.source.x, width); })
-				.attr("y1", function(d) { return bounder(d.source.y, height); })
-				.attr("x2", function(d) { return bounder(d.target.x, width); })
-				.attr("y2", function(d) { return bounder(d.target.y, height); });
-
-			node
-				.attr("cx", function(d) { return bounder(d.x, width) })
-				.attr("cy", function(d) { return bounder(d.y, height) });
+			.on("mouseleave", function(d) {
+				d3.select(this)
+					.transition()
+					.duration(1000)
+					.attr("fill", theme.backgroundColor); 
+			})
+			.call(drag)
+			;
+			
+		
+		// labels
+		container.selectAll("text").remove();
+		d3plus.textwrap().container(container.append("text"));
+		for(i = 0; i < N; ++i)
+		{
+			d3plus.textwrap()
+				.container(container.append("text").attr("pointer-events","none").attr("fill", theme.textColor))
+				.shape("circle")
+				.resize(true) 
+				.text(topics[i]["label"])
+				.x(topics[i].x - radius)
+				.y(topics[i].y - radius)
+				.width(2 * radius)
+				.height(2 * radius)
+				.align("center")
+				.valign("middle")
+				.draw()
+				; 
 		}
-	} 
-
-	function dragstarted(d) {
-	  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-	  d.fx = d.x;
-	  d.fy = d.y;
-	}
-
-	function dragged(d) {
-	  d.fx = d3.event.x;
-	  d.fy = d3.event.y;
-	}
-
-	function dragended(d) {
-	  if (!d3.event.active) simulation.alphaTarget(0);
-	  d.fx = null;
-	  d.fy = null;
+		document.getElementById("topics_field").value = JSON.stringify(topics);
+		document.getElementById("links_field").value = JSON.stringify(links);
 	}
 	
-	function bounder(x, max_x) {
-		if (x < 5) return 5;
-		if (x > max_x - 5) return max_x-5;
-		return x;
-	}
+	function sqr(x) {return x*x;}
 	
-	var selectMode = 0;
-	function selectTopic(id) {
-		if (selectMode == 0) {
-			document.getElementById("topic1").selectedIndex = id;
-			selectMode = 1;
-		} else {
-			document.getElementById("topic2").selectedIndex = id;
-			selectMode = 0;
-		}
-	}
-
+	
+ 
 </script>
 {% endblock %}
 

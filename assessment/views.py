@@ -33,7 +33,9 @@ def problem(request):
 			return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can see assessment problem.")
 		
 		if "mode" in request.GET and request.GET["mode"] == "settings":
-			return render(request, os.path.join("assessment", problem.type, "settings.html"), Context(problem.get_view_context()))
+			context = problem.get_view_context()
+			context["no_footer"] = True
+			return render(request, os.path.join("assessment", problem.type, "settings.html"), Context(context))
 		else:
 			from django.contrib.auth.models import User
 			not_assessors = [x.username for x in User.objects.all()]

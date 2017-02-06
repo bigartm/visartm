@@ -7,8 +7,6 @@ from django.conf import settings
 import json
 import numpy as np
 import pandas as pd 
-from scipy.spatial.distance import euclidean, cosine
-from scipy.stats import entropy 
 import artm
 import re
 from shutil import rmtree 
@@ -198,6 +196,13 @@ class ArtmModel(models.Model):
 				else:
 					self.log("Matrix for modality " + modality.name + " wasn't found.")
 		self.log("Matrix phi loaded.")
+		self.log("Norming phi...")
+		sums = np.sum(phi, axis = 0)
+		topics_count = len(sums)
+		for row in phi:
+			for j in range(topics_count):
+				row[j] /= sums[j]
+		
 		np.save(os.path.join(self.get_folder(), "phi.npy"), phi)
 		self.log("Matrix phi saved in numpy format.")
 				
@@ -426,6 +431,51 @@ class ArtmModel(models.Model):
 		except:
 			return "Model is being processed..."
 	
+	
+	def get_topics(self, layer=-1):
+		if layer == -1:
+			layer=self.layers_count
+		return Topic.objects.filter(model = self, layer = layer).order_by("index_id")
+	
+	def get_topics_distances(self, metric="euclidean", layer=-1):
+		if layer == -1:
+			layer=self.layers_count
+		if layer == 0:
+			return np.zeros((1,1))
+			
+		topics_count = [int(x) for x in self.topics_count.split()]
+		ret = np.zeros((topics_count[layer], topics_count[layer]))
+		shift = 0
+		for i in range (1, layer):
+			shift += topics_count[i]
+			
+		phi_t = self.get_phi().transpose()
+			
+		if metric == "euclidean":
+			from scipy.spatial.distance import euclidean
+			metric = euclidean 
+		elif metric == "cosine":
+			from scipy.spatial.distance import cosine
+			metric = cosine  
+		elif metric == "hellinger":
+			from algo.metrics import hellinger
+			metric = hellinger
+		elif metric == "kld":
+			from algo.metrics import kld
+			metric = kld
+		elif metric == "jsd":
+			from algo.metrics import jsd
+			metric = jsd
+		elif metric == "jaccard":
+			from algo.metrics import jaccard, filter_tails
+			phi_t = filter_tails(phi_t, 0.9)
+			metric = jaccard
+			
+		for i in range(topics_count[layer]):
+			for j in range(topics_count[layer]):
+				ret[i][j] = metric(phi_t[shift + i], phi_t[shift + j])
+		return ret
+	
 	# Only horizontal arranging
 	@transaction.atomic
 	def arrange_topics(self, mode = "alphabet"):
@@ -440,15 +490,9 @@ class ArtmModel(models.Model):
 		
 		
 		TopicRelated.objects.filter(model = self).delete()
-		topic_distances = [np.zeros((i, i)) for i in topics_count]
-		shift = 0
-		for layer_id in range (1, layers_count + 1):
-			for i in range(topics_count[layer_id]):
-				for j in range(topics_count[layer_id]):
-					distance = euclidean(phi_t[shift + i], phi_t[shift + j])
-					topic_distances[layer_id][i][j] = distance
-			shift += topics_count[layer_id]
-			
+		topic_distances = [self.get_topics_distances(layer=i) for i in range(layers_count + 1)]
+		
+		for layer_id in range (1, layers_count + 1): 
 			for i in range(0, topics_count[layer_id]):
 				idx = np.argsort(topic_distances[layer_id][i])
 				for j in idx[1 : 1 + min(5, topics_count[layer_id] - 1)]:

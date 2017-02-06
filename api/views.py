@@ -83,10 +83,9 @@ def get_documents(request):
 				"count": relation.count,
 				"concordance": relation.document.get_concordance(term)
 			}
-			result.append(doc)
-			
-	response =  HttpResponse(json.dumps(result), content_type='application/json')  
-	return response
+			result.append(doc)			
+	return HttpResponse(json.dumps(result), content_type='application/json')  
+	 
 	 
 @allow
 def get_polygon_children(request):
@@ -96,9 +95,7 @@ def get_polygon_children(request):
 	result = []
 	for child in Polygon.objects.filter(parent = polygon):
 		result.append(child.to_json_object())
-	response =  HttpResponse(json.dumps(result), content_type='application/json')  
-	_acao_response(response)
-	return response
+	return HttpResponse(json.dumps(result), content_type='application/json')  
 
 @allow
 def set_parameter(request):
@@ -109,7 +106,6 @@ def set_parameter(request):
 		elif request.GET['param'] == 'is_tag':
 			target.is_tag = change_boolean(target.is_tag, request.GET['value'])
 		target.save()
-	
 	return HttpResponse("OK")
 	
 def change_boolean(initial, new):

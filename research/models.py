@@ -26,7 +26,7 @@ class Research(models.Model):
 			f.write("<html>\n<head></head>\n<body>")
 			f.write("<h1>Research report</h1>\n")
 			f.write("<p>Research id: %d<br>\n" % self.id)
-			f.write("Dataset: %d<br>\n" % self.id)
+			f.write("Dataset: %s<br>\n" % str(self.dataset))
 			if self.model:
 				f.write("Model: %s<br>\n" % str(self.model))
 			if self.problem:
@@ -75,21 +75,24 @@ class Research(models.Model):
 		self.figure = plt.figure()
 		return self.figure.gca()
 	
-	def report_picture(self):
+	def report_picture(self, height=400, width=400, align='left'):
 		self.img_counter += 1
 		file_name = str(self.img_counter) + '.png'
 		path = os.path.join(self.get_pic_folder(), file_name)
 		self.figure.savefig(path)
 		with open(self.get_report_file(), "a") as f:
-			f.write("<div align='center'><img src='pic/%s'  /></div>\n" % file_name)	
+			f.write("<div align='%s'><img src='pic/%s' width='%d' heigth='%d' /></div>\n" % (align, file_name, width, height))	
 
-	def report_table(self, table):
+	def report_table(self, table, format="%s"):
 		with open(self.get_report_file(), "a") as f: 
 			f.write('<table border="1" cellpadding="0" cellspacing="0">\n')
 			for row in table:
 				f.write("<tr>\n")
 				for cell in row:
-					f.write("<td>%s</td>\n" % str(cell))
+					if format:
+						f.write("<td>")
+						f.write(format % cell)
+						f.write("</td>")
 				f.write("</tr>\n")
 			f.write("</table>\n")
 		
