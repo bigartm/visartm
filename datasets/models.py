@@ -218,6 +218,8 @@ class Dataset(models.Model):
 		doc_id = 0
 		with open(vw_file_name, "r", encoding = "utf-8") as f:
 			for line in f:
+				if len(line)<=1:
+					continue
 				doc = Document()
 				doc.dataset = self
 				doc_id += 1
@@ -382,6 +384,8 @@ class Document(models.Model):
 				with open(wordpos_file, "r", encoding = "utf-8") as f2:
 					for line in f2.readlines():
 						parsed = line.split()
+						if len(parsed) != 3:
+							continue
 						key = parsed[2]
 						if key in self.dataset.terms_index:
 							term_index_id = self.dataset.terms_index[key].index_id
