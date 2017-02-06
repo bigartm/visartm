@@ -392,8 +392,8 @@ admin.site.register(AssessmentProblem)
 
 class Segmentation_Topic(models.Model):
 	problem = models.ForeignKey(AssessmentProblem, null=False)
-	name = models.TextField(null=False, default="")
-	description = models.TextField(null=True)
+	name = models.TextField(null=False, default="New topic")
+	description = models.TextField(null=False, default="Description")
 		
 	def description_html(self):
 		return self.description.replace("\n","<br>")
