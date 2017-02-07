@@ -179,7 +179,7 @@ class ArtmModel(models.Model):
 						phi[term_matrix_id][j] = row[1][j]
 		else:
 			self.log("WARNING! Phi wasn't detected. Will try load from matrices for modalities.")
-			for modality in Modality.objects.get(dataset=self.dataset):
+			for modality in Modality.objects.filter(dataset=self.dataset):
 				phi_path = os.path.join(self.get_folder(), "phi_" +  modality.name)
 				if os.path.exists(phi_path):
 					self.log("Found matrix for modality " + modality.name + ". Will load.")

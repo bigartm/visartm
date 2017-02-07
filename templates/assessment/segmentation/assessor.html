@@ -75,14 +75,23 @@
 			>{{topic.name}}</a><sup><a onClick="notUseTopic({{topic.id}});">x</a></sup></span> 
 		{% endfor %}  	
 		<hr>
+		 
+		<div style="float: left;">
+			<form method="GET" action = "/assessment/get_task">
+				<input type="hidden" name="problem_id" value="{{task.problem.id}}" />
+				<button type="submit" class="btn btn-primary">Skip</button>  
+			</form> 
+		</div>
+			
+		<div style="float: right;">
+			<form method="POST">
+				<button type="submit" class="btn btn-success">Finish assesment</button>
+				<input type="hidden" name="task_id" value="{{task.id}}" />
+				<input type="hidden" name="finished" />
+				{% csrf_token %}
+			</form>
+		</div>
 		
-		
-		<form method="POST">
-			<button type="submit" class="btn btn-primary">Finish assesment</button>
-			<input type="hidden" name="task_id" value="{{task.id}}" />
-			<input type="hidden" name="finished" />
-			{% csrf_token %}
-		</form> 
 	</div>
  
 	

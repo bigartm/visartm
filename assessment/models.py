@@ -318,6 +318,9 @@ class AssessmentTask(models.Model):
 				selections = [x for x in answer["selections"] if (x[0] >= new_selection_end or x[1] <= new_selection_start)]
 				if topic_id != -1:
 					selections.append([new_selection_start, new_selection_end, topic_id])
+					
+				# define selected terms and select such in that dataset, if they are not any other selection	
+					
 				selections.sort()
 				answer["selections"] = selections
 			elif POST["action"] == "topic_use":
