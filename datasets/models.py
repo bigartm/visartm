@@ -555,7 +555,8 @@ class Document(models.Model):
 				pref = ""
 				suf = "."
 				fi = sentence.find("<b>") - 60
-				li = sentence.rfind("</b>") + 60
+				li = sentence.find("</b>") + 60
+				#li = sentence.rfind("</b>") + 60
 				if fi < 0:
 					fi = 0
 				else:

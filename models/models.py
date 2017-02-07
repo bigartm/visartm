@@ -208,12 +208,15 @@ class ArtmModel(models.Model):
 			raise ValueError("No phi matrix")
 		
 		self.log("Matrix phi loaded.")
+		
+		'''
 		self.log("Norming phi...")
 		sums = np.sum(phi, axis = 0)
 		topics_count = len(sums)
 		for row in phi:
 			for j in range(topics_count):
 				row[j] /= sums[j]
+		'''
 		
 		np.save(os.path.join(self.get_folder(), "phi.npy"), phi)
 		self.log("Matrix phi saved in numpy format.")
