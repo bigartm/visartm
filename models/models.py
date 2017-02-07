@@ -30,15 +30,15 @@ class ArtmModel(models.Model):
 	threshold = models.IntegerField(null = False, default = 100) 
 	
 	def __str__(self):
-		if self.name == '':
-			return "model " + str(self.id)
+		if not self.name or len(self.name) == 0:
+			return self.text_id
 		else: 
 			return self.name		
 	
 	def create_generic(self, POST):
 		mode = POST['mode']
 		self.log("Creating model, mode=" + mode)
-		self.text_id = str(self.id) 
+		self.text_id = "model_" + str(self.id) 
 		
 		try:
 			if mode == 'flat': 
@@ -158,6 +158,8 @@ class ArtmModel(models.Model):
 	def gather_phi(self):
 		self.log("Loading matrix phi...")
 		phi_path = os.path.join(self.get_folder(), "phi")
+		phi = None
+		topics_count = 0
 		if os.path.exists(phi_path):
 			phi_raw = pd.read_pickle(os.path.join(self.get_folder(), "phi"))
 			if phi_raw.shape[0] == self.dataset.terms_count:
@@ -183,18 +185,28 @@ class ArtmModel(models.Model):
 				phi_path = os.path.join(self.get_folder(), "phi_" +  modality.name)
 				if os.path.exists(phi_path):
 					self.log("Found matrix for modality " + modality.name + ". Will load.")
+					phi_raw = pd.read_pickle(phi_path)
 					terms_index = self.dataset.get_terms_index(modality=modality)
+					if phi is None:
+						topics_count = phi_raw.shape[1]
+						phi = np.zeros((self.dataset.terms_count, topics_count))
+					if phi_raw.shape[1] != topics_count:
+						raise ValueError("Fatal error. Matrices phi are of different width.")
 					for row in phi_raw.iterrows():
 						term_text = row[0]
-						try:
+						if term_text in terms_index:
 							term_matrix_id = terms_index[term_text] - 1
-						except:
+						else:
 							self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
 							continue
 						for j in range(topics_count):
 							phi[term_matrix_id][j] = row[1][j]
 				else:
-					self.log("Matrix for modality " + modality.name + " wasn't found.")
+					self.log("Fatal error. Matrix for modality " + modality.name + " wasn't found.")
+		
+		if phi is None:
+			raise ValueError("No phi matrix")
+		
 		self.log("Matrix phi loaded.")
 		self.log("Norming phi...")
 		sums = np.sum(phi, axis = 0)

@@ -319,7 +319,7 @@ class Dataset(models.Model):
 		terms_index = dict()
 		query_set = Term.objects.filter(dataset=self)
 		if modality:
-			query_set = query_set.objects.filter(modality=modality)
+			query_set = query_set.filter(modality=modality)
 		for term in query_set:
 				terms_index[term.text] = term.index_id
 		return terms_index

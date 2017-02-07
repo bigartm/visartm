@@ -3,7 +3,6 @@ from datetime import datetime
 import traceback
 import os
 from django.conf import settings
-import matplotlib.pyplot as plt 
 
 from datasets.models import Dataset
 from models.models import ArtmModel
@@ -72,6 +71,7 @@ class Research(models.Model):
 			f.write("<p>" + text + "</p>\n")
 	
 	def gca(self):
+		import matplotlib.pyplot as plt 
 		self.figure = plt.figure()
 		return self.figure.gca()
 	
