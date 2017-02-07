@@ -420,13 +420,18 @@ def visual_term(request):
 			total_weight += phi_row[shift + topic_index_id]
 		topics_list.sort(reverse = True) 
 		
+		weight_sum = 0
 		for (weight, topic_index_id) in topics_list:
 			topics.append({
 				"topic": topics_index[topic_index_id], 
 				"weight": weight,
 				"show": (weight >= 0.05 * total_weight)
 			})
+			weight_sum += weight
+		
 		context['topics'] = topics
+		if weight_sum == 0:
+			context['topics_all_zeros'] = True
 	
 	term.count_documents_index()
 	return render(request, 'datasets/term.html', Context(context)) 

@@ -33,14 +33,18 @@
 		<div>
 			<hr>
 			<h4>Topic distribution</h4>
-			<div id = "pieChart" align = "center" ></div>
-			{% for entry in topics %}
-				{% if entry.show %}
-					<span id ="square{{forloop.counter}}">∎</span>
-					<a href = "/topic?id={{entry.topic.id}}">{{entry.topic.title}}</a>
-					</br>
-				{% endif %}
-			{% endfor %}
+			{% if topics_all_zeros %}
+				<p>Row in matrix phi for this term contains enirely of zeros.</p>
+			{% else %}
+				<div id = "pieChart" align = "center" ></div>
+				{% for entry in topics %}
+					{% if entry.show %}
+						<span id ="square{{forloop.counter}}">∎</span>
+						<a href = "/topic?id={{entry.topic.id}}">{{entry.topic.title}}</a>
+						</br>
+					{% endif %}
+				{% endfor %}
+			{% endif %}
 		</div>
 		
 		<script src="/static/js/d3pie.min.js"></script>
