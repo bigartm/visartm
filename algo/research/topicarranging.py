@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np 
-import json
-from scipy.spatial.distance import euclidean, cosine
+import json 
 
 params = json.loads(research.problem.params)
 model = research.model
@@ -25,7 +24,7 @@ research.gca().imshow(assessed_weights, interpolation = "nearest")
 research.report_picture()
 
 	
-for metric in ["euclidean", "cosine", "hellinger", "jaccard"]:
+for metric in ["euclidean", "cosine", "hellinger"]:
 	research.report_text("Distance (%s) between topics:" % metric)
 	dist = model.get_topics_distances(metric=metric)
 	research.report_table(dist, format="%.2f")

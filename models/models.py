@@ -465,26 +465,21 @@ class ArtmModel(models.Model):
 			shift += topics_count[i]
 			
 		phi_t = self.get_phi().transpose()
-			
-		if metric == "euclidean":
-			from scipy.spatial.distance import euclidean
-			metric = euclidean 
-		elif metric == "cosine":
-			from scipy.spatial.distance import cosine
-			metric = cosine  
-		elif metric == "hellinger":
-			from algo.metrics import hellinger
-			metric = hellinger
-		elif metric == "kld":
-			from algo.metrics import kld
-			metric = kld
+		import algo.metrics as metrics
+		if metric == "euclidean": 
+			metric = metrics.euclidean 
+		elif metric == "cosine": 
+			metric = metrics.cosine  
+		elif metric == "hellinger": 
+			metric = metrics.hellinger
+		elif metric == "kld": 
+			metric = metrics.kld
 		elif metric == "jsd":
 			from algo.metrics import jsd
-			metric = jsd
-		elif metric == "jaccard":
-			from algo.metrics import jaccard, filter_tails
-			phi_t = filter_tails(phi_t, 0.1, 0.9)
-			metric = jaccard
+			metric = metrics.jsd
+		elif metric == "jaccard": 
+			phi_t = metrics.filter_tails(phi_t, 0.1, 0.9)
+			metric = metrics.jaccard
 			
 		for i in range(topics_count[layer]):
 			for j in range(topics_count[layer]):

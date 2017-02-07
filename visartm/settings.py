@@ -32,7 +32,7 @@ ALLOWED_HOSTS = ["192.168.0.103","127.0.0.1"]
 
 
 # VisARTM specific settings
-THREADING = True
+THREADING = False
 ASSESSMENT_TYPES = ['segmentation', 'topic_spectrum']
 THEMES = ["light"]
 

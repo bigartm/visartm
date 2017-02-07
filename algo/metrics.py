@@ -1,6 +1,13 @@
 import numpy as np
-from scipy.spatial.distance import euclidean
+#from scipy.spatial.distance import euclidean
 #from scipy.stats import entropy 			
+
+def euclidean(p, q):
+	return np.linalg.norm(p-q)
+			
+def cosine(p, q):
+	return np.dot(p,q) / (np.linalg.norm(p)*np.linalg.norm(1))
+	
 			
 def hellinger(p,q):
 	_SQRT2 = np.sqrt(2)

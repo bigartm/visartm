@@ -54,7 +54,7 @@ def	dataset_create(request):
 	if request.method == 'GET': 
 		existing_datasets = [dataset.text_id for dataset in Dataset.objects.all()]
 		folders = os.listdir(os.path.join(settings.DATA_DIR, "datasets"))
-		unreg = [i for i in folders if not i in existing_datasets]
+		unreg = [i for i in folders if (not i in existing_datasets) and (not i[0]=='.')]
 		 
 		context = Context({"unreg": unreg})
 		return render(request, "datasets/create_dataset.html", context) 
@@ -214,7 +214,7 @@ def visual_dataset(request):
 
 	
 import numpy as np
-from scipy.spatial.distance import euclidean, cosine
+from algo.metrics import euclidean
 def visual_document(request): 
 	if 'id' in request.GET:
 		document = Document.objects.get(id = request.GET['id'])

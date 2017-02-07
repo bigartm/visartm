@@ -12,7 +12,7 @@
 !/data/datasets/example/documents
 /temp
 /doc
-/ve
+/visartm-env
 
 
 *.FEDIMSER.*
