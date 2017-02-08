@@ -105,12 +105,13 @@ class ArtmModel(models.Model):
 		
 		batch_vectorizer, dictionary = self.dataset.get_batches()
 		
-		model = artm.hARTM(num_document_passes = iter_count)
+		model = artm.hARTM(num_document_passes = iter_count, theta_columns_naming="title")
 		model.cache_theta = True
 		layers = [0 for i in range(layers_count)]
 
 		layers[0] = model.add_level(num_topics = num_topics[1],
-                            topic_names=["topic" + str(t) for t in range(num_topics[1])] )
+                            topic_names=["topic" + str(t) for t in range(num_topics[1])]
+							)
 		layers[0].initialize(dictionary=dictionary)
 		self.log("Layer 0 initialized.")
 		layers[0].fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = iter_count)   
@@ -121,6 +122,7 @@ class ArtmModel(models.Model):
 				parent_level_weight = 0.1, 
 				num_topics = num_topics[layer_id + 1],
 				topic_names=["topic" + str(t) for t in range(num_topics[layer_id + 1])]
+				
 			)
 			layers[layer_id].initialize(dictionary=dictionary)
 			self.log("Layer " + str(layer_id) + " initialized.")
@@ -221,6 +223,27 @@ class ArtmModel(models.Model):
 		np.save(os.path.join(self.get_folder(), "phi.npy"), phi)
 		self.log("Matrix phi saved in numpy format.")
 				
+				
+	def gather_theta(self):
+		self.log("Loading matrix theta...")
+		theta_raw = pd.read_pickle(os.path.join(self.get_folder(), "theta"))
+		self.theta_index = theta_raw.index
+		topics_count = theta_raw.shape[0]
+		theta = np.zeros((topics_count, self.dataset.documents_count))
+		for document in Document.objects.filter(dataset=self.dataset):
+			doc_text_id = document.text_id
+			doc_matrix_id = document.index_id - 1
+			if doc_text_id in theta_raw:
+				column = theta_raw[doc_text_id]
+				for i in range(topics_count):
+					theta[i][doc_matrix_id] = column[i]
+					
+		self.log(str(theta))
+		self.log("Saving matrix theta...")		
+		np.save(os.path.join(self.get_folder(), "theta.npy"), theta)	
+		self.log("Matrix theta saved...")	
+
+		
 	@transaction.atomic
 	def reload(self):  
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
@@ -230,11 +253,9 @@ class ArtmModel(models.Model):
 		self.gather_phi()
 		phi = np.load(os.path.join(self.get_folder(), "phi.npy"))
 		phi_t = phi.transpose()
-			
-		self.log("Loading matrix theta...")
-		theta_raw = pd.read_pickle(os.path.join(self.get_folder(), "theta")) #.sort_index(axis = 1)
-		theta = theta_raw.values
-		np.save(os.path.join(self.get_folder(), "theta.npy"), theta)	
+		
+		self.gather_theta()
+		theta = np.load(os.path.join(self.get_folder(), "theta.npy"))
 		theta_t = theta.transpose()
 		
 		layers_count = self.layers_count
@@ -262,7 +283,7 @@ class ArtmModel(models.Model):
 		topic_names = [[] for i in range(layers_count + 1)]
 		offset = 0
 		for layer_id in range(1, layers_count + 1):
-			topic_names[layer_id] = theta_raw.index[offset : offset + topics_count[layer_id]]
+			topic_names[layer_id] = self.theta_index[offset : offset + topics_count[layer_id]]
 		offset += topics_count[layer_id]
 		
 		# Building temporary index for terms
@@ -392,6 +413,7 @@ class ArtmModel(models.Model):
 			best_topic_id = distr.argmax()
 			
 			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id + 1))
+			# self.log("Document " +  str(doc_index_id) + " appended to topic " + str(best_topic_id))
 			if self.threshold <= 50:
 				for topic_id in range(topics_count[layers_count]):
 					if distr[topic_id] > threshold and topic_id != best_topic_id:
@@ -433,8 +455,7 @@ class ArtmModel(models.Model):
 			f.write("<br>\n")
 			
 	def log(self, string):
-		if not settings.THREADING:
-			print(string)
+		print(string)
 		with open(self.log_file_name, "a") as f:
 			f.write(string + "<br>\n")
 			
@@ -521,7 +542,7 @@ class ArtmModel(models.Model):
 				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
 				idx = np.argsort(titles)
 			if mode == "hamilton":
-				from algo.topicarranging.Hamilton import HamiltonPath 
+				from algo.hamilton.hamilton_path import HamiltonPath 
 				hp = HamiltonPath(topic_distances[layer_id])
 				idx = hp.solve()
 			elif mode == "tsne": 

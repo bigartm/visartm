@@ -14,3 +14,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "artmonline.settings")
 
 application = get_wsgi_application()
+
+
+import research
+research.models.on_start()

@@ -86,12 +86,16 @@
 							<span style="color:green;">OK</span>
 						{% elif research.status == 3 %}
 							<span style="color:red;">Error</span>
+						{% elif research.status == 4 %}
+							<span style="color:red;">Interrupted</span>
 						{% endif %}
 					</td>
 					<td>
 						{% if research.status == 2 %}
 							<a href="/research/rerun?id={{research.id}}">Rerun</a>
 						{% elif research.status == 3 %}
+							<a href="/research/rerun?id={{research.id}}">Rerun</a>
+						{% elif research.status == 4 %}
 							<a href="/research/rerun?id={{research.id}}">Rerun</a>
 						{% endif %}
 					</td>

@@ -52,7 +52,7 @@ urlpatterns = [
 	
 	# Models and topics
 	url(r'^topic$', models_views.visual_topic),
-	url(r'^model$', models_views.visual_model),
+	url(r'^model$', models_views.visual_model), 
 	url(r'^models/reload_model$', models_views.reload_model),
 	url(r'^models/arrange_topics$', models_views.arrange_topics),	
 	url(r'^models/reset_visuals$', models_views.reset_visuals),	

@@ -17,11 +17,11 @@ class Research(models.Model):
 	script_name = models.TextField(null=False)
 	start_time = models.DateTimeField(null=False, default = datetime.now)
 	finish_time = models.DateTimeField(null=True)
-	status = models.IntegerField(null=False, default = 0)
+	status = models.IntegerField(null=False, default = 0)  # 1-running,2-OK,3-errror,4-interrupted
 	error_message = models.TextField(null=True)
 	
 	def run(self):
-		with open(self.get_report_file(), "w") as f:
+		with open(self.get_report_file(), "w", encoding="utf-8") as f:
 			f.write("<html>\n<head></head>\n<body>")
 			f.write("<h1>Research report</h1>\n")
 			f.write("<p>Research id: %d<br>\n" % self.id)
@@ -40,7 +40,7 @@ class Research(models.Model):
 
 		
 		try:
-			with open(script_file_name) as f:
+			with open(script_file_name, "r", encoding="utf-8") as f:
 				code = compile(f.read(), script_file_name, "exec")		
 			exec(code, {"research": self})
 		except:
@@ -55,19 +55,19 @@ class Research(models.Model):
 		self.status = 2
 		self.save()
 		
-		with open(self.get_report_file(), "a") as f:
+		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<hr>\n")
 			f.write("<p>Research finished: %s</p>\n" % self.finish_time.strftime("%d.%m.%y %H:%M:%S") )
 			f.write("</body>\n</html>\n")
 		
 	
 	def report_html(self, text):
-		with open(self.get_report_file(), "a") as f:
+		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write(text + "\n")
 	
 	
-	def report_text(self, text):
-		with open(self.get_report_file(), "a") as f:
+	def report(self, text):
+		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<p>" + text + "</p>\n")
 	
 	def gca(self):
@@ -80,11 +80,11 @@ class Research(models.Model):
 		file_name = str(self.img_counter) + '.png'
 		path = os.path.join(self.get_pic_folder(), file_name)
 		self.figure.savefig(path)
-		with open(self.get_report_file(), "a") as f:
+		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<div align='%s'><img src='pic/%s' width='%d' heigth='%d' /></div>\n" % (align, file_name, width, height))	
 
 	def report_table(self, table, format="%s"):
-		with open(self.get_report_file(), "a") as f: 
+		with open(self.get_report_file(), "a", encoding="utf-8") as f: 
 			f.write('<table border="1" cellpadding="0" cellspacing="0">\n')
 			for row in table:
 				f.write("<tr>\n")
@@ -122,6 +122,12 @@ class Research(models.Model):
 		seconds = dt.seconds
 		return "{:02}:{:02}".format(seconds // 60, seconds % 60)
 
+def on_start():
+	# print ("ENTRY POINT 2")
+	for research in Research.objects.filter(status=1):
+		research.status = 4
+		research.save()
+		
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 from shutil import rmtree 

@@ -34,6 +34,9 @@
 		{% if document.time %}Time: {{document.time}}<br>{% endif %}
 		{% if document.url %} <a href = {{document.url}}>View original</a><br>{% endif %}
 		index_id: {{document.index_id}}
+		<br>
+		text_id: {{document.text_id}}
+		
 	
 	{% if models %}
 		<div >
@@ -73,7 +76,7 @@
 		<div> 
 			<h4>Related documents</h4>
 			{% for rel_doc in related_documents %}
-				<a href = "/visual/document?id={{rel_doc.id}}" >{{rel_doc.title}}</a>
+				<a href = "/document?id={{rel_doc.id}}" >{{rel_doc.title}}</a>
 				<br>
 			{% endfor %}
 		</div>

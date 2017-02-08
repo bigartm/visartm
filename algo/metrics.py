@@ -6,8 +6,10 @@ def euclidean(p, q):
 	return np.linalg.norm(p-q)
 			
 def cosine(p, q):
-	return np.dot(p,q) / (np.linalg.norm(p)*np.linalg.norm(1))
-	
+	return 1 - (np.dot(p,q) / (np.linalg.norm(p)*np.linalg.norm(q)))
+
+def cov(p, q):
+	return np.dot(p,q)	
 			
 def hellinger(p,q):
 	_SQRT2 = np.sqrt(2)

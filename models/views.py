@@ -41,7 +41,11 @@ def visual_model(request):
 
 @login_required
 def reload_model(request):
-	model = ArtmModel.objects.get(id = request.GET['model'])
+	try:
+		model = ArtmModel.objects.get(id = request.GET['model'])
+	except:
+		model = ArtmModel.objects.get(id = request.GET['id'])
+	
 	if model.status == 1:
 		return general_views.message(request, "Model is locked.")
 	model.creation_time = datetime.now()
@@ -113,8 +117,12 @@ def create_model(request):
 	model.save()
 	model.prepare_log()
 	
-	t = Thread(target = ArtmModel.create_generic, args = (model, request.POST, ), daemon = True)
-	t.start()
+	if settings.THREADING:
+		t = Thread(target = ArtmModel.create_generic, args = (model, request.POST, ), daemon = True)
+		t.start()
+	else:
+		model.create_generic(request.POST)
+	
 	
 	return redirect("/model?model=" + str(model.id))
 	

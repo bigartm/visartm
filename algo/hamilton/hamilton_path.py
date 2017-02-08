@@ -11,14 +11,16 @@ class HamiltonPath:
             raise ValueError("Adjacency matrix should be square")
         self.N = adj.shape[0]        
         for i in range (0, self.N):
-            if self.A[i][i]!=0:
+            if abs(self.A[i][i]) > 1e-6:
                 raise ValueError ("Diagonal elements should be 0")
+            self.A[i][i] = 0
             for j in range (i+1, self.N):
                 if (self.A[i][j]!=self.A[j][i]):
                     raise ValueError("Adjacency matrix should be symmetric")
         self.path = [i for i in range (0,self.N)]
         self.count_priority()
         self.cut_branch = self.N
+        self.atomic_iterations = 10000
     
     def path_weight(self, path = None):
         if path == None:
@@ -33,12 +35,11 @@ class HamiltonPath:
         print ("NN: Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t))
         
         t = time.time()
-        self.cut_branch = 2
-        self.solve_branch()
+        self.solve_branch(2)
         print ("Branch(2): Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t))
          
         t = time.time() 
-        self.solve_annealing(self.N/2)
+        self.solve_annealing(run_time=self.N/2)
         print ("Annealing: Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t)) 
 #        t = time.time()
 #        self.cut_branch = 3
@@ -54,14 +55,12 @@ class HamiltonPath:
     def solve(self):
         start_time =  time.time()
         print ("Quality before = ", self.path_weight()) 
-        if self.N <= 10:
-            self.cut_branch = self.N
+        if self.N <= 10: 
             self.solve_branch() 
-        elif self.N <= 20:
-            self.cut_branch = 2
-            self.solve_branch() 
+        elif self.N <= 20: 
+            self.solve_branch(2) 
         else:
-            self.solve_annealing(self.N)
+            self.solve_annealing(run_time=self.N)
         print ("Quality after = ", self.path_weight())
         print ("Time:  %fs " % (time.time() - start_time) )
         return self.path
@@ -98,15 +97,27 @@ class HamiltonPath:
                 if (go_ctr == self.cut_branch):
                     break
     
-    def solve_annealing(self, run_time):
+    def solve_annealing(self, run_time=1):
         start_time = time.time()
         cur_weight = self.path_weight()
+        self.chart_time = []
+        self.chart_iterations = []
+        self.chart_weight = []
+        self.iter_counter = 0
+        
         while (time.time() - start_time < run_time):
             elapsed = time.time() - start_time
+            quality = self.path_weight()
+            print(elapsed, quality)
+            self.chart_time.append(elapsed)
+            self.chart_iterations.append(self.iter_counter)
+            self.chart_weight.append(quality)
+            self.iter_counter += self.atomic_iterations
+            
             if elapsed > run_time:
                 break
             q = cur_weight * 0.05 * (1 - elapsed/run_time)
-            for c in range(1000):
+            for c in range(self.atomic_iterations):
                 i = randint(0, self.N - 1)
                 j = randint(0, self.N - 1)
                 self.path[i], self.path[j] = self.path[j], self.path[i]
@@ -137,7 +148,9 @@ class HamiltonPath:
                 used[k_best] = 1
             self.priority.append(p)
             
-    def solve_branch(self):       
+    def solve_branch(self, cut=1000000):
+        start_time = time.time()
+        self.cut_branch = cut
         self.best_weight = self.path_weight()
         self.used = [0 for i in range(0,self.N)]
         self.cur_path = [-1 for i in range(0,self.N)]
@@ -147,8 +160,10 @@ class HamiltonPath:
             self.cur_weight = 0
             self.solve_branch_rec(i, 1)
             self.used[i] = 0
+        self.elapsed = time.time() - start_time
             
     def solve_nn(self):
+        start_time = time.time()
         self.best_weight = self.path_weight()
         self.cur_path = [0 for i in range(0,self.N)]      
                 
@@ -169,6 +184,8 @@ class HamiltonPath:
             if (self.path_weight(self.cur_path) < self.best_weight):
                 self.path = self.cur_path
                 self.best_weight = self.path_weight(self.cur_path)
+        
+        self.elapsed = time.time() - start_time
             
     def get_path(self):
         return self.path
@@ -185,7 +202,7 @@ class HamiltonPath:
             for j in range(0, self.N):
                 ret[i][j] = self.A[self.path[i]][self.path[j]]
         return ret
-                
+			
 if __name__ == '__main__':
     N = 22
     dist = np.zeros((N,N))

@@ -71,7 +71,7 @@ def show_research(request, research_id):
 	if research.status == 3:
 		return general_views.message(request, "Error during rendering.<br>" + research.error_message.replace('\n', "<br>"))
 		
-	with open(research.get_report_file(), "r") as f:
+	with open(research.get_report_file(), "r", encoding = "utf-8") as f:
 		response = HttpResponse(f.read(), content_type='text/html')
 	
 	if research.status == 1:
