@@ -80,7 +80,7 @@ def visual(model, params):
 		cells_send.append({"X" : x, "Y" : y, "intense": intense, "docs" : value})
 	
 	topics_send = [{"Y": topic.spectrum_index,
-					"topwords": top_words_html(topic.top_words(count=10)),
+					"topwords": top_words_html(topic.top_words(count=15)),
 					"name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2])} for topic in topics]
 	
 	# in case of hierarchical model we want show tree
