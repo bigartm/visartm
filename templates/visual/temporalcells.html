@@ -360,9 +360,7 @@
 	document.getElementById("select_group").value = params[1];
 	document.getElementById("select_norm").value = params[2];
 	
-	function changeMode() {
-		mode = "temporalcells_" + document.getElementById("select_group").value + "_" +
-			document.getElementById("select_norm").value;
+	function changeMode() { 
 		window.location = "/visual/global?model={{model.id}}&type=temporalcells_" +
 				document.getElementById("select_group").value + "_" +
 				document.getElementById("select_norm").value;

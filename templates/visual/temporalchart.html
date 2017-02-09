@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load extra_tags %}
+
+{% block title %}{{dataset}} | Temporal chart {% endblock %}
+{% block style %}
+	<style>
+		.c3 path, .c3 line {
+			fill: none;
+			stroke: #000;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+<div id="chart"></div>	
+{% endblock %}
+
+{% block right %} 
+	Group by :
+	<select id = "select_group" onchange="changeMode();">
+		<option>year</option>
+		<option>month</option>
+		<option>week</option>
+		<option>day</option>
+	</select>
+	<br> 
+	<input type="checkbox" id="cb_splines" onchange="changeMode();">Splines</input>
+	<hr>
+	<h3>Topics</h3>
+	<div id="topics_list"></id>
+{% endblock %}
+
+{% block javascript %}  
+
+<script src="/static/js/d3.v3.min.js"></script>  
+<script src="/static/js/c3.min.js"></script>
+<script type="text/javascript">
+	
+	{% autoescape off %}
+	{{data}}
+	{% endautoescape %}
+	
+	
+	
+	var api = new ArtmApi(); 
+	var topics_count = charts.length; 
+	var dates_count = dates.length; 
+ 
+	topics_list  = "";
+	for (i = 0; i < topics_count; ++i) {
+		topics_list += "<input type='checkbox' id='cb" + i + "' onchange='changeMode();'>" + charts[i][0] + "</input><br>";
+	}
+	document.getElementById("topics_list").innerHTML = topics_list;
+	
+	
+	area_type='area';
+	use_splines =  getUrlParameter("splines");
+	if (use_splines && use_splines == "true")
+	{
+		document.getElementById("cb_splines").checked = true;
+		area_type = 'area-spline';
+	}
+	
+	
+	columns = [];
+	types = {};
+	groups = [];
+	columns.push(dates);
+	//columns.push(charts[0]);
+	topics_list = getUrlParameter("topics")
+	if (topics_list) topics_list = topics_list.split(',');
+		else topics_list = [];
+	topics_list.forEach(function(i) {
+		document.getElementById("cb"+i).checked=true;
+		types[charts[i][0]] = area_type;
+		columns.push(charts[i]);
+		groups.push(charts[i][0]);
+	});
+	
+	var chart = c3.generate({
+		bindto: "#chart",
+		data: {
+			x: 'date',
+			columns: columns,
+			types: types,
+			groups: [groups]
+		},
+		size: {
+			height: 500
+		},
+		axis: {
+			x: {
+				label: "Day",
+				type: 'timeseries',
+				tick: {
+					format: '%Y-%m-%d',
+					culling: {max:5}
+				}
+			},
+			y: {
+				label: {text: 'Documents', position: 'outer-middle'},
+				min: 0,
+				padding: {top:1, bottom:0}
+			},
+		},
+		point: {r:0}
+	});
+		
+ 
+	
+	
+	params = getUrlParameter("type").split('_');
+	document.getElementById("select_group").value = params[1]; 
+	function changeMode() {
+		topics_list = "";
+		for (i = 0; i < topics_count; ++i) {
+			if (document.getElementById("cb"+i).checked) {
+				topics_list += "," + i;
+			}
+		}
+		
+		query = "/visual/global?model={{model.id}}&type=temporalchart_" +
+				document.getElementById("select_group").value +
+				"&topics=" + topics_list.substring(1);
+		
+		if (document.getElementById("cb_splines").checked) {
+			query += "&splines=true";
+		} 
+		
+		window.location = query;
+	}
+</script>
+{% endblock %}

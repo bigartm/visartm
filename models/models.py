@@ -585,6 +585,46 @@ class ArtmModel(models.Model):
 		return int(self.topics_count.split()[-1])
 	
 	
+	# Groups documents into matrix Dates-Topics, elements are absolute ids of documents
+	# Topics are ordered in order of spectrum_index
+	# Return tuple - matrix, dates
+	def group_matrix(self, group_by="day", named_groups=False):
+		from algo.utils.date_namer import DateNamer
+		#from models.models import Topic
+		documents = Document.objects.filter(dataset = self.dataset)
+		topics = Topic.objects.filter(model = self, layer = self.layers_count).order_by("spectrum_index")
+		topics_count = len(topics)
+		dn = DateNamer()
+		
+		dates_hashes = set()
+		for document in documents:
+			dates_hashes.add(dn.date_hash(document.time, group_by))
+		dates_hashes = list(dates_hashes)
+		dates_hashes.sort()
+		dates = []
+		dates_reverse_index = dict()
+		
+		dates_count = 0 
+		for date_h in dates_hashes:
+			dates_reverse_index[date_h] = dates_count
+			if named_groups:
+				dates.append(dn.date_name(date_h, group_by)) 
+			else:
+				dates.append(dn.hash_date(date_h, group_by)) 
+			dates_count += 1
+			
+		cells = [[[] for j in range(topics_count)] for i in range(dates_count)]
+		
+		
+		for topic in topics:
+			y = topic.spectrum_index
+			for document in topic.get_documents():
+				x = dates_reverse_index[dn.date_hash(document.time, group_by)]
+				cells[x][y].append(document.id)
+		
+		return cells, dates
+	
+	
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 @receiver(pre_delete, sender=ArtmModel, dispatch_uid='artmmodel_delete_signal')

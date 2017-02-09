@@ -66,7 +66,7 @@ class Dataset(models.Model):
 		if "filter" in preprocessing_params:
 			self.preprocess_filter(preprocessing_params["filter"])
 			custom_vocab = True
-		if "custom_vocab" in preprocessing_params:
+		if "custom_vocab" in preprocessing_params and preprocessing_params["custom_vocab"]==True:
 			self.log("Will use custom vocab.txt")
 			custom_vocab = True
 			 
@@ -297,10 +297,11 @@ class Dataset(models.Model):
 			f.write("<br>\n")
 			
 	def log(self, string):
-		if not settings.THREADING:
+		if settings.DEBUG:
 			print(string)		
-		with open(self.log_file_name, "a") as f:
-			f.write(string + "<br>\n")
+		if settings.THREADING:
+			with open(self.log_file_name, "a") as f:
+				f.write(string + "<br>\n")
 				
 	def read_log(self):
 		try:
@@ -324,6 +325,8 @@ class Dataset(models.Model):
 				terms_index[term.text] = term.index_id
 		return terms_index
  
+ 
+	
 	
 class Document(models.Model):
 	title = models.TextField(null=False)
@@ -394,6 +397,7 @@ class Document(models.Model):
 				self.word_index = bytes() 
 				for pos, length, tid in word_index_list:
 					self.word_index += struct.pack('I', pos) + struct.pack('B', -length) + struct.pack('I', tid)
+					self.dataset.log("%d %d %d written to index" % (pos, length, tid))
 			else:
 				self.log("WARNING! No wordpos for file " + selff.text_id)
 		

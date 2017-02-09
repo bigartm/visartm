@@ -1,5 +1,3 @@
-#if __name__ != "__main__":
-from datasets.models import Document
 from models.models import Topic, TopicInTopic
 
 import re
@@ -20,64 +18,38 @@ def top_words_html(tw):
 
 def visual(model, params): 		
 	group_by = params[1]		# year,month,week,day
-	intense_mode = params[2]	# row,column,all
-	documents = Document.objects.filter(dataset = model.dataset)
+	intense_mode = params[2]	# row,column,all 
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")
 	
-	dn = DatesNamer()
-	
-	dates_hashes = set()
-	for document in documents:
-		dates_hashes.add(dn.date_hash(document.time, group_by))
-	dates_hashes = list(dates_hashes)
-	dates_hashes.sort()
-	dates_send = []
-	dates_reverse_index = dict()
-	
-	i = 0 
-	for date_h in dates_hashes:
-		dates_reverse_index[date_h] = i 
-		dates_send.append({"X": i, "name": dn.date_name(date_h, group_by)})
-		i += 1
+	cells, dates = model.group_matrix(group_by=group_by, named_groups=True)
+	topics_count = len(topics)
+	dates_count = len(dates)
+	dates_send = [{"X": i, "name": dates[i]} for i in range(dates_count)]
 		
-	cells = dict()
-	
-	
-	
-	
-	for topic in topics:
-		for document in topic.get_documents():
-			cell_xy = (dates_reverse_index[dn.date_hash(document.time, group_by)], topic.spectrum_index)
-			if not cell_xy in cells:
-				cells[cell_xy] = []
-			cells[cell_xy].append(document.id)
-		
+	# Find maximal sizes for norming
 	max_size = 0
-	column_max_size = [0 for i in range(len(dates_send))]
-	row_max_size = [0 for i in range(len(topics))]
-	
-	for key, value in cells.items():
-		x = key[0]
-		y = key[1]
-		size = len(value)
-		max_size = max(max_size, size)
-		column_max_size[x] = max(column_max_size[x], size)
-		row_max_size[y] = max(row_max_size[y], size)
-		
+	column_max_size = [0 for i in range(dates_count)]
+	row_max_size = [0 for i in range(topics_count)]	
+	for x in range(dates_count):
+		for y in range(topics_count):
+			size = len(cells[x][y])
+			max_size = max(max_size, size)
+			column_max_size[x] = max(column_max_size[x], size)
+			row_max_size[y] = max(row_max_size[y], size)
+			
 		
 	cells_send = []
-	for key, value in cells.items():
-		x = key[0]
-		y = key[1]
-		size = len(value)
-		if intense_mode == "all":
-			intense = size / max_size 
-		elif intense_mode == "row":
-			intense = size / row_max_size[y] 
-		elif intense_mode == "column":
-			intense = size / column_max_size[x] 
+	for x in range(dates_count):
+		for y in range(topics_count):
+			size = len(cells[x][y])
+			if intense_mode == "all":
+				intense = size / max_size 
+			elif intense_mode == "row":
+				intense = size / row_max_size[y] 
+			elif intense_mode == "column":
+				intense = size / column_max_size[x] 
 		
-		cells_send.append({"X" : x, "Y" : y, "intense": intense, "docs" : value})
+			cells_send.append({"X" : x, "Y" : y, "intense": intense, "docs" : cells[x][y]})
 	
 	topics_send = [{"Y": topic.spectrum_index,
 					"topwords": top_words_html(topic.top_words(count=15)),
@@ -104,50 +76,10 @@ def visual(model, params):
 			for j in el["positions"]:
 				lines_send.append({"from_y": pos_y, "to_y": j})
 			i += 1
-	
+	#-------------------------------------------
 	
 	return  "cells=" + json.dumps(cells_send) + ";\n" + \
 			"dates=" + json.dumps(dates_send) + ";\n" + \
 			"topics=" + json.dumps(topics_send) + ";\n" + \
 			"high_topics=" + json.dumps(high_topics_send) + ";\n" + \
 			"lines=" + json.dumps(lines_send) + ";\n" 
-
-import datetime
-class DatesNamer:
-	def __init__(self):
-		self.monthes = ["*", "Jan", "Feb", "Mar","Apr", "May", "Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-
-				
-	def date_hash(self, date, group_by):
-		if (group_by == "year"):
-			return date.year
-		elif (group_by == "month"):
-			return date.month + 100 * date.year
-		elif (group_by == "week"):
-			return (date - datetime.datetime(1970, 1, 5, 0, 0, 0, 1)).days // 7
-		elif (group_by == "day"):
-			return date.day + 100 * date.month + 10000 * date.year
-			
-	def date_name(self, date_hash, group_by):
-		global monthes
-		if (group_by == "year"):
-			return str(date_hash)
-		if (group_by == "month"):
-			return self.monthes[int(date_hash % 100)] + " " + str(int(date_hash / 100))  
-		if (group_by == "week"): 
-			monday = datetime.date(1970, 1, 5) + datetime.timedelta(days = 7 * date_hash)
-			sunday = monday + datetime.timedelta(days=6)
-			if monday.month == sunday.month:
-				return "%s-%s %s %d" % (monday.day, sunday.day, self.monthes[monday.month], monday.year)
-			elif monday.year == sunday.year:
-				return "%s %s - %s %s %d" % (monday.day, self.monthes[monday.month], sunday.day, self.monthes[sunday.month], monday.year)
-			else:
-				return "%s %s %d - %s %s %d" % (monday.day, self.monthes[monday.month], monday.year, monday.day, self.monthes[sunday.month], sunday.year)
-		elif (group_by == "day"):
-			return str(date_hash % 100) + " " + self.monthes[ int(date_hash / 100) % 100] + " " + str(int(date_hash / 10000) % 100)
-
-'''		 
-if __name__ == "__main__":
-    dn = DatesNamer()
-    print(dn.date_name(20101110, "day") )
-'''

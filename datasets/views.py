@@ -156,7 +156,7 @@ def visual_dataset(request):
 		freq = ['freq'] 
 		x = 0
 		last_y = -1
-		print("loop in")
+		#print("loop in")
 		for term in terms:
 			y = term.token_tf
 			if y != last_y:
@@ -164,7 +164,7 @@ def visual_dataset(request):
 				freq.append(y)
 				last_y = y 
 			x+=1	
-		print("loop out")
+		#print("loop out")
 		word.append(x)
 		freq.append(y)		
 		context['stats'] = {'word_freq':[word, freq]}
