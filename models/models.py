@@ -237,8 +237,7 @@ class ArtmModel(models.Model):
 				column = theta_raw[doc_text_id]
 				for i in range(topics_count):
 					theta[i][doc_matrix_id] = column[i]
-					
-		self.log(str(theta))
+					 
 		self.log("Saving matrix theta...")		
 		np.save(os.path.join(self.get_folder(), "theta.npy"), theta)	
 		self.log("Matrix theta saved...")	
@@ -624,6 +623,9 @@ class Topic(models.Model):
 		
 	def get_documents_index_ids(self):  
 		return [struct.unpack('I', self.documents[8*i : 8*i+4])[0] for i in range(self.documents_count)]
+		
+	def top_words(self, count = 10):
+		return [x.term.text for x in TopTerm.objects.filter(topic=self).order_by('-weight')[0:count]]
 			
 class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

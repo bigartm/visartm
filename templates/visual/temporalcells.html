@@ -1,8 +1,21 @@
 {% extends 'base.html' %}
+{% load extra_tags %}
+
 {% block title %}{{dataset}} | Temporal cells {% endblock %}
 {% block style %}
 	<style type="text/css">
-
+		div.tooltip {	
+			position: absolute;			
+			text-align: center;			
+			#width: 60px;					
+			#height: 28px;					
+			padding: 2px;				
+			font: 12px sans-serif;		
+			background: lightsteelblue;	
+			border: 0px;		
+			border-radius: 8px;			
+			pointer-events: none;			
+		}
 	</style>
 {% endblock %}
 
@@ -12,9 +25,23 @@
 </div>
 {% endblock %}
 
-{% block right %}	
+{% block right %} 
+	Group by :
+	<select id = "select_group" onchange="changeMode();">
+		<option>year</option>
+		<option>month</option>
+		<option>week</option>
+		<option>day</option>
+	</select>
+	<br>
+	Normalize by: 
+	<select id = "select_norm" onchange="changeMode();">
+		<option>all</option>
+		<option>column</option>
+		<option>row</option> 
+	</select>
+	<hr>
 	
-	{% load extra_tags %}
 	<div>
 		<h4 id="label1"> </h4>  
 		<p id="label2"> </p>  
@@ -73,11 +100,13 @@
 	//Create SVG element
 	var svg = d3.select("#picture")
 				.append("svg");
-				
+	
 	var group_cells = svg.append("g");
+	var group_date_labels = svg.append("g");
+	var group_labels = svg.append("g");
 	var group_topic_labels = svg.append("g");
 	var group_high_topic_labels = svg.append("g");
-	var group_date_labels = svg.append("g");
+	
 	var group_colorbar = svg.append("g");
 	var topics_count = topics.length;
 	 
@@ -128,7 +157,17 @@
 		 
 
 	
-
+	var date_pointers = group_date_labels.selectAll("polygon")
+		.data(dates)
+		.enter()
+		.append("polygon")
+		.attr("points", function(d,i) {
+			if (i % 10 != 0) return "";
+			x = get_label_x(d,i)-12;
+			y = square_size * topics_count + 7;
+			return x + "," + y + " " + (x+5) + "," + (y-5) + " " + (x+10) + "," + y;
+		})
+	
 	var date_labels = group_date_labels.selectAll("text")
 		.data(dates)
 		.enter()
@@ -149,6 +188,15 @@
 
 	 
 	
+	var topicBackground = group_topic_labels
+		.append("rect")
+		.attr("x",0)
+		.attr("y",0)
+		.attr("width", topic_labels_shift + topic_label_width - 3)
+		.attr("height", 3000)
+		.attr("fill", "#ffffff")
+		;
+		
 	if (two_layered) {
 		var high_topic_labels = group_high_topic_labels.selectAll('text')
 			.data(high_topics) 	 
@@ -191,7 +239,15 @@
 			return d["name"];
 		})
 		.attr("fill", theme.textColor)
-		.attr("text-anchor", "end");
+		.attr("text-anchor", "end")
+		.style("cursor", "pointer")
+		.on("mouseover", function(d, i) {
+			showTooltip(d["topwords"], d3.mouse(this));
+		})
+		.on("mouseout", function(d, i) { 
+			hideTooltip(); 
+		})
+		;
 	
 	 
 	 
@@ -214,7 +270,9 @@
 	function dragged(d) {
 		shift_x += d3.event.dx;
 		cells.attr("x", get_cell_x);
-		date_labels.attr("x", get_label_x);
+		group_date_labels.attr("transform", "translate(" + shift_x + ")");
+		topicBackground.update();
+		//date_labels.attr("x", get_label_x);
 	}
 		 	
 	function clicked(d, i) {  
@@ -249,61 +307,7 @@
 					})
 			}); 					
 		}
-	 
-	
-	/*
-	//COLORBAR-----------
-	var color_space = [];
-	var colorbar_top = 100;
-	var colorbar_bottom = 300;
-	var step_height = (colorbar_bottom - colorbar_top)/(max_intense+1)+1;
-	var label_step = (max_intense / 10)>> 0;
-	
-	
-	for (i=0; i<=max_intense; ++i) {
-		color_space.push({"intense":i, "color":get_color(i)});
-	}
-	
-	var colorbar_items = group_colorbar.selectAll("rect")
-		.data(color_space)
-		.enter()
-		.append("rect")
-		.attr("x", function(d, i) {
-				return topic_label_width + square_size * dates_count ;
-		})
-		.attr("y", function(d, i) {
-			return colorbar_top + (colorbar_bottom - colorbar_top) * (d["intense"] / max_intense);
-		})
-		.attr("width", 5)
-		.attr("height", step_height)				
-		.attr("fill", function(d, i) {
-			return d["color"];
-		});
-		
-	var colorbar_labels = group_colorbar.selectAll("text")
-		.data(color_space)
-		.enter()
-		.append("text")
-		.attr("x", function(d, i) {
-				return topic_label_width + square_size * dates_count + 8 ;
-		})
-		.attr("y", function(d, i) {
-			return colorbar_top + (colorbar_bottom - colorbar_top) * (d["intense"] / max_intense) + step_height;
-		})
-		.text(function(d, i) {
-			if (i % label_step == 0) {
-			   return d["intense"];
-			}  
-		})				
-		.attr("fill", "white");
-		
-	//COLORBAR---------
-	 
-	var monthes = ["Январь", "Февраль", "Март", "Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
-	function getDate(d) {
-		return monthes[parseInt(d["month"])-1] + " " + d["year"];
-	}
-	*/
+
 	
 	function getRgb(color) {
 		if (color[0] == "#") return $c.hex2rgb(color).a;
@@ -313,9 +317,8 @@
 	
 	
 	
-	function get_color(intense, y) {
-		ky = (y / topics_count);
-		kz = intense / max_intense;
+	function get_color(kz, y) {
+		ky = (y / topics_count); 
 		if ({% temporal_spectrum %}) {
 			R = topColor[0] * (1 - ky) + bottomColor[0] * ky; 
 			G = topColor[1] * (1 - ky) + bottomColor[1] * ky;  
@@ -330,6 +333,39 @@
 					  B * kz + emptyColor[2] * (1 - kz));
 	} 
 	
+	
+	var tooltip = d3.select("body").append("div")	
+		.attr("class", "tooltip")				
+		.style("opacity", 0);
+	
+	function showTooltip(message, mouse) {
+		tooltip
+			.transition(200)		
+            .style("opacity", .9);	
+		tooltip
+			.html(message)
+			.style("left", (d3.event.pageX) + "px")		
+            .style("top", (d3.event.pageY - 28) + "px")
+			.attr("visibility", "visible")
+			;
+	}
 
+	function hideTooltip() {
+		tooltip
+			.transition(200)		
+            .style("opacity", 0);
+	}
+	
+	params = getUrlParameter("type").split('_');
+	document.getElementById("select_group").value = params[1];
+	document.getElementById("select_norm").value = params[2];
+	
+	function changeMode() {
+		mode = "temporalcells_" + document.getElementById("select_group").value + "_" +
+			document.getElementById("select_norm").value;
+		window.location = "/visual/global?model={{model.id}}&type=temporalcells_" +
+				document.getElementById("select_group").value + "_" +
+				document.getElementById("select_norm").value;
+	}
 </script>
 {% endblock %}

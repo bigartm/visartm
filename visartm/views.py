@@ -4,12 +4,14 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from datetime import datetime
 from django.conf import settings
+import os
  
 def start_page(request):
     return render(request, 'index.html', Context({'no_footer' : True}))
 
-def settings_page(request): 
-	context = Context({'themes': settings.THEMES})
+def settings_page(request):  
+	themes = [f.split('.')[0] for f in os.listdir(os.path.join(settings.BASE_DIR, "static", "themes")) if ".js" in f]
+	context = Context({'themes': themes})
 	return render(request, 'settings.html', context)  
 	
 def	help_page(request):

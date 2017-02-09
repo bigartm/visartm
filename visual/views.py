@@ -10,13 +10,8 @@ from visual.models import GlobalVisualization
 import visartm.views as general_views
 
 def visual_global(request):
-	if 'dataset' in request.GET:
-		dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-		model = get_model(request, dataset)
-	else:
-		model = ArtmModel.objects.filter(id = request.GET['model'])[0]
-		dataset = model.dataset
-		
+	model = ArtmModel.objects.get(id = request.GET['model'])
+	dataset = model.dataset 
 		
 	visual_name = request.GET['type']
 	
@@ -28,7 +23,7 @@ def visual_global(request):
 							
 	if 'try' in request.GET and request.GET['try'] == 'again':
 		GlobalVisualization.objects.filter(model = model, name = visual_name).delete()
-		return redirect("/visual/global?type=" + visual_name + "&dataset=" + dataset.text_id)
+		return redirect("/visual/global?type=" + visual_name + "&model=" + str(model.id))
 		
 		
 	try:
@@ -52,7 +47,7 @@ def visual_global(request):
 	elif visualization.status == 2:
 		return general_views.message(request, "Error during rendering.<br>" + visualization.error_message.replace('\n', "<br>") +   \
 				"<br><br><a href='/visual/global?type=" + visual_name + \
-				"&dataset=" + dataset.text_id + "&try=again'>Try again</a>")
+				"&model=" + str(model.id) + "&try=again'>Try again</a>")
 	
 	
 	data_file_name = os.path.join(model.get_visual_folder(), visual_name + ".txt")

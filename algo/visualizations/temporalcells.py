@@ -6,8 +6,21 @@ import re
 import json
 
 
+def top_words_html(tw):
+	i = 0
+	ret = ""
+	for word in tw:
+		i+= 1
+		ret += word
+		if i % 3 == 0:
+			ret += "<br>"
+		else:
+			ret += " "
+	return ret
+
 def visual(model, params): 		
-	group_by = params[1]
+	group_by = params[1]		# year,month,week,day
+	intense_mode = params[2]	# row,column,all
 	documents = Document.objects.filter(dataset = model.dataset)
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")
 	
@@ -31,6 +44,7 @@ def visual(model, params):
 	
 	
 	
+	
 	for topic in topics:
 		for document in topic.get_documents():
 			cell_xy = (dates_reverse_index[dn.date_hash(document.time, group_by)], topic.spectrum_index)
@@ -38,14 +52,36 @@ def visual(model, params):
 				cells[cell_xy] = []
 			cells[cell_xy].append(document.id)
 		
-	max_intense = 0
+	max_size = 0
+	column_max_size = [0 for i in range(len(dates_send))]
+	row_max_size = [0 for i in range(len(topics))]
+	
+	for key, value in cells.items():
+		x = key[0]
+		y = key[1]
+		size = len(value)
+		max_size = max(max_size, size)
+		column_max_size[x] = max(column_max_size[x], size)
+		row_max_size[y] = max(row_max_size[y], size)
+		
+		
 	cells_send = []
 	for key, value in cells.items():
-		intense = len(value);
-		max_intense = max(max_intense, intense)
-		cells_send.append({"X" : key[0], "Y" : key[1], "intense": intense, "docs" : value})
+		x = key[0]
+		y = key[1]
+		size = len(value)
+		if intense_mode == "all":
+			intense = size / max_size 
+		elif intense_mode == "row":
+			intense = size / row_max_size[y] 
+		elif intense_mode == "column":
+			intense = size / column_max_size[x] 
+		
+		cells_send.append({"X" : x, "Y" : y, "intense": intense, "docs" : value})
 	
-	topics_send = [{"Y": topic.spectrum_index, "name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2])} for topic in topics]
+	topics_send = [{"Y": topic.spectrum_index,
+					"topwords": top_words_html(topic.top_words(count=10)),
+					"name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2])} for topic in topics]
 	
 	# in case of hierarchical model we want show tree
 	high_topics_send = []
@@ -74,10 +110,9 @@ def visual(model, params):
 			"dates=" + json.dumps(dates_send) + ";\n" + \
 			"topics=" + json.dumps(topics_send) + ";\n" + \
 			"high_topics=" + json.dumps(high_topics_send) + ";\n" + \
-			"lines=" + json.dumps(lines_send) + ";\n" + \
-			"max_intense=" + str(max_intense) + ";\n"
+			"lines=" + json.dumps(lines_send) + ";\n" 
 
-
+import datetime
 class DatesNamer:
 	def __init__(self):
 		self.monthes = ["*", "Jan", "Feb", "Mar","Apr", "May", "Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -86,8 +121,10 @@ class DatesNamer:
 	def date_hash(self, date, group_by):
 		if (group_by == "year"):
 			return date.year
-		if (group_by == "month"):
+		elif (group_by == "month"):
 			return date.month + 100 * date.year
+		elif (group_by == "week"):
+			return (date - datetime.datetime(1970, 1, 5, 0, 0, 0, 1)).days // 7
 		elif (group_by == "day"):
 			return date.day + 100 * date.month + 10000 * date.year
 			
@@ -97,6 +134,15 @@ class DatesNamer:
 			return str(date_hash)
 		if (group_by == "month"):
 			return self.monthes[int(date_hash % 100)] + " " + str(int(date_hash / 100))  
+		if (group_by == "week"): 
+			monday = datetime.date(1970, 1, 5) + datetime.timedelta(days = 7 * date_hash)
+			sunday = monday + datetime.timedelta(days=6)
+			if monday.month == sunday.month:
+				return "%s-%s %s %d" % (monday.day, sunday.day, self.monthes[monday.month], monday.year)
+			elif monday.year == sunday.year:
+				return "%s %s - %s %s %d" % (monday.day, self.monthes[monday.month], sunday.day, self.monthes[sunday.month], monday.year)
+			else:
+				return "%s %s %d - %s %s %d" % (monday.day, self.monthes[monday.month], monday.year, monday.day, self.monthes[sunday.month], sunday.year)
 		elif (group_by == "day"):
 			return str(date_hash % 100) + " " + self.monthes[ int(date_hash / 100) % 100] + " " + str(int(date_hash / 10000) % 100)
 
