@@ -25,7 +25,7 @@ class ArtmModel(models.Model):
 	author = models.ForeignKey(User, null=True)
 	layers_count = models.IntegerField(default = 1) 
 	topics_count = models.TextField(null = False, default = "")
-	status = models.IntegerField(null = False, default = 0) 
+	status = models.IntegerField(null = False, default = 0)  # 1-running, 2-error, 3-OK
 	error_message = models.TextField(null=True) 
 	threshold = models.IntegerField(null = False, default = 100) 
 	
@@ -262,7 +262,7 @@ class ArtmModel(models.Model):
 		
 		# Loading matrices
 		self.gather_phi()
-		phi = np.load(os.path.join(self.get_folder(), "phi.npy"))
+		phi = self.get_phi()
 		phi_t = phi.transpose()
 		
 		self.gather_theta()
@@ -304,8 +304,7 @@ class ArtmModel(models.Model):
 		
 		# Removing existing topics and related objects
 		from visual.models import GlobalVisualization
-		Topic.objects.filter(model = self).delete()
-		TopTerm.objects.filter(model = self).delete()
+		Topic.objects.filter(model = self).delete() 
 		TopicInTopic.objects.filter(model = self).delete()
 		GlobalVisualization.objects.filter(model = self).delete()
 		
@@ -325,6 +324,9 @@ class ArtmModel(models.Model):
 		
 		topics_index[0].append(root_topic)		
 		
+		title_size = 3 
+		top_terms_size = 100
+		
 		row_counter = 0
 		for layer_id in range(1, layers_count + 1):
 			for topic_id in range(topics_count[layer_id]):
@@ -332,33 +334,40 @@ class ArtmModel(models.Model):
 				topic.model = self
 				topic.index_id = topic_id
 				topic.layer = layer_id
+				topic.matrix_id = row_counter
 				topic.save()
 				
-				# Top terms
-				distr = phi_t[row_counter]
-				row_counter += 1
-				idx = np.zeros(terms_count)
+				# Naming and top wrods extracting
+				distr = phi_t[row_counter] 
 				idx = np.argsort(distr)
 				idx = idx[::-1]
-				terms_to_title = []
-				title_size = 3
-				top_terms_size = 20
-				ctr = 0
+				terms_to_title = []				
+				title_counter = 0
+				mc = self.dataset.modalities_count
+				top_terms_counter = [0 for i in range(mc)]
+				
 				for i in idx:
+					weight = distr[i]
+					if weight == 0:
+						break
 					term = terms_index[int(i)]
-					if term.modality.is_word:
-						ctr += 1
-						top_term = TopTerm()
-						top_term.model = self
-						top_term.topic = topic
-						top_term.term_id = terms_id_index[int(i)]
-						top_term.weight = distr[int(i)]
-						top_term.save()
+					mid = term.modality.index_id
+					if top_terms_counter[mid] < top_terms_size:
+						relation = TopTerm()
+						relation.topic = topic
+						relation.term = term
+						relation.weight = weight
+						relation.save()
 						
-						if ctr <= title_size:
-							terms_to_title.append(term.text)
-						if ctr == top_terms_size:
+						top_terms_counter[mid] += 1
+						if top_terms_counter[mid] == top_terms_size:
+							mc -= 1
+						if mc == 0:
 							break
+						
+					if title_counter < title_size and term.modality.is_word:
+						title_counter += 1 						
+						terms_to_title.append(term.text) 
 				
 				if 'topic' in topic_names[layer_id][topic_id]:
 					topic.title = ', '.join(terms_to_title)
@@ -373,9 +382,10 @@ class ArtmModel(models.Model):
 				topics_index[layer_id].append(topic)
 				 
 					
-				
+				row_counter += 1
 				if row_counter % 10 == 0:
 					self.log("Created topic %d/%d." % (row_counter, total_topics_count))
+				
 		
 		# Adding topics of top layer as children of root
 		for topic in topics_index[1]:
@@ -637,6 +647,12 @@ class ArtmModel(models.Model):
 		return cells, dates
 	
 	
+def on_start():
+	for model in ArtmModel.objects.filter(status=1):
+		model.status = 2
+		model.error_message = "Model processing was interrupted."
+		model.save()
+	
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 @receiver(pre_delete, sender=ArtmModel, dispatch_uid='artmmodel_delete_signal')
@@ -651,7 +667,8 @@ def remove_model_files(sender, instance, using, **kwargs):
 				
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null=False)
-	index_id = models.IntegerField(null=True)
+	index_id = models.IntegerField(null=True)	# in layer
+	matrix_id = models.IntegerField(null=True)  # In matrix
 	title = models.TextField(null=False)
 	title_short = models.TextField(null=True) 
 	spectrum_index = models.IntegerField(null = True, default = 0) 
@@ -692,7 +709,10 @@ class TopicInTopic(models.Model):
 	parent = models.ForeignKey(Topic, null = False, related_name = 'parent')
 	child = models.ForeignKey(Topic, null = False, related_name = 'child')
 	
-		
+class TopTerm(models.Model):
+	topic = models.ForeignKey(Topic)
+	term = models.ForeignKey(Term)
+	weight = models.FloatField()
 		
 class TopicRelated(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
@@ -709,14 +729,7 @@ class TopicInTerm(models.Model):
 	weight = models.FloatField()
 	def __str__(self):
 		return str(self.term) + " " + str(self.topic) + "{0:.1f}%".format(100 * self.weight)		
-		
-class TopTerm(models.Model):
-	model = models.ForeignKey(ArtmModel, null = False)
-	topic = models.ForeignKey(Topic, null = False)
-	term =  models.ForeignKey(Term, null = False)
-	weight = models.FloatField()
-	def __str__(self):
-		return str(self.term) + " (" + "{:10.4f}".format(self.weight) + " )"
+
 	
 from django.contrib import admin
 admin.site.register(ArtmModel)

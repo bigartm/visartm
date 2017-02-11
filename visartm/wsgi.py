@@ -16,5 +16,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "artmonline.settings")
 application = get_wsgi_application()
 
 
-import research
+import research, models
 research.models.on_start()
+models.models.on_start()
+

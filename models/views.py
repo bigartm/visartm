@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
-from datasets.models import Dataset, Modality
+from datasets.models import Dataset, Modality, Term
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound
-from models.models import ArtmModel, Topic, TopTerm, TopicRelated, TopicInTopic
+from models.models import ArtmModel, Topic, TopicRelated, TopicInTopic, TopTerm
 from visual.models import GlobalVisualization
 from django.contrib.auth.decorators import login_required, permission_required
 import visartm.views as general_views
@@ -11,7 +11,7 @@ from django.conf import settings
 import os
 from threading import Thread
 from datetime import datetime
-
+import numpy as np
 
 def visual_model(request):
 	model = ArtmModel.objects.get(id = request.GET['model'])
@@ -22,7 +22,7 @@ def visual_model(request):
 		if model.status == 2:
 			return general_views.message(request, 
 				"Model is bad. Error occured.<br>" + 
-				model.error_message.replace('\n',"<br>") +
+				model.error_message.replace('\n',"<br>") + "<br>" +
 				"<a href = '/models/delete_model?model=" + str(model.id) + "'>Delete this model</a><br>" +
 				"<a href = '/models/reload_model?model=" + str(model.id) + "'>Reload this model</a><br>" )
 		if model.status == 3:
@@ -156,20 +156,26 @@ def delete_all_models(request):
 							
 def	visual_topic(request):
 	topic = Topic.objects.filter(id = request.GET['id'])[0]
-	model = topic.model
-	#main_modality = topic.model.dataset.word_modality
-	top_terms = TopTerm.objects.filter(topic = topic).order_by('-weight')
-	#top_terms = [term for term in top_terms if term.term.modality == main_modality]
+	model = topic.model 
 	related_topics = TopicRelated.objects.filter(model = topic.model, topic1 = topic).order_by("weight")	
-	context = {'topic': topic, 'top_terms': top_terms, 'related_topics' : related_topics}
+	context = {'topic': topic, 'related_topics' : related_topics}
 	
-	if topic.layer == model.layers_count:
-		context['is_low'] = True
+	 
+	if 'mode' in request.GET and request.GET['mode'] == 'topterms':
+		context['modalities'] = Modality.objects.filter(dataset=model.dataset)
+		top_terms = TopTerm.objects.filter(topic=topic)
+		if 'modality' in request.GET and request.GET['modality'] != 'all':
+			modality = Modality.objects.get(dataset=model.dataset, name=request.GET["modality"])
+			top_terms = top_terms.filter(term__modality=modality)
+		top_terms=top_terms.order_by("-weight")
+		context['top_terms'] = top_terms
 	else:
-		topics = TopicInTopic.objects.filter(parent = topic)
-		context['topics'] = topics
-		context['is_low'] = False
-		 
+		if topic.layer == model.layers_count:
+			context['documents'] = True
+		else:
+			topics = TopicInTopic.objects.filter(parent = topic)
+			context['topics'] = topics 
+			 
 	return render(request, 'models/topic.html', Context(context))
 	
 @login_required

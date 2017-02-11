@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>Dataset {{dataset.name}}</h1> 
-<ul class="nav nav-tabs">
+	<ul class="nav nav-tabs">
 	{% if documents %}
 		<li class="active"><a>Documents</a></li> 
 		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>

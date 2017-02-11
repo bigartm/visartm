@@ -3,19 +3,19 @@ function getRgb(color) {
 	else return $c.name2rgb(color).a;
 }
 
-var getUrlParameter = function getUrlParameter(sParam) {
-    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
-        sURLVariables = sPageURL.split('&'),
-        sParameterName,
-        i;
-
-    for (i = 0; i < sURLVariables.length; i++) {
+function getUrlParameter(parameterName, defaultValue) {
+    sURLVariables = decodeURIComponent(window.location.search.substring(1)).split('&');
+	var ret = undefined;
+	for (i = 0; i < sURLVariables.length; i++) {
         sParameterName = sURLVariables[i].split('=');
 
-        if (sParameterName[0] === sParam) {
-            return sParameterName[1] === undefined ? true : sParameterName[1];
+        if (sParameterName[0] === parameterName) {
+            ret = sParameterName[1];
+			break;			
         }
     }
+	if (ret) { return ret;}
+	else {return defaultValue;}
 };
 
 

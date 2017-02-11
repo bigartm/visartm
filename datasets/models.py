@@ -19,6 +19,7 @@ class Dataset(models.Model):
 	owner = models.ForeignKey(User, null=False, default=0)
 	terms_count = models.IntegerField(default = 0) 
 	documents_count = models.IntegerField(default = 0)
+	modalities_count = models.IntegerField(default = 0)
 	creation_time = models.DateTimeField(null=False, default = datetime.now) 
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
@@ -154,7 +155,7 @@ class Dataset(models.Model):
 		
 		self.log("Saving terms to database...")
 		term_index_id = -2
-		modality_index_id = 0
+		self.modalities_count = 0
 		self.terms_index = dict()
 		modalities_index = dict()  
 		with open(dictionary_file_name, "r", encoding = 'utf-8') as f:
@@ -173,8 +174,8 @@ class Dataset(models.Model):
 				modality_name = parsed[1]
 				if not modality_name in modalities_index:
 					modality = Modality()
-					modality_index_id += 1
-					modality.index_id = modality_index_id
+					modality.index_id = self.modalities_count 
+					self.modalities_count += 1
 					modality.name = modality_name
 					modality.dataset = self 
 					modality.save()
