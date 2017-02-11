@@ -105,7 +105,7 @@ class ArtmModel(models.Model):
 		
 		batch_vectorizer, dictionary = self.dataset.get_batches()
 		
-		model = artm.hARTM(num_document_passes = iter_count, theta_columns_naming="title")
+		model = artm.hARTM(num_document_passes = iter_count, theta_columns_naming="id")
 		model.cache_theta = True
 		layers = [0 for i in range(layers_count)]
 
@@ -228,16 +228,28 @@ class ArtmModel(models.Model):
 		self.log("Loading matrix theta...")
 		theta_raw = pd.read_pickle(os.path.join(self.get_folder(), "theta"))
 		self.theta_index = theta_raw.index
-		topics_count = theta_raw.shape[0]
-		theta = np.zeros((topics_count, self.dataset.documents_count))
-		for document in Document.objects.filter(dataset=self.dataset):
-			doc_text_id = document.text_id
-			doc_matrix_id = document.index_id - 1
-			if doc_text_id in theta_raw:
-				column = theta_raw[doc_text_id]
+		if (1 in theta_raw) and theta_raw.shape[1] == self.dataset.documents_count:
+			theta = theta_raw.sort_index(axis=1).values
+		else:
+			self.log("Will load theta column by column.")
+			if theta_raw.shape[1] != self.dataset.documents_count:
+				self.log("WARNING! Not all documents are present in matrix.")
+			topics_count = theta_raw.shape[0]
+			theta = np.zeros((topics_count, self.dataset.documents_count))
+			for document in Document.objects.filter(dataset=self.dataset):
+				if document.index_id in theta_raw:
+					column = theta_raw[document.index_id]
+				elif document.text_id in theta_raw:
+					column = theta_raw[document.text_id]
+				else:
+					self.log("WARNING! Document " + document.text_id + " wasn't found in matrix theta.")
+					continue
+					
+				doc_matrix_id = document.index_id - 1
 				for i in range(topics_count):
 					theta[i][doc_matrix_id] = column[i]
-					 
+						 
+						 
 		self.log("Saving matrix theta...")		
 		np.save(os.path.join(self.get_folder(), "theta.npy"), theta)	
 		self.log("Matrix theta saved...")	
@@ -594,11 +606,11 @@ class ArtmModel(models.Model):
 		documents = Document.objects.filter(dataset = self.dataset)
 		topics = Topic.objects.filter(model = self, layer = self.layers_count).order_by("spectrum_index")
 		topics_count = len(topics)
-		dn = DateNamer()
+		dn = DateNamer(group_by=group_by, lang=self.dataset.language)
 		
 		dates_hashes = set()
 		for document in documents:
-			dates_hashes.add(dn.date_hash(document.time, group_by))
+			dates_hashes.add(dn.date_hash(document.time))
 		dates_hashes = list(dates_hashes)
 		dates_hashes.sort()
 		dates = []
@@ -608,9 +620,9 @@ class ArtmModel(models.Model):
 		for date_h in dates_hashes:
 			dates_reverse_index[date_h] = dates_count
 			if named_groups:
-				dates.append(dn.date_name(date_h, group_by)) 
+				dates.append(dn.date_name(date_h)) 
 			else:
-				dates.append(dn.hash_date(date_h, group_by)) 
+				dates.append(dn.hash_date(date_h)) 
 			dates_count += 1
 			
 		cells = [[[] for j in range(topics_count)] for i in range(dates_count)]
@@ -619,7 +631,7 @@ class ArtmModel(models.Model):
 		for topic in topics:
 			y = topic.spectrum_index
 			for document in topic.get_documents():
-				x = dates_reverse_index[dn.date_hash(document.time, group_by)]
+				x = dates_reverse_index[dn.date_hash(document.time)]
 				cells[x][y].append(document.id)
 		
 		return cells, dates

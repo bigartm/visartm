@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ["192.168.0.103","127.0.0.1"]
 # VisARTM specific settings
 THREADING = True
 ASSESSMENT_TYPES = ['segmentation', 'topic_spectrum']
+LANGUAGES = ['english', 'russian', 'ukrainian']
 
 # Application definition
 
@@ -149,8 +150,8 @@ STATICFILES_DIRS = (
 
 LOGIN_REDIRECT_URL = '/datasets'
 
+'''
 import os
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -166,3 +167,4 @@ LOGGING = {
         },
     },
 }
+'''

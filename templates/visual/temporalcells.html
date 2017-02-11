@@ -2,22 +2,7 @@
 {% load extra_tags %}
 
 {% block title %}{{dataset}} | Temporal cells {% endblock %}
-{% block style %}
-	<style type="text/css">
-		div.tooltip {	
-			position: absolute;			
-			text-align: center;			
-			#width: 60px;					
-			#height: 28px;					
-			padding: 2px;				
-			font: 12px sans-serif;		
-			background: lightsteelblue;	
-			border: 0px;		
-			border-radius: 8px;			
-			pointer-events: none;			
-		}
-	</style>
-{% endblock %}
+
 
 {% block content %}
 <div   style="margin-left:-25px;" id = "picture_container" width="100%" height="100%" >
@@ -113,6 +98,8 @@
 	var selected_cell; 
 	var shift_x = 0;
 	
+	var tooltip = D3Tooltip();
+	
 	var drag = d3.behavior.drag()
 		.origin(function(d) { return d; })
 		.on("dragstart", function(d){d3.event.sourceEvent.stopPropagation();})
@@ -128,7 +115,7 @@
 		.call(drag);
 	
 	var cells = group_cells.selectAll("rect")
-		.data(cells)
+		.data(cells, function(d, i) { return d + i; })
 		.enter()
 		.append("rect")
 		.attr("x", get_cell_x)
@@ -163,7 +150,7 @@
 		.append("polygon")
 		.attr("points", function(d,i) {
 			if (i % 10 != 0) return "";
-			x = get_label_x(d,i)-12;
+			x = get_label_x(d,i)+3;
 			y = square_size * topics_count + 7;
 			return x + "," + y + " " + (x+5) + "," + (y-5) + " " + (x+10) + "," + y;
 		})
@@ -178,7 +165,7 @@
 			}  
 		})
 		.attr("fill", theme.textColor)
-		.attr("text-anchor", "end")
+		.attr("text-anchor", "begin")
 		.attr("x", get_label_x) 
 		.attr("y", function(d, i) { 
 			return 22 + square_size * topics_count; 
@@ -242,10 +229,10 @@
 		.attr("text-anchor", "end")
 		.style("cursor", "pointer")
 		.on("mouseover", function(d, i) {
-			showTooltip(d["topwords"], d3.mouse(this));
+			tooltip.show(d["topwords"], d3.mouse(this));
 		})
 		.on("mouseout", function(d, i) { 
-			hideTooltip(); 
+			tooltip.hide(); 
 		})
 		;
 	
@@ -260,7 +247,7 @@
 	function get_label_x(d, i){
 		x = topic_label_width + square_size * d["X"] + shift_x;
 		if (x < topic_labels_shift + topic_label_width) x = -1000;
-		return x + 14;
+		return x;
 	}
 	
 	function get_label_y(d){
@@ -334,27 +321,7 @@
 	} 
 	
 	
-	var tooltip = d3.select("body").append("div")	
-		.attr("class", "tooltip")				
-		.style("opacity", 0);
-	
-	function showTooltip(message, mouse) {
-		tooltip
-			.transition(200)		
-            .style("opacity", .9);	
-		tooltip
-			.html(message)
-			.style("left", (d3.event.pageX) + "px")		
-            .style("top", (d3.event.pageY - 28) + "px")
-			.attr("visibility", "visible")
-			;
-	}
-
-	function hideTooltip() {
-		tooltip
-			.transition(200)		
-            .style("opacity", 0);
-	}
+	 
 	
 	params = getUrlParameter("type").split('_');
 	document.getElementById("select_group").value = params[1];

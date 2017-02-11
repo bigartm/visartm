@@ -58,7 +58,7 @@
 <script type="text/javascript">
 	document.getElementById("highlight_terms").checked = !(getCookie("highlight_terms") == "false");
 	document.getElementById("temporal_spectrum").checked = !(getCookie("temporal_spectrum") == "false");
-	document.getElementById("color_theme").value = getCookie("color_theme", "light");
+	document.getElementById("color_theme").value = getCookie("color_theme", "default");
 	document.getElementById("cut_bow").value = getCookie("cut_bow", "1");
 
 	
@@ -78,13 +78,15 @@
 		setCookie(name, value);
 	}
 	
+	var tooltip = D3Tooltip();
+	
 	var svg1 = d3.select("#palette")
              .append("svg")
              .attr("width", 1000)
              .attr("height", 50);
 			 
 	svg1.selectAll("circle")
-		.data( d3.range(-1,21) )
+		.data( d3.range(-1,26) )
 		.enter()
 		.append("circle")
 		.attr("r", 18 )
@@ -98,17 +100,19 @@
 			return theme.palette(d);
 		})
 		.on("mouseover", function(d, i) {
+			tooltip.show(theme.palette(d), d3.mouse(this));
 			d3.select(this)
 			   .attr("stroke-width", 2);
 		})
 		.on("mouseout", function(d, i) {
+			tooltip.hide();
 			d3.select(this)
 			   .transition().duration(500).attr("stroke-width", 0);
 		})
 		;
 		
 	svg1.selectAll("text")
-		.data( d3.range(-1,21) )
+		.data( d3.range(-1,26) )
 		.enter()
 		.append("text")
 		.text(function(d){
@@ -121,6 +125,8 @@
 		.attr("fill", theme.textColor)
 		.attr("pointer-events","none")
 		;
+	
+
 		
 </script>
 

@@ -17,3 +17,35 @@ var getUrlParameter = function getUrlParameter(sParam) {
         }
     }
 };
+
+
+//D3 Tooltip
+var D3Tooltip = function() {
+	var tooltipDiv = d3.select("body").append("div")	
+		.attr("class", "d3tooltip")				
+		.style("opacity", 0);
+	
+	
+	var show = function (message, mouse) {
+		tooltipDiv
+			.transition(200)		
+			.style("opacity", .9);	
+		tooltipDiv
+			.html(message)
+			.style("left", (d3.event.pageX) + "px")		
+			.style("top", (d3.event.pageY - 28) + "px")
+			.attr("visibility", "visible")
+			;
+	};
+
+	var hide = function() {
+		tooltipDiv
+			.transition(200)		
+			.style("opacity", 0);
+	};
+	
+	return {
+		show: show,
+		hide: hide
+	}
+};

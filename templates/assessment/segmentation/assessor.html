@@ -50,8 +50,8 @@
 			{% endfor %}  	
 		</div>
 		<form id = "formAddTopic" method="POST" action="/assessment/problem">
-			<input type="text" name='name' placeholder = "Topic name"></input>
-			<button type="submit">Add topic</button>
+			<input type="text" name='name' placeholder = "Название темы"></input>
+			<button type="submit">Добавить</button>
 			<input type="hidden" name='problem_id' value="{{task.problem.id}}"> </input>
 			<input type="hidden" name='action' value="add_topic"> </input>
 			<input type="hidden" name='next' value="/assessment/task?task_id={{task.id}}"> </input> 
@@ -63,29 +63,30 @@
  
 
 			
-		<a id = "topic0" onClick="sendSelection(-1);">No topic</a><br>
+		<input type="radio" id = "topic-1">Очистка</input><br>
 		{% for topic in topics_in %}
-			<a 
-				id = "topic{{forloop.counter}}" 
-				onClick="sendSelection({{topic.id}});"
-				data-toggle="tooltip" 
-				data-placement="bottom" 
-				title="{% autoescape off %}{{topic.description_html}}{% endautoescape %}"
-				data-html="true"
-			>{{topic.name}}</a><sup><a onClick="notUseTopic({{topic.id}});">x</a></sup></span> 
+			<div data-toggle="tooltip" data-placement="bottom" data-html="true">
+				<input 
+					type = "radio"
+					id = "topic{{forloop.counter}}" 
+					onClick="sendSelection({{topic.id}});"
+					title="{% autoescape off %}{{topic.description_html}}{% endautoescape %}"
+					
+				>{{topic.name}}</input><sup><a onClick="notUseTopic({{topic.id}});">x</a></sup></span> 
+			</div>
 		{% endfor %}  	
 		<hr>
 		 
 		<div style="float: left;">
 			<form method="GET" action = "/assessment/get_task">
 				<input type="hidden" name="problem_id" value="{{task.problem.id}}" />
-				<button type="submit" class="btn btn-primary">Skip</button>  
+				<button type="submit" class="btn btn-primary">Пропустить</button>  
 			</form> 
 		</div>
 			
 		<div style="float: right;">
 			<form method="POST">
-				<button type="submit" class="btn btn-success">Finish assesment</button>
+				<button type="submit" class="btn btn-success">Завершить</button>
 				<input type="hidden" name="task_id" value="{{task.id}}" />
 				<input type="hidden" name="finished" />
 				{% csrf_token %}

@@ -8,7 +8,7 @@ def color_theme(context):
 	try:
 		return context['request'].COOKIES["color_theme"]
 	except:
-		return "light"
+		return "default"
 		
 @register.simple_tag(takes_context=True)
 def temporal_spectrum(context):

@@ -7,6 +7,7 @@ from django.conf import settings
 import visartm.views as general_views
 from threading import Thread
 from datetime import datetime
+from django.contrib.auth.decorators import login_required, permission_required
 import os
  
 def datasets_list(request):  
@@ -17,7 +18,7 @@ def datasets_list(request):
 	context = Context({'datasets': datasets})
 	return render(request, 'datasets/datasets_list.html', context)
 	
-	
+@login_required	
 def	dataset_reload(request):	
 	dataset = Dataset.objects.get(text_id = request.GET['dataset'])
 	if request.user != dataset.owner:
@@ -35,7 +36,7 @@ def	dataset_reload(request):
 		
 	return redirect("/dataset?dataset=" + dataset.text_id) 
 	
-
+@login_required
 def dataset_delete(request):
 	dataset = Dataset.objects.get(id = request.GET['id'])
 	if request.user != dataset.owner:
@@ -50,13 +51,17 @@ def dataset_delete(request):
 				"<a href = '/datasets/delete?id=" + str(dataset.id) + "&sure=yes'>Yes</a><br>" +
 				"<a href = '/dataset?dataset=" + dataset.text_id + "'>No</a>")		
 	
+@login_required
 def	dataset_create(request):	
 	if request.method == 'GET': 
 		existing_datasets = [dataset.text_id for dataset in Dataset.objects.all()]
 		folders = os.listdir(os.path.join(settings.DATA_DIR, "datasets"))
 		unreg = [i for i in folders if (not i in existing_datasets) and (not i[0]=='.')]
 		 
-		context = Context({"unreg": unreg})
+		context = Context({
+			'unreg': unreg,
+			'languages': settings.LANGUAGES
+		})
 		return render(request, "datasets/create_dataset.html", context) 
 	
 	#print(request.POST)
@@ -117,6 +122,7 @@ def visual_dataset(request):
 		dataset.description = request.POST['description']
 		dataset.preprocessing_params = request.POST['preprocessing_params']	
 		dataset.is_public = ("is_public" in request.POST)
+		dataset.language = request.POST['language']
 		dataset.save() 
 		return redirect("/dataset?dataset=" + request.POST['dataset'] + "&mode=settings")
 	
@@ -182,7 +188,10 @@ def visual_dataset(request):
 	elif mode == 'modalities':
 		context['modalities'] = Modality.objects.filter(dataset = dataset).order_by('-terms_count')
 	elif mode == 'settings':
-		context['settings'] = {'modalities': Modality.objects.filter(dataset = dataset)}
+		context['settings'] = {
+			'modalities': Modality.objects.filter(dataset = dataset),
+			'languages': settings.LANGUAGES
+		}
 	elif mode == 'assessment':
 		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor	
 		context['assessment'] = dict()

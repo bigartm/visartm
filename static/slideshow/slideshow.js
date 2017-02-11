@@ -263,6 +263,6 @@ var Slideshow = function () {
     return {
         init: init,
 		goToNext: goToNext
-     }
+    }
 
 }

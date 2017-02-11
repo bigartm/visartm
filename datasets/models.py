@@ -22,7 +22,8 @@ class Dataset(models.Model):
 	creation_time = models.DateTimeField(null=False, default = datetime.now) 
 	status = models.IntegerField(null = False, default = 0) 
 	error_message = models.TextField(null=True) 
-
+	language = models.TextField(null=False, default="english")
+	
 	preprocessing_params = models.TextField(null=False, default = "{}")
 	time_provided = models.BooleanField(null=False, default = True)
 	is_public = models.BooleanField(null=False, default = True)
@@ -397,9 +398,8 @@ class Document(models.Model):
 				self.word_index = bytes() 
 				for pos, length, tid in word_index_list:
 					self.word_index += struct.pack('I', pos) + struct.pack('B', -length) + struct.pack('I', tid)
-					self.dataset.log("%d %d %d written to index" % (pos, length, tid))
 			else:
-				self.log("WARNING! No wordpos for file " + selff.text_id)
+				self.dataset.log("WARNING! No wordpos for file " + self.text_id)
 		
 		bow = BagOfWords()
 		current_modality = '@default_class'		
