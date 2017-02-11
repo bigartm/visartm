@@ -37,8 +37,9 @@ class ArtmModel(models.Model):
 	
 	def create_generic(self, POST):
 		mode = POST['mode']
-		self.log("Creating model, mode=" + mode)
 		self.text_id = "model_" + str(self.id) 
+		self.prepare_log()
+		self.log("Creating model, mode=" + mode)
 		
 		try:
 			if mode == 'flat': 
@@ -258,6 +259,7 @@ class ArtmModel(models.Model):
 	@transaction.atomic
 	def reload(self):  
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
+		self.prepare_log()
 		self.log("Reloading model " + str(self.id) + "...")
 		
 		# Loading matrices
@@ -344,14 +346,16 @@ class ArtmModel(models.Model):
 				terms_to_title = []				
 				title_counter = 0
 				mc = self.dataset.modalities_count
-				top_terms_counter = [0 for i in range(mc)]
+				top_terms_counter = dict()
 				
 				for i in idx:
 					weight = distr[i]
 					if weight == 0:
 						break
 					term = terms_index[int(i)]
-					mid = term.modality.index_id
+					mid = term.modality_id
+					if not mid in top_terms_counter:
+						top_terms_counter[mid] = 0
 					if top_terms_counter[mid] < top_terms_size:
 						relation = TopTerm()
 						relation.topic = topic
@@ -470,15 +474,17 @@ class ArtmModel(models.Model):
 			
 	def prepare_log(self):
 		if len(self.text_id) == 0:
-			self.text_id = str(self.id)
+			self.text_id = "model_" + str(self.id)
 		self.log_file_name = os.path.join(self.get_folder(), "log.txt")
 		with open(self.log_file_name, "w") as f:
 			f.write("<br>\n")
 			
 	def log(self, string):
-		print(string)
-		with open(self.log_file_name, "a") as f:
-			f.write(string + "<br>\n")
+		if settings.DEBUG:
+			print(string)
+		if settings.THREADING:
+			with open(self.log_file_name, "a") as f:
+				f.write(string + "<br>\n")
 			
 		
 	def read_log(self):
