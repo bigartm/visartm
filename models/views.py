@@ -170,12 +170,13 @@ def	visual_topic(request):
 		top_terms=top_terms.order_by("-weight")
 		context['top_terms'] = top_terms
 	else:
-		if topic.layer == model.layers_count:
-			context['documents'] = True
+		if topic.layer < model.layers_count:
+			context['topics'] = TopicInTopic.objects.filter(parent = topic) 
 		else:
-			topics = TopicInTopic.objects.filter(parent = topic)
-			context['topics'] = topics 
-			 
+			context['documents'] = True
+			
+	context['low_level'] = (topic.layer == model.layers_count)
+	
 	return render(request, 'models/topic.html', Context(context))
 	
 @login_required

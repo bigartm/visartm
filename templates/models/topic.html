@@ -6,23 +6,15 @@
 	<h1> Topic {{topic.title}} </h1>
 	<ul class="nav nav-tabs">
 		{% if top_terms %}
-			<li><a href="/topic?id={{topic.id}}">{% if documents %}Documents{% else %}Topics{% endif %}</a></li>
+			<li><a href="/topic?id={{topic.id}}">{% if low_level %}Documents{% else %}Topics{% endif %}</a></li>
 			<li class="active"><a>Top terms</a></li>
 		{% else %}
-			<li class="active"><a>{% if documents %}Documents{% else %}Topics{% endif %}</a></li>
+			<li class="active"><a>{% if low_level %}Documents{% else %}Topics{% endif %}</a></li>
 			<li><a href="/topic?id={{topic.id}}&mode=topterms">Top terms</a></li>
 		{% endif %} 
 	</ul>
 	
-	{% if documents %} 
-		<div id="documents"></div>
-		<p><a id = "morelink" onclick = "append(100)"></a></p>
-	{% elif topics %} 
-		{% for topic in topics %}
-			<a href = "/topic?id={{topic.child.id}}" >{{topic.child}}</a>
-			<br>
-		{% endfor %}
-	{% elif top_terms %}
+	{% if top_terms %}
 		<p></p>
 		Modality:
 		<select id="select_modality" onchange="selectModality();">
@@ -36,6 +28,16 @@
 			<a href = "/term?id={{y.term.id}}" >{{y.term}}</a> ({{y.weight | floatformat:4}})
 			<br>
 		{% endfor %} 
+	{% else %}
+		{% if documents %} 
+			<div id="documents"></div>
+			<p><a id = "morelink" onclick = "append(100)"></a></p>
+		{% else %} 
+			{% for topic in topics %}
+				<a href = "/topic?id={{topic.child.id}}" >{{topic.child}}</a>
+				<br>
+			{% endfor %}
+		{% endif %}
 	{% endif %} 
 
 		
@@ -56,10 +58,6 @@
 	
 	<hr>
 	
-	{% if is_low %}
-		<h4>Distribution over higher topics</h4>
-		<p>Not implemented</p>
-	{% endif %}
 	<h4>Related topics</h4>
 	{% for related_topic in related_topics%}
 		<a href="/topic?id={{related_topic.topic2.id}}">{{related_topic.topic2}}</a> ({{related_topic.weight | floatformat:2}})
