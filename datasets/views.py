@@ -134,7 +134,8 @@ def visual_dataset(request):
 			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>", dataset.creation_time)
 	elif dataset.status == 2:
 		return general_views.message(request, dataset.error_message.replace("\n","<br>") + \
-			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>")
+			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>"+ \
+			"<br><a href='/datasets/delete?id=" + str(dataset.id) + "'>Delete</a>")
 	
 	context = {'dataset': dataset}
 	
@@ -464,12 +465,13 @@ def dump(request):
 	folder = dataset.get_folder()
 	with zipfile.ZipFile(outfile, 'w') as zf:
 		for root, dirs, files in os.walk(folder):
-			if root[-7:] == "batches":
+			if root[-7:] == "batches" or "_MACOSX" in root:
 				continue
 			rel_path = root[len(folder)+1:]
 			for file in files:
-				# print(os.path.join(rel_path, file))
-				zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
+				if file[0] != '.':
+					# print(os.path.join(rel_path, file))
+					zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
 
 	zipped_file = outfile.getvalue()
 	response = HttpResponse(zipped_file, content_type='application/octet-stream')

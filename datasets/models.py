@@ -252,6 +252,7 @@ class Dataset(models.Model):
 			raise ValueError("Must be zip archive")
 		self.text_id = parsed[0]
 		self.name = parsed[0]
+		self.prepare_log("Loading dataset %s from archive..." % self.text_id)
 		
 		if len(Dataset.objects.filter(text_id = parsed[0])) != 0:
 			raise ValueError("Dataset " + parsed[0] + " already exists.")
@@ -259,15 +260,15 @@ class Dataset(models.Model):
 		with open(os.path.join(self.get_folder(), archive_name), 'wb+') as f:
 			for chunk in archive.chunks():
 				f.write(chunk)
-		print("Archive unloaded.")
+		self.log("Archive uploaded.")
 		
 		import zipfile
 		zip_ref = zipfile.ZipFile(zip_file_name, 'r')
 		zip_ref.extractall(self.get_folder())
 		zip_ref.close() 
-		print("Archive unpacked. Dataset name: " + self.text_id)
+		self.log("Archive unpacked. Dataset name: " + self.text_id)
 		
-		
+		os.remove(zip_file_name)
 		
 	def get_batches(self):
 		dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
@@ -293,10 +294,10 @@ class Dataset(models.Model):
 		return True
 	'''
 	
-	def prepare_log(self):
-		self.log_file_name = os.path.join(settings.DATA_DIR, "datasets", self.text_id, "log.txt")
+	def prepare_log(self, string=""):
+		self.log_file_name = os.path.join(self.get_folder(), "log.txt")
 		with open(self.log_file_name, "w") as f:
-			f.write("<br>\n")
+			f.write("%s<br>\n" % string)
 			
 	def log(self, string):
 		if settings.DEBUG:
@@ -320,7 +321,7 @@ class Dataset(models.Model):
 	
 	def get_terms_index(self, modality=None):
 		terms_index = dict()
-		query_set = Term.objects.filter(dataset=self)
+		query_set = Term.objects.filter(dataset=self).order_by("-modality__is_word")
 		if modality:
 			query_set = query_set.filter(modality=modality)
 		for term in query_set:
@@ -328,9 +329,21 @@ class Dataset(models.Model):
 		return terms_index
  
  
+ 
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+@receiver(pre_delete, sender=Dataset, dispatch_uid='dataset_delete_signal')
+def remove_model_files(sender, instance, using, **kwargs):
+	folder = instance.get_folder()
+	print("Will delete folder " + folder)
+	try:
+		rmtree(folder)
+	except:
+		pass 
+ 
 def on_start():
 	for dataset in Dataset.objects.filter(status=1):
-		model.status = 2
+		dataset.status = 2
 		dataset.error_message = "Dataset processing was interrupted."
 		dataset.save()
 	

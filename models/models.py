@@ -38,11 +38,11 @@ class ArtmModel(models.Model):
 	def create_generic(self, POST):
 		mode = POST['mode']
 		self.text_id = "model_" + str(self.id) 
-		self.prepare_log()
-		self.log("Creating model, mode=" + mode)
+		
 		
 		try:
 			if mode == 'flat': 
+				self.prepare_log("Creating flat model (auto)")
 				iter_count = int(POST.getlist('iter_count')[0])
 				self.layers_count = 1
 				self.topics_count = "1 " + POST.getlist('num_topics')[0]
@@ -50,6 +50,7 @@ class ArtmModel(models.Model):
 				artm_object = self.create_simple(iter_count = iter_count)
 				self.save_matrices(artm_object)
 			elif mode == "hier":
+				self.prepare_log("Creating hierarchical model (auto)")
 				self.layers_count = int(POST['num_layers'])
 				iter_count = int(POST.getlist('iter_count')[1]) 
 				self.topics_count = "1 " + ' '.join([POST.getlist('num_topics')[i + 1] for i in range(self.layers_count)])
@@ -62,15 +63,16 @@ class ArtmModel(models.Model):
 					code = compile(f.read(), script_file_name, "exec")		
 				batch_vectorizer, dictionary = self.dataset.get_batches()
 				local_vars = {"batch_vectorizer": batch_vectorizer, "dictionary": dictionary}  
-				print("Running custom sript...")		
+				self.prepare_log("Running custom sript...")		
 				exec(code, local_vars)
-				print("Custom script finished.")
+				self.log("Custom script finished.")
 				artm_object = local_vars["model"]
 				self.save_matrices(artm_object)
 			elif mode == "custom":
 				raise Exception("You cannot upload scripts.")
 			elif mode == "matrices":
 				self.text_id = POST["matrices_folder"]
+				self.prepare_log("Model will be loaded from matrices")
 			elif mode == "empty":
 				sample_script_file = os.path.join(self.get_folder(), "sample.py")
 				batches_folder = os.path.join(self.dataset.get_folder(), "batches")
@@ -165,23 +167,20 @@ class ArtmModel(models.Model):
 		topics_count = 0
 		if os.path.exists(phi_path):
 			phi_raw = pd.read_pickle(os.path.join(self.get_folder(), "phi"))
-			if phi_raw.shape[0] == self.dataset.terms_count:
-				self.log("Considering that rows in phi are indexed according to dictionary.")
-				phi = phi_raw.values
-			else: 
-				self.log("WARNING! Not all words are in phi. Will restore. In case of equal terms result can be wrong.")
-				topics_count = phi_raw.shape[1]
-				phi = np.zeros((self.dataset.terms_count, topics_count))
-				terms_index = self.dataset.get_terms_index()
-				for row in phi_raw.iterrows():
-					term_text = row[0]
-					try:
-						term_matrix_id = terms_index[term_text] - 1
-					except:
-						self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
-						continue
-					for j in range(topics_count):
-						phi[term_matrix_id][j] = row[1][j]
+			#phi = phi_raw.values
+			self.log("WARNING! Not all words are in phi. Will restore. In case of equal terms result can be wrong.")
+			topics_count = phi_raw.shape[1]
+			phi = np.zeros((self.dataset.terms_count, topics_count))
+			terms_index = self.dataset.get_terms_index()
+			for row in phi_raw.iterrows():
+				term_text = row[0]
+				try:
+					term_matrix_id = terms_index[term_text] - 1
+				except:
+					self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
+					continue
+				for j in range(topics_count):
+					phi[term_matrix_id][j] = row[1][j]
 		else:
 			self.log("WARNING! Phi wasn't detected. Will try load from matrices for modalities.")
 			for modality in Modality.objects.filter(dataset=self.dataset):
@@ -472,12 +471,12 @@ class ArtmModel(models.Model):
 			self.status = 2
 			self.save()
 			
-	def prepare_log(self):
+	def prepare_log(self, string=""):
 		if len(self.text_id) == 0:
 			self.text_id = "model_" + str(self.id)
 		self.log_file_name = os.path.join(self.get_folder(), "log.txt")
 		with open(self.log_file_name, "w") as f:
-			f.write("<br>\n")
+			f.write("%s<br>\n" % string)
 			
 	def log(self, string):
 		if settings.DEBUG:
