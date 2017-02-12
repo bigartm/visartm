@@ -21,7 +21,7 @@ class Dataset(models.Model):
 	documents_count = models.IntegerField(default = 0)
 	modalities_count = models.IntegerField(default = 0)
 	creation_time = models.DateTimeField(null=False, default = datetime.now) 
-	status = models.IntegerField(null = False, default = 0) 
+	status = models.IntegerField(null = False, default = 0)  # 0=OK, 1=processing, 2=error
 	error_message = models.TextField(null=True) 
 	language = models.TextField(null=False, default="english")
 	
@@ -328,7 +328,11 @@ class Dataset(models.Model):
 		return terms_index
  
  
-	
+def on_start():
+	for dataset in Dataset.objects.filter(status=1):
+		model.status = 2
+		dataset.error_message = "Dataset processing was interrupted."
+		dataset.save()
 	
 class Document(models.Model):
 	title = models.TextField(null=False)
