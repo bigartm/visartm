@@ -67,6 +67,15 @@
  
 
 {% block right %}
+	<h3>Upload topics from file</h3>
+	<form method = "post"  enctype="multipart/form-data">	
+		<input type="file" name="topics_file"/>
+		<button class="btn btn-success">Upload</button>
+		<input type="hidden" name='action' value="load_topics"/>
+		<input type="hidden" name='problem_id' value="{{problem.id}}"/>
+		{% csrf_token %}
+	</form>
+	<hr>
 {% endblock %}
 
 {% block javascript %}

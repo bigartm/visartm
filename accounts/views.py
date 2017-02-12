@@ -54,25 +54,24 @@ def signup(request):
 	return HttpResponse("Registration complete.<br><a href='/accounts/login'>To login page</a>.")
 
 def account_view(request, user_name):
-	account = User.objects.filter(username = user_name)[0]
-	
-	assessment_problems = []
-	for entry in ProblemAssessor.objects.filter(assessor=account):
-		assessment_problems.append({
-			"problem": entry.problem,
-			"tasks": AssessmentTask.objects.filter(assessor=account, problem=entry.problem, status=1),
-			"supervise": (entry.problem.dataset.owner == account)
-	})
-		
-	
-	context = Context({"account": account,
-					   "public_datasets": Dataset.objects.filter(owner = account, is_public = True),
-					   "private_datasets": Dataset.objects.filter(owner = account, is_public = False), 
-					   "assessment_problems": assessment_problems,
-					   "models": ArtmModel.objects.filter(author = account),
-					   "researches": Research.objects.filter(researcher = account).order_by("id")})
+	account = User.objects.get(username = user_name)
+	context = {"account": account}
+	 
+	if account == request.user:
+		assessment_problems = []
+		for entry in ProblemAssessor.objects.filter(assessor=account):
+			assessment_problems.append({
+				"problem": entry.problem,
+				"tasks": AssessmentTask.objects.filter(assessor=account, problem=entry.problem, status=1),
+				"supervise": (entry.problem.dataset.owner == account)
+		})		
+		context["public_datasets"] = Dataset.objects.filter(owner = account, is_public = True)
+		context["private_datasets"] = Dataset.objects.filter(owner = account, is_public = False)
+		context["assessment_problems"] = assessment_problems
+		context["models"] = ArtmModel.objects.filter(author = account)
+		context["researches"] = Research.objects.filter(researcher = account).order_by("id")
 					   
-	return render(request, 'accounts/account.html', context) 
+	return render(request, 'accounts/account.html', Context(context)) 
 	
 	
 	

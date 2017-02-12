@@ -19,7 +19,7 @@ def problem(request):
 		if not ProblemAssessor.objects.filter(problem=problem, assessor=request.user):
 			return HttpResponseForbidden("You are not authorized to assess this problem, so you can't make any changes to it.")
 		
-		problem.alter(request.POST)
+		problem.alter(request)
 		if "next" in request.POST:
 			return redirect(request.POST["next"])
 		else:
@@ -139,8 +139,9 @@ def get_results(request):
 	if request.user != problem.dataset.owner:
 		return HttpResponseForbidden("You are not owner.") 
 	response =  HttpResponse(json.dumps(problem.get_results()), content_type='application/json')
-	timestamp = datetime.now().strftime("%d%m%y_%H%M%S") 
-	response['Content-Disposition'] = 'attachment; filename="%s_%s_%s.json"' % ((problem.dataset.text_id, problem.type, timestamp))
+	if "mode" in request.GET and request.GET['mode']=='file':
+		timestamp = datetime.now().strftime("%d%m%y_%H%M%S") 
+		response['Content-Disposition'] = 'attachment; filename="%s_%s_%s.json"' % ((problem.dataset.text_id, problem.type, timestamp))
 	return response
 	
 @login_required

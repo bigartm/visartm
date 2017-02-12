@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import json
 from random import randint
+from django.conf import settings
 
 class AssessmentProblem(models.Model):
 	type = models.TextField() 
@@ -65,19 +66,21 @@ class AssessmentProblem(models.Model):
 		self.save()
 		
 	# Allows superviser or assessor alter some global parameters of assessment problem
-	def alter(self, POST):
-		print("ALTER PROBLEM", POST)
+	def alter(self, request):
+		POST = request.POST 
 		params = json.loads(self.params) 
 		if self.type == "segmentation":				
-			if POST["action"] == "add_topic":
-				print("ADD TOPIC")
+			if POST["action"] == "add_topic": 
 				target = POST["name"]
 				if len(target) > 2:
 					topic = Segmentation_Topic()
 					topic.problem = self
 					topic.name = target
-					topic.save()
-			
+					try:
+						topic.save()
+					except:
+						pass
+						
 			elif POST["action"] == "alter_topic":
 				topic_id = POST["topic_id"]
 				target = Segmentation_Topic.objects.get(id=topic_id)
@@ -89,6 +92,24 @@ class AssessmentProblem(models.Model):
 				
 			elif POST["action"] == "delete_topic":
 				Segmentation_Topic.objects.filter(id=POST["topic_id"]).delete()
+				
+			elif POST["action"] == "load_topics":
+				topics_file = request.FILES['topics_file']
+				path = os.path.join(self.get_folder(), "topics.txt") 
+				with open(path, 'wb+') as f:
+					for chunk in topics_file.chunks():
+						f.write(chunk) 
+				with open(path) as f:
+					input = json.loads(f.read())
+				topics = input["topics"]
+				Segmentation_Topic.objects.filter(problem=self).delete()
+				for x in topics:
+					topic = Segmentation_Topic()
+					topic.name = x["name"]
+					topic.description = x["description"]
+					topic.problem=self
+					topic.save()
+					
 		elif self.type == "topic_spectrum":				
 			if POST["action"] == "change_model":
 				id = int(POST["model_id"])
@@ -131,7 +152,7 @@ class AssessmentProblem(models.Model):
 			result_topics = []
 			i = 0
 			for topic in Segmentation_Topic.objects.filter(problem=self):
-				result_topics.append(topic.name)
+				result_topics.append({"id":i, "name": topic.name, "description": topic.description})
 				topics_index[topic.id] = str(i)				
 				i += 1
 				
@@ -139,8 +160,8 @@ class AssessmentProblem(models.Model):
 			results["documents"] = []
 			for task in AssessmentTask.objects.filter(problem=self):
 				if task.status == 2:
-					answer = json.loads(task.answer)
-					terms_assessions = answer["terms_assessions"]
+					task.load_answer()
+					terms_assessions = task.answer["terms_assessions"]
 					word_index = task.document.get_word_index()
 					terms = ""
 					for i in range(len(word_index)):
@@ -156,8 +177,7 @@ class AssessmentProblem(models.Model):
 	def refresh(self):
 		now = datetime.now()
 		if (now - self.last_refreshed).seconds < 150:
-			return
-		print("Will refresh")
+			return 
 		deadline = now - timedelta(0, self.timeout)
 		dead_tasks = AssessmentTask.objects.filter(problem=self, status=1, creation_time__lte=deadline)
 		#for task in dead_tasks:
@@ -166,23 +186,61 @@ class AssessmentProblem(models.Model):
 		dead_tasks.delete()
 		self.last_refreshed = now
 		self.save()
+		
+	def get_folder(self):
+		if self.type == "segmentation":
+			path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "segmentation")
+		else:
+			path = os.path.join(settings.DATA_DIR, "assessment", str(self.id))
+		
+		if not os.path.exists(path): 
+			os.makedirs(path) 
+		return path	 
 			
+			
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
+from shutil import rmtree 
+@receiver(pre_delete, sender=AssessmentProblem, dispatch_uid='problem_delete_signal')
+def remove_problem_files(sender, instance, using, **kwargs):
+	# print("DELETE " + instance.get_folder())
+	try:
+		rmtree(instance.get_folder())
+	except:
+		pass
+		
+			
+def get_css(class_id, css_id):
+	if css_id == 2:
+		return "context"
+	ret = ""
+	if css_id == 1:
+		ret += "keyword "
+	if class_id > 0:
+		ret += "tpc" + str(class_id)
+	return ret
 	
 # TODO: to separate file
 def text_to_span(text, start, end, class_id, css):
 	if start >= end:
 		return ""
 	cur_css = css[start]
-	ret = "<span class='tpc%d %s' offset=%d>" % (class_id, cur_css, start)
+	ret = "<span class='%s' offset=%d>" % (get_css(class_id, cur_css), start)
 	for pos in range(start, end):
 		if text[pos]=='\n':
-			ret += "</span><br><span class='tpc%d %s' offset=%d>" % (class_id, cur_css,  pos + 1)
+			ret += "</span><br><span class='%s' offset=%d>" % (get_css(class_id, cur_css),  pos + 1)
 		else:
 			if pos != start and css[pos] != cur_css:
 				cur_css = css[pos]
-				ret += "</span><span class='tpc%d %s' offset=%d>" % (class_id, cur_css, pos)
+				ret += "</span><span class='%s' offset=%d>" % (get_css(class_id, cur_css), pos)
 			ret += text[pos]
 	return ret + "</span>"
+		 
+		
+
+		
+from contextlib import contextmanager		
+import os
 		
 class AssessmentTask(models.Model):
 	problem = models.ForeignKey(AssessmentProblem, null=False)
@@ -198,46 +256,70 @@ class AssessmentTask(models.Model):
 	def get_view_context(self):
 		context = {"task": self}  	
 		params = json.loads(self.problem.params)
-		answer = json.loads(self.answer)
+		self.load_answer()
 		
 		if self.problem.type == "segmentation":
-			if not "selections" in answer:
-				answer["selections"] = []
-			if not "topics_in" in answer:
-				answer["topics_in"] = []
+			if not "selections" in self.answer:
+				self.answer["selections"] = []
+			if not "topics_in" in self.answer:
+				self.answer["topics_in"] = {}
 			
 			# Deal with topics
-			all_topics = Segmentation_Topic.objects.filter(problem=self.problem)
-			topics_in = answer["topics_in"]
-			context["topics_in"] = [topic for topic in all_topics if topic.id in topics_in]
-			context["topics_out"] = [topic for topic in all_topics if not topic.id in topics_in]			
-			context["topics_count"] = len(context["topics_in"])
-			topics_class_ids = dict()
-			i = 0
-			for topic in context["topics_in"]:
-				i += 1
-				topics_class_ids[topic.id] = i
+			all_topics = Segmentation_Topic.objects.filter(problem=self.problem).order_by("name")
+			topics_colors = {}
+			for x, y in self.answer["topics_in"].items():
+				topics_colors[int(x)] = y
+				
+			topics_send = [] 
+			for topic in all_topics: 
+				if topic.id in topics_colors:
+					topics_send.append({"topic": topic, "color": topics_colors[topic.id]})
+				else:
+					topics_send.append({"topic": topic, "color": -1})
+				
+			context["topics"] = topics_send 	 
 			
 			# Get the text
 			text = self.document.text
 			
+			
+			word_index = self.document.get_word_index()
+			term_beginnings = set()
+			for x,_,_ in word_index:
+				term_beginnings.add(x)
+			
+			
+			
 			# Find which terms are keywords (should be marekd as tags), they will be bold
 			tags_ids = self.document.get_tags_ids()
-			css = ['' for i in range(len(text))]
-			if tags_ids:
-				word_index = self.document.get_word_index()
+			css = [0 for i in range(len(text))]			#1=keyword, 2=context
+			if tags_ids:				
 				for start_pos, length, term_index_id in word_index:
 					if term_index_id in tags_ids:
 						for i in range(start_pos, start_pos + length):
-							css[i] = "kwrd"
-				
+							css[i] = 1
+			
+			# find context
+			line_start = 0
+			is_context = True
+			for i in range(len(text)+1):
+				if i in term_beginnings:
+					is_context = False
+				if i == len(text) or text[i]=='\n':
+					if is_context:
+						for j in range(line_start, i):
+							css[j] = 2
+					is_context = True
+					line_start = i
+			  
+			
 			# Deal with text
 			cur_pos = 0
 			new_text = "<span offset='-20'>====================</span><br>"
-			for sel in answer["selections"]:
-				if sel[2] in topics_class_ids:
+			for sel in self.answer["selections"]:
+				if sel[2] in topics_colors:
 					new_text += text_to_span(text, cur_pos, sel[0], -1, css)
-					new_text += text_to_span(text, sel[0], sel[1], topics_class_ids[sel[2]], css)
+					new_text += text_to_span(text, sel[0], sel[1], topics_colors[sel[2]], css)
 					cur_pos = sel[1] 
 			new_text += text_to_span(text, cur_pos, len(text), -1, css)
 			new_text += "<br><span offset=%d>====================</span>" % cur_pos
@@ -245,19 +327,25 @@ class AssessmentTask(models.Model):
 			
 			
 			
-			if "scroll_top" in answer:
-				context["scroll_top"] = answer["scroll_top"]
+			if "scroll_top" in self.answer:
+				context["scroll_top"] = self.answer["scroll_top"]
 			else:
 				context["scroll_top"] = 0
 			
-			
+			if 'selected_topic' in self.answer:
+				context["selected_topic"] = self.answer["selected_topic"]
+			else:
+				context["selected_topic"] = -1
+				
 		return context
 		
 	def initialize(self):
-		answer = dict()
+		self.load_answer()	
 		if self.problem.type == "segmentation":
-			selections = []
-			topics_in = []
+			if not 'selections' in self.answer:
+				self.answer["selections"] = []
+			if not 'topics_in' in self.answer:
+				self.answer["topics_in"] = {}
 			word_index = self.document.get_word_index()
 			text_terms = [x[2] for x in word_index]
 			
@@ -265,7 +353,7 @@ class AssessmentTask(models.Model):
 			while cur_term < len(text_terms): 
 				segment = None
 				length = 0
-				candidates = Segmentation_TypicalSegment.objects.filter(problem=self.problem, first_term_id=text_terms[cur_term])
+				candidates = Segmentation_TypicalSegment.objects.filter(problem=self.problem, first_term_id=text_terms[cur_term]).order_by("-length")
 				for candidate in candidates:
 					candidate_terms = json.loads(candidate.terms)
 					length = len(candidate_terms)
@@ -274,31 +362,18 @@ class AssessmentTask(models.Model):
 						break
 				if segment:
 					topic_id = candidate.get_best_topic()
-					if not topic_id in topics_in:
-						topics_in.append(topic_id)
+					if not topic_id in self.answer["topics_in"]:
+						self.answer["topics_in"].append(topic_id)
 					end_pos = word_index[cur_term + length - 1][0] + word_index[cur_term + length - 1][1] 
-					selections.append([word_index[cur_term][0], end_pos, topic_id])
+					self.answer["selections"].append([word_index[cur_term][0], end_pos, topic_id])
 					cur_term += length
 				else:
-					cur_term += 1
-					
-			answer["selections"] = selections
-			answer["topics_in"] = topics_in
-			
-		self.answer = json.dumps(answer)
-		self.save()
+					cur_term += 1 
+		self.save_answer()
 		
 	def alter(self, POST):
-		answer = json.loads(self.answer) 
-		answer["last_post_request"] = POST
-		print("ALTER TASK", POST)
-		
-		if self.problem.type == "segmentation":
-			if not "selections" in answer:
-				answer["selections"] = []
-			if not "topics_in" in answer:
-				answer["topics_in"] = []
-				
+		self.load_answer()		
+		if self.problem.type == "segmentation": 
 			if POST["action"] == "selection":
 				new_selection_start = int(POST["selection_start"])
 				new_selection_end = int(POST["selection_end"]) 
@@ -309,40 +384,51 @@ class AssessmentTask(models.Model):
 				if new_selection_end > doc_length:
 					new_selection_end = doc_length
 				if new_selection_start >= new_selection_end:
-					return
-				print("ALTER GO", new_selection_start, new_selection_end)
+					return 
 				topic_id = int(POST["topic_id"])
-				if not topic_id in answer["topics_in"]:
-					answer["topics_in"].append(topic_id)
+				#if topic_id != -1:
+				#	if not topic_id in answer["topics_in"]:
+				#		answer["topics_in"].append(topic_id)
 				
-				selections = [x for x in answer["selections"] if (x[0] >= new_selection_end or x[1] <= new_selection_start)]
+				if not "selections" in self.answer:
+					self.answer["selections"] = []
+				
+				selections = [x for x in self.answer["selections"] if (x[0] >= new_selection_end or x[1] <= new_selection_start)]
 				if topic_id != -1:
 					selections.append([new_selection_start, new_selection_end, topic_id])
 					
 				# define selected terms and select such in that dataset, if they are not any other selection	
 					
 				selections.sort()
-				answer["selections"] = selections
-			elif POST["action"] == "topic_use":
-				print("ALTER TOPIC USE")
-				topic_id = int(POST["topic_id"])
-				if not topic_id in answer["topics_in"]:
-					answer["topics_in"].append(topic_id)
+				self.answer["selections"] = selections
+				self.answer["selected_topic"] = topic_id
+			elif POST["action"] == "topic_use": 
+				topic_id = int(POST["topic_id"]) 
+				if not "topics_in" in self.answer:
+					self.answer["topics_in"] = {}
+				if not topic_id in self.answer["topics_in"]:
+					used_colors = set([color for _, color in self.answer["topics_in"].items()])
+					for i in range(1,1000):
+						if not i in used_colors:
+							new_color = i
+							break
+					self.answer["topics_in"][topic_id] = new_color 
+					self.answer["selected_topic"] = topic_id
 			elif POST["action"] == "topic_not_use":
-				topic_id = int(POST["topic_id"])
-				if topic_id in answer["topics_in"]:
-					answer["topics_in"].remove(topic_id)
+				topic_id = str(POST["topic_id"])
+				if "topics_in" in self.answer and topic_id in self.answer["topics_in"]:
+					del self.answer["topics_in"][topic_id]
 			
 			if "scroll_top" in POST:
-				answer["scroll_top"] = POST["scroll_top"]
-			
-		self.answer = json.dumps(answer)
-		self.save()
+				self.answer["scroll_top"] = POST["scroll_top"]
+		
+		self.save_answer() 
 		
 	def finalize(self, POST):
-		answer = json.loads(self.answer) 
+		self.load_answer() 
+		
 		if self.problem.type == "segmentation":
-			selections = answer["selections"]
+			selections = self.answer["selections"]
 			word_index = self.document.get_word_index()
 			terms_assessions = [-1 for i in range(len(word_index))]
 			assessed_segments = []
@@ -354,17 +440,41 @@ class AssessmentTask(models.Model):
 						terms.append(term_id)
 						terms_assessions[i] = topic_id
 					i += 1
-				if len(terms) > 0:
+				if len(terms) > 1:
 					assessed_segments.append([terms, topic_id])
 					segment = Segmentation_TypicalSegment.get_segment(self.problem, terms)
 					segment.add_topic(topic_id)
 					
-			answer["terms_assessions"] = terms_assessions
-			answer["assessed_segments"] = assessed_segments
-			
-		self.answer = json.dumps(answer)
-		self.save()
-		
+			self.answer["terms_assessions"] = terms_assessions
+			self.answer["assessed_segments"] = assessed_segments
+			 
+		self.save_answer()
+	
+
+	def load_answer(self):
+		path = self.get_file()
+		if path:
+			try:
+				with open(path, "r") as f:
+					text = f.read()
+				self.answer = json.loads(text)
+			except:
+				self.answer =  {} 
+		else:
+			try:
+				self.answer = json.loads(self.answer_text)
+			except:
+				self.answer = {}
+			 
+	def save_answer(self): 
+		path = self.get_file()
+		if path: 
+			with open(path, "w") as f:
+				f.write(json.dumps(self.answer))
+		else: 
+			self.answer_text = json.dumps(self.answer)
+			self.save()
+	
 	def __str__(self):
 		if self.problem.type == "segmentation":
 			return self.document.title
@@ -378,6 +488,14 @@ class AssessmentTask(models.Model):
 			dt = datetime.now() - self.creation_time
 		seconds = dt.seconds
 		return "{:02}:{:02}".format(seconds // 60, seconds % 60)
+		
+	def get_file(self):
+		if self.problem.type == "segmentation":
+			return os.path.join(self.problem.get_folder(), self.document.text_id)
+		else:
+			raise None
+			
+
 		
 class ProblemAssessor(models.Model):
 	problem = models.ForeignKey(AssessmentProblem, null=False)
@@ -404,12 +522,16 @@ class Segmentation_Topic(models.Model):
 	def description_lines(self):
 		return self.description.split("\n")
 		
+	class Meta:
+		unique_together = (("problem", "name"))
+		
 		
 class Segmentation_TypicalSegment(models.Model):
 	problem = models.ForeignKey(AssessmentProblem, null=False, default=0)
 	first_term_id = models.IntegerField(null=False, default=0)
 	terms = models.TextField(null=False, default="")
 	topics = models.TextField(null=False, default="")
+	length = models.IntegerField(null=False, default=1)
 	
 	def get_segment(problem, terms):
 		key = json.dumps(terms)
@@ -423,6 +545,7 @@ class Segmentation_TypicalSegment(models.Model):
 			segment.first_term_id = terms[0]
 			segment.terms = key
 			segment.topics = "{}"
+			segment.length = len(terms)
 			segment.save()
 			return segment
 			

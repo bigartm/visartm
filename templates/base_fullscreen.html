@@ -2,13 +2,17 @@
 <html>
 	<head>
 		<title>{% block title %}{% endblock %}</title>
+
+		<script src="/static/js/artmonlineapi.js?version={% now 'U' %}"></script>
+		<script src="/static/js/base.js?version={% now 'U' %}"></script>
+		
 		{% block style %}{% endblock %}
 	</head>
 
 	<body> 
 		{% block content %}{% endblock %}
 		
-		<script src="/static/js/artmonlineapi.js?version={% now 'U' %}"></script>
+		
 		{% block javascript %}{% endblock %}
 	</body>
 </html>

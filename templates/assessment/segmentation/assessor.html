@@ -4,109 +4,126 @@
 
 {% block style %}
 <style>
-	#visartm-content {
+	#content {
 		float: left; 
 		width:100%;
 		height: 100%;
 		overflow-y: scroll;
-		height:75%;
+		height:85%;
 	}
 	
-	.kwrd {
+	.keyword {
 		font-weight: bold;
+	}
+	
+	.context {
+			color: #cccccc;
+			font-style: italic;
+			user-select: none;
+			background-color: white;
+		}
+		
+	#descr {
+		border-style: solid;
+		border-radius: 8px;
 	}
 </style>
 {% endblock %}
 
-{% block content %}
-	<div  onmouseup="rememberSelection()">
-		<p>Assesment task #{{task.id}}</p>
-		<p>{{task}}.</p>
-		  
-	 
-		<div id="text">
-		  {% autoescape off %}{{text}}{% endautoescape %}
-		</div>		
-	</div>
-	
-	
-	
-	
-{% endblock %}
- 
-
-{% block right %} 
-	<div> 
-		<div>
-			{% for topic in topics_out %}
-				<a 
-					onClick="sendSelection({{topic.id}})"
-					data-toggle="tooltip" 
-					data-placement="bottom" 
-					title="{{topic.description_html}}"
-					data-html="true"
-				>{{topic.name}}</a>
-				<br>
-			{% endfor %}  	
-		</div>
-		<form id = "formAddTopic" method="POST" action="/assessment/problem">
-			<input type="text" name='name' placeholder = "Название темы"></input>
-			<button type="submit">Добавить</button>
-			<input type="hidden" name='problem_id' value="{{task.problem.id}}"> </input>
-			<input type="hidden" name='action' value="add_topic"> </input>
-			<input type="hidden" name='next' value="/assessment/task?task_id={{task.id}}"> </input> 
-			{% csrf_token %}
-		</form>
-		<hr>
-		 
-		
- 
-
-			
-		<input type="radio" id = "topic-1">Очистка</input><br>
-		{% for topic in topics_in %}
-			<div data-toggle="tooltip" data-placement="bottom" data-html="true">
-				<input 
-					type = "radio"
-					id = "topic{{forloop.counter}}" 
-					onClick="sendSelection({{topic.id}});"
-					title="{% autoescape off %}{{topic.description_html}}{% endautoescape %}"
-					
-				>{{topic.name}}</input><sup><a onClick="notUseTopic({{topic.id}});">x</a></sup></span> 
+{% block supercontent %}
+	<div class='container-fluid'>
+		<div class="col-sm-7">
+			<div id="content">			
+				<div  onmouseup="sendSelection()">
+					<p>Assesment task #{{task.id}}</p>
+					<p>{{task}}.</p>
+					  
+				 
+					<div id="text">
+					  {% autoescape off %}{{text}}{% endautoescape %}
+					</div>		
+				</div>
 			</div>
-		{% endfor %}  	
-		<hr>
-		 
-		<div style="float: left;">
-			<form method="GET" action = "/assessment/get_task">
-				<input type="hidden" name="problem_id" value="{{task.problem.id}}" />
-				<button type="submit" class="btn btn-primary">Пропустить</button>  
-			</form> 
 		</div>
+		<div class="col-sm-3">
 			
-		<div style="float: right;">
-			<form method="POST">
-				<button type="submit" class="btn btn-success">Завершить</button>
-				<input type="hidden" name="task_id" value="{{task.id}}" />
-				<input type="hidden" name="finished" />
+			
+					 
+					
+			 
+			<form id="formSelectTopic">
+				<input type="radio" name='selected_topic' id="rb-1" value="-1" checked="checked" onclick="showDescription();">Нет темы</input><br>
+				{% for topic in topics %}
+					{% if topic.color > 0 %} 
+						<input 
+							type = "radio" 
+							name='selected_topic'
+							value='{{topic.topic.id}}'
+							onclick="showDescription();"
+							{% if selected_topic == topic.topic.id %} checked="checked" {% endif %}
+						><span 	id="rb{{topic.color}}">{{topic.topic.name}}</span></input>
+						<sup><a onClick="notUseTopic({{topic.topic.id}});"><big>x</big></a></sup>
+						<br>
+					{% else %}
+						{{topic.topic.name}}
+						<sup><a onClick="useTopic({{topic.topic.id}});"><big>+</big></a></sup>
+						<br>
+					{% endif %}
+					
+				{% endfor %}  	
+			</form>
+			 
+			
+			<form id = "formAddTopic" method="POST" action="/assessment/problem">
+				<input type="text" name='name' placeholder = "Название темы"></input>
+				<button type="submit">Добавить</button>
+				<input type="hidden" name='problem_id' value="{{task.problem.id}}"> </input>
+				<input type="hidden" name='action' value="add_topic"> </input>
+				<input type="hidden" name='next' value="/assessment/task?task_id={{task.id}}"> </input> 
 				{% csrf_token %}
 			</form>
+			<hr>
+			 
+			 
+			<div style="float: left;">
+				<form method="GET" action = "/assessment/get_task">
+					<input type="hidden" name="problem_id" value="{{task.problem.id}}" />
+					<button type="submit" class="btn btn-primary">Пропустить</button>  
+				</form> 
+			</div>
+				
+			<div style="float: right;">
+				<form method="POST">
+					<button type="submit" class="btn btn-success">Завершить</button>
+					<input type="hidden" name="task_id" value="{{task.id}}" />
+					<input type="hidden" name="finished" />
+					{% csrf_token %}
+				</form>
+			</div>
+					 
+			 
+				
+			<form id="formMain" method="POST">
+				<input type="hidden" name="task_id" value="{{task.id}}" />
+				<input type="hidden" id="selection_end" name="selection_end" value="0"/>
+				<input type="hidden" id="selection_start" name="selection_start" value="0"/>
+				<input type="hidden" id="scroll_top" name="scroll_top" value="0"/>
+				<input type="hidden" id="action" name="action" value="selection"/>
+				<input type="hidden" id="topic_id" name="topic_id" value="0"/>	
+				{% csrf_token %}
+			</form> 
 		</div>
-		
+		<div class="col-sm-2" id="descr">
+			<h3 id="descr-title"></h3>
+			<div id="descr-text"></div>
+		</div>
 	</div>
- 
+	 
 	
-	<form id="formMain" method="POST">
-		<input type="hidden" name="task_id" value="{{task.id}}" />
-		<input type="hidden" id="selection_end" name="selection_end" value="0"/>
-		<input type="hidden" id="selection_start" name="selection_start" value="0"/>
-		<input type="hidden" id="scroll_top" name="scroll_top" value="0"/>
-		<input type="hidden" id="action" name="action" value="selection"/>
-		<input type="hidden" id="topic_id" name="topic_id" value="0"/>	
-		{% csrf_token %}
-	</form>
-
 {% endblock %}
+ 
+
+ 
 
 {% block javascript %}
 <script type="text/javascript">
@@ -115,30 +132,34 @@
 	$(document).ready(function(){
 		$('[data-toggle="tooltip"]').tooltip(); 
 	});
-	
-	var background_rgb = getRgb(theme.backgroundColor);
-	for (i = 0; i <= {{topics_count}}; ++i){
-		color = theme.palette(i);
-		document.getElementById("topic"+i).style.color = color;
 		
-		rgb = getRgb(color);  
-		color = $c.rgb2hex( 
-			~~(0.2*rgb[0]+0.8*background_rgb[0]), 
-			~~(0.2*rgb[1]+0.8*background_rgb[1]),
-			~~(0.2*rgb[2]+0.8*background_rgb[2])
-		);
-		$(".tpc" + i).css("background-color", color);
+	var background_rgb = getRgb(theme.backgroundColor);
+	for (i = 1; i <= 30; ++i){
+		try {
+			color = theme.palette(i);
+			document.getElementById("rb"+i).style.color = color;
+			
+			rgb = getRgb(color);  
+			/*
+			color = $c.rgb2hex( 
+				~~(0.2*rgb[0]+0.8*background_rgb[0]), 
+				~~(0.2*rgb[1]+0.8*background_rgb[1]),
+				~~(0.2*rgb[2]+0.8*background_rgb[2])
+			);*/
+			$(".tpc" + i).css("background-color", color);
+			$(".tpc" + i).css("color", "white");
+		} catch (e) {;}
 	}
 	
-	document.getElementById('visartm-content').scrollTop = {{scroll_top}};
-	document.getElementById("visartm-content").onscroll = function(){
-		scroll_top = document.getElementById('visartm-content').scrollTop;
+	document.getElementById('content').scrollTop = {{scroll_top}};
+	document.getElementById("content").onscroll = function(){
+		scroll_top = document.getElementById('content').scrollTop;
 		document.getElementById("scroll_top").value = scroll_top; 
 	};
 	
 	var somethingSelected = false;
 	
-	function rememberSelection() {
+	function sendSelection() {
 		selection = window.getSelection();
 		selectedText = selection.toString(); 
 		if (selectedText.length > 1) {
@@ -151,18 +172,36 @@
 		} else {
 			somethingSelected = false;
 		}
+		
+		if (somethingSelected) { 
+			document.getElementById("action").value = "selection";
+			document.getElementById("topic_id").value = document.getElementById("formSelectTopic").elements["selected_topic"].value;
+			document.getElementById("formMain").submit();
+		} 
 	}
 	
-	function sendSelection(topic_id) {
-		if (somethingSelected) {
-			document.getElementById("action").value = "selection";
-			document.getElementById("topic_id").value = topic_id;
-			document.getElementById("formMain").submit();
-		} else {
-			document.getElementById("action").value = "topic_use";
-			document.getElementById("topic_id").value = topic_id;
-			document.getElementById("formMain").submit();
-		}
+	function showDescription() {
+		descrTitle = document.getElementById("descr-title");
+		descrText = document.getElementById("descr-text");
+		descrTitle.innerHTML = "Нет темы";
+		descrText.innerHTML = "";
+		topic_id = document.getElementById("formSelectTopic").elements["selected_topic"].value;
+		{% for x in topics %}
+			{% if x.color > 0 %}
+				if (topic_id == {{x.topic.id}}) {
+					descrTitle.innerHTML = "{{x.topic.name}}";
+					descrText.innerHTML = "{{x.topic.description_html}}";
+				}
+			{% endif %}
+		{% endfor %}
+	}
+	 
+	showDescription();
+	
+	function useTopic(topic_id) {
+		document.getElementById("action").value = "topic_use";
+		document.getElementById("topic_id").value = topic_id;
+		document.getElementById("formMain").submit();
 	}  
 	
 	function notUseTopic(topic_id, action) {
@@ -173,5 +212,3 @@
 	
 </script>
 {% endblock %}
-
-

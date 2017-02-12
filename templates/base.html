@@ -9,11 +9,12 @@
 
 	
 	
-	
+	<!--
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  
+	--->
+	
 	<!--  CSS -->
 	<link href="/static/css/base.css?version={% now 'U' %}" rel="stylesheet"> 
 	<link href="/static/bootstrap-3.3.7/css/bootstrap.min.css" rel="stylesheet">
@@ -76,31 +77,32 @@
   </div> 
 </nav>
 
-
-<div class='container-fluid'>
-	<div class="col-sm-9">
-		<div id="visartm-content">			
-			{% block content %} 
-			{% endblock %}
+{% block supercontent %}
+	<div class='container-fluid'>
+		<div class="col-sm-9">
+			<div id="visartm-content">			
+				{% block content %} 
+				{% endblock %}
+			</div>
+		</div>
+		<div class="col-sm-3">
+			<div id="visartm-right">
+				{% block right %} 
+				{% endblock %}
+			</div>
 		</div>
 	</div>
-	<div class="col-sm-3">
-		<div id="visartm-right">
-			{% block right %} 
-			{% endblock %}
-		</div>
-	</div>
-</div>
 
-{% if not no_footer %}
-<p></p>
-<hr>
-<footer class="footer">
-  <div class="container">
-	<p align="center" class="text-muted">&copy; Aithea, 2017</p>
-  </div>
-</footer>
-{% endif %}
+	{% if not no_footer %}
+	<p></p>
+	<hr>
+	<footer class="footer">
+	  <div class="container">
+		<p align="center" class="text-muted">&copy; Aithea, 2017</p>
+	  </div>
+	</footer>
+	{% endif %}
+{% endblock %}
 
 </body>
 
