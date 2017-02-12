@@ -99,7 +99,7 @@ class AssessmentProblem(models.Model):
 				with open(path, 'wb+') as f:
 					for chunk in topics_file.chunks():
 						f.write(chunk) 
-				with open(path) as f:
+				with open(path, "r", encoding="utf-8") as f:
 					input = json.loads(f.read())
 				topics = input["topics"]
 				Segmentation_Topic.objects.filter(problem=self).delete()
