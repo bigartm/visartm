@@ -538,14 +538,14 @@ class Document(models.Model):
 			
 		return ret
 		
-	def get_concordance(self, term):
+	def get_concordance(self, terms):
 		text = self.text
 		wi = self.word_index
 		conc = ""
 		cur_pos = 0
 		for i in range(len(wi) // 9):
 			term_index_id = struct.unpack('I', wi[9*i+5 : 9*i+9])[0]
-			if term_index_id == term.index_id:
+			if term_index_id in terms:
 				pos = struct.unpack('I', wi[9*i : 9*i+4])[0]
 				length = struct.unpack('B', wi[9*i+4 : 9*i+5])[0]
 				conc += text[cur_pos : pos] + "<b>" + text[pos : pos + length] + "</b>"
@@ -628,6 +628,11 @@ class Term(models.Model):
 			self.documents += struct.pack('I', document_index_id) + struct.pack('H', count) 
 		self.save()
  
+	def get_documents(self):
+		self.count_documents_index() 
+		for i in range (len(self.documents) // 6):
+			doc_iid = struct.unpack('I', self.documents[6*i: 6*i+4])[0]
+			yield Document.objects.get(dataset_id=self.dataset_id, index_id=doc_iid) 
 	
 from django.contrib import admin
 admin.site.register(Dataset)

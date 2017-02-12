@@ -86,7 +86,7 @@ def get_documents(request):
 				"id": document.id,
 				"title": document.title,
 				"count": struct.unpack('H', docs_index[6*i+4: 6*i+6])[0],
-				"concordance": document.get_concordance(term)
+				"concordance": document.get_concordance([term.iid])
 			})			
 	return HttpResponse(json.dumps(result), content_type='application/json')  
 	 

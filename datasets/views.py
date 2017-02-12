@@ -9,6 +9,7 @@ from threading import Thread
 from datetime import datetime
 from django.contrib.auth.decorators import login_required, permission_required
 import os
+from django.contrib.auth.models import User	
  
 def datasets_list(request):  
 	datasets = Dataset.objects.filter(is_public = True)
@@ -452,6 +453,29 @@ def visual_modality(request):
 	context["terms"] = Term.objects.filter(modality = modality).order_by("-token_tf")[:100]
 	return render(request, 'datasets/modality.html', Context(context)) 
 	
+def dump(request):
+	dataset = Dataset.objects.get(id = request.GET['dataset_id'])
+	import zipfile
+	import io
+	 
+	
+	
+	outfile = io.BytesIO()
+	folder = dataset.get_folder()
+	with zipfile.ZipFile(outfile, 'w') as zf:
+		for root, dirs, files in os.walk(folder):
+			if root[-7:] == "batches":
+				continue
+			rel_path = root[len(folder)+1:]
+			for file in files:
+				# print(os.path.join(rel_path, file))
+				zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
+
+	zipped_file = outfile.getvalue()
+	response = HttpResponse(zipped_file, content_type='application/octet-stream')
+	response['Content-Disposition'] = 'attachment; filename=%s.zip' % dataset.text_id 
+	return response
+
 def global_search(request):
 	context = {}
 	if "search" in request.GET:
@@ -465,13 +489,45 @@ def global_search(request):
 		else:
 			documents = Document.objects.filter(title__icontains = search_query) 
 			if len(documents) !=0:
-				context["documents"] = documents
+				context["documents_title"] = documents
 				total_found += len(documents)
 				
 			terms = Term.objects.filter(text__icontains = search_query) 
 			if len(terms) != 0:
 				context["terms"] = terms
 				total_found += len(terms)
+		
+			accounts = User.objects.filter(username__icontains=search_query)
+			if len(accounts) != 0:
+				context["accounts"] = accounts
+				total_found += len(accounts)
+				
+			parsed = search_query.split()
+			if len(parsed) > 1:
+				query_length = len(parsed)
+				terms_try = Term.objects.filter(text=parsed[0])
+				documents = []
+				for term in terms_try:
+					try:
+						other_terms = [Term.objects.get(dataset=term.dataset, text=parsed[i]).index_id for i in range(1, query_length)]
+					except:
+						continue
+					conc = [term.index_id] + other_terms	
+						
+					for document in term.get_documents():
+						match = True
+						for iid in other_terms:
+							if document.count_term(iid)==0:
+								match = False
+						if match:
+							documents.append({
+								"document": document,
+								"concordance" : document.get_concordance(conc)
+							})
+		
+				if len(documents) != 0:
+					context["documents"] = documents
+					total_found += len(documents)
 		
 		if total_found > 0:
 			context['message'] = "Found " + str(total_found) + " results."

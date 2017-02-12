@@ -12,12 +12,23 @@
 {% if search_query %}  
 	{{message}} 
 	 
-	{% if documents %}
+	{% if documents_title %}
 		<hr>
-		<h3>Documents</h3>
-		{% for document in documents %}
+		<h3>Documents (by title)</h3>
+		{% for document in documents_title %}
 			<a href="/document?id={{document.id}}">{{document.dataset.name}}/{{document}}</a><br>
 		{% endfor %}
+	{% endif %} 
+	
+	{% if documents %}
+		<hr>
+		<h3>Documents (by terms)</h3>
+		{% autoescape off %}
+		{% for document in documents %}
+			<a href="/document?id={{document.document.id}}">{{document.document.dataset.name}}/{{document.document}}</a><br>
+			<p>{{document.concordance}}</p>
+		{% endfor %}
+		{% endautoescape %}
 	{% endif %} 
 	
 	{% if terms %}
@@ -25,6 +36,14 @@
 		<h3>Terms</h3>
 		{% for term in terms %}
 			<a href="/term?id={{term.id}}">{{term.dataset.name}}/{{term}}</a><br>
+		{% endfor %}
+	{% endif %}
+	
+	{% if accounts %}
+		<hr>
+		<h3>Accounts</h3>
+		{% for account in accounts %}
+			<a href="/accounts/{{account.username}}">{{account}}</a><br>
 		{% endfor %}
 	{% endif %}
 {% endif %}
