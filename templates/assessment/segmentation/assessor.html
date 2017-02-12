@@ -180,6 +180,7 @@
 		} 
 	}
 	
+	{% autoescape off %}
 	function showDescription() {
 		descrTitle = document.getElementById("descr-title");
 		descrText = document.getElementById("descr-text");
@@ -190,11 +191,16 @@
 			{% if x.color > 0 %}
 				if (topic_id == {{x.topic.id}}) {
 					descrTitle.innerHTML = "{{x.topic.name}}";
-					descrText.innerHTML = "{{x.topic.description_html}}";
+					descrText.innerHTML = "" 
+					{% for line in x.topic.description_lines %}
+						+ "{{line}}<br>"
+					{% endfor %}
+					;
 				}
 			{% endif %}
 		{% endfor %}
 	}
+	{% endautoescape %}
 	 
 	showDescription();
 	

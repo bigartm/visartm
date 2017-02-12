@@ -363,7 +363,8 @@ class AssessmentTask(models.Model):
 				if segment:
 					topic_id = candidate.get_best_topic()
 					if not topic_id in self.answer["topics_in"]:
-						self.answer["topics_in"].append(topic_id)
+						self.save_answer()
+						self.alter({"action": "topic_use", "topic_id": str(topic_id)})
 					end_pos = word_index[cur_term + length - 1][0] + word_index[cur_term + length - 1][1] 
 					self.answer["selections"].append([word_index[cur_term][0], end_pos, topic_id])
 					cur_term += length
@@ -520,8 +521,8 @@ class Segmentation_Topic(models.Model):
 		return self.description.replace("\n","<br>")
 	
 	def description_lines(self):
-		return self.description.split("\n")
-		
+		return [line[:-1] for line in self.description.split("\n")] 
+	
 	class Meta:
 		unique_together = (("problem", "name"))
 		
