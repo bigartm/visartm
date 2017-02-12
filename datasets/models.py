@@ -326,6 +326,7 @@ class Dataset(models.Model):
 			query_set = query_set.filter(modality=modality)
 		for term in query_set:
 				terms_index[term.text] = term.index_id
+				terms_index[term.text + "#$" + term.modality.name] = term.index_id
 		return terms_index
  
  

@@ -167,8 +167,7 @@ class ArtmModel(models.Model):
 		topics_count = 0
 		if os.path.exists(phi_path):
 			phi_raw = pd.read_pickle(os.path.join(self.get_folder(), "phi"))
-			#phi = phi_raw.values
-			self.log("WARNING! Not all words are in phi. Will restore. In case of equal terms result can be wrong.")
+			# phi = phi_raw.values
 			topics_count = phi_raw.shape[1]
 			phi = np.zeros((self.dataset.terms_count, topics_count))
 			terms_index = self.dataset.get_terms_index()
