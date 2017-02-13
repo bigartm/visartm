@@ -93,7 +93,7 @@ def create_model(request):
 		try:
 			folders = os.listdir(os.path.join(settings.DATA_DIR, "datasets", dataset.text_id, "models"))
 			existing_models = [model.text_id for model in ArtmModel.objects.filter(dataset = dataset)]
-			unreg = [i for i in folders if not i in existing_models]
+			unreg = [i for i in folders if (not i in existing_models) and (not i[0] == '.')]
 		except:
 			pass
 			

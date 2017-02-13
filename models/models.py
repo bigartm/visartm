@@ -160,6 +160,7 @@ class ArtmModel(models.Model):
 			for layer_id in range(1, self.layers_count): 
 				psi = layers[layer_id].get_psi().to_pickle(os.path.join(self.get_folder(), "psi" + str(layer_id)))
 		
+	
 	def gather_phi(self):
 		self.log("Loading matrix phi...")
 		phi_path = os.path.join(self.get_folder(), "phi")
@@ -167,19 +168,31 @@ class ArtmModel(models.Model):
 		topics_count = 0
 		if os.path.exists(phi_path):
 			phi_raw = pd.read_pickle(os.path.join(self.get_folder(), "phi"))
-			# phi = phi_raw.values
-			topics_count = phi_raw.shape[1]
-			phi = np.zeros((self.dataset.terms_count, topics_count))
-			terms_index = self.dataset.get_terms_index()
-			for row in phi_raw.iterrows():
-				term_text = row[0]
-				try:
-					term_matrix_id = terms_index[term_text] - 1
-				except:
-					self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
-					continue
-				for j in range(topics_count):
-					phi[term_matrix_id][j] = row[1][j]
+			if self.dataset.check_terms_order(phi_raw.index):
+				phi = phi_raw.values
+				self.log("Matrix phi has correct index")
+			else:
+				self.log("WARNING! Matrix phi has wrong index. Will restore. In case of equal terms in different modalitites there will be errors.")
+				topics_count = phi_raw.shape[1]
+				phi = np.zeros((self.dataset.terms_count, topics_count))
+				self.log("Building terms index...")
+				terms_index = self.dataset.get_terms_index()
+				self.log("Terms index built.")
+				
+				ctr = 0
+				for row in phi_raw.iterrows():
+					term_text = row[0]
+					try:
+						term_matrix_id = terms_index[term_text]
+					except:
+						self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
+						continue
+					for j in range(topics_count):
+						phi[term_matrix_id][j] = row[1][j]
+					
+					if ctr % 10000 == 0:
+						self.log(str(ctr))
+					ctr += 1
 		else:
 			self.log("WARNING! Phi wasn't detected. Will try load from matrices for modalities.")
 			for modality in Modality.objects.filter(dataset=self.dataset):
@@ -337,7 +350,7 @@ class ArtmModel(models.Model):
 				topic.matrix_id = row_counter
 				topic.save()
 				
-				# Naming and top wrods extracting
+				# Naming and top words extracting
 				distr = phi_t[row_counter] 
 				idx = np.argsort(distr)
 				idx = idx[::-1]
@@ -435,12 +448,12 @@ class ArtmModel(models.Model):
 			distr = theta_t_low[doc_index_id]
 			best_topic_id = distr.argmax()
 			
-			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id + 1))
+			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id))
 			# self.log("Document " +  str(doc_index_id) + " appended to topic " + str(best_topic_id))
 			if self.threshold <= 50:
 				for topic_id in range(topics_count[layers_count]):
 					if distr[topic_id] > threshold and topic_id != best_topic_id:
-						document_bags[topic_id].append(distr[topic_id], doc_index_id + 1)
+						document_bags[topic_id].append(distr[topic_id], doc_index_id)
 			
 			if doc_index_id % 1000 == 0:
 				self.log(str(doc_index_id)) 
@@ -476,6 +489,7 @@ class ArtmModel(models.Model):
 		self.log_file_name = os.path.join(self.get_folder(), "log.txt")
 		with open(self.log_file_name, "w") as f:
 			f.write("%s<br>\n" % string)
+		self.save()
 			
 	def log(self, string):
 		if settings.DEBUG:

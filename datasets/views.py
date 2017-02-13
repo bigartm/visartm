@@ -265,7 +265,7 @@ def visual_document(request):
 			shift += topics_count[i]
 		topics_list = []
 		for topic_index_id in range(0, topics_count[target_layer]):
-			topics_list.append((theta[shift + topic_index_id, document.index_id - 1], topic_index_id))
+			topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
 		topics_list.sort(reverse = True)
 		context['topics'] = [{"weight": 100*i[0], "topic": topics_index[i[1]]} for i in topics_list]
 		return render(request, 'datasets/document_all_topics.html', Context(context)) 
@@ -289,10 +289,9 @@ def visual_document(request):
 		shift = 0
 		for i in range(1, target_layer):
 			shift += topics_count[i]
-		topics_list = []
-		document_matrix_id = document.index_id - 1
+		topics_list = [] 
 		for topic_index_id in range(0, topics_count[target_layer]):
-			topics_list.append((theta[shift + topic_index_id, document_matrix_id], topic_index_id))
+			topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
 		topics_list.sort(reverse = True) 
 		
 		topics = []
@@ -341,7 +340,7 @@ def visual_document(request):
 			print(highlight_terms)
 			if not model is None: 
 				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
-				theta_t_layer = theta_t[document_matrix_id, shift : shift + topics_count[target_layer]]
+				theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]
 			
 			entries = []
 			
@@ -350,9 +349,8 @@ def visual_document(request):
 				if model is None:
 					entries.append((start_pos, length, term_index_id, 0)) 
 				else:
-					term_matrix_id = term_index_id - 1
-					topic_id = np.argmax(phi_layer[term_matrix_id] * theta_t_layer)	
-					if phi_layer[term_matrix_id][topic_id] < 1e-9:
+					topic_id = np.argmax(phi_layer[term_index_id] * theta_t_layer)	
+					if phi_layer[term_index_id][topic_id] < 1e-9:
 						# If term wasn't included to model
 						class_id = -1
 					else:
@@ -383,7 +381,7 @@ def visual_document(request):
 	if not model is None:
 		documents_index = Document.objects.filter(dataset = dataset).order_by("index_id")
 		dist = np.zeros(documents_count)
-		self_distr = theta_t[document_matrix_id]
+		self_distr = theta_t[document.index_id]
 		for other_document_id in range(0, documents_count):
 			dist[other_document_id] = euclidean(self_distr, theta_t[other_document_id])
 		
@@ -419,7 +417,7 @@ def visual_term(request):
 		for i in range(1, model.layers_count):
 			shift += topics_count[i]
 		
-		phi_row = model.get_phi()[term.index_id - 1]
+		phi_row = model.get_phi()[term.index_id]
 		
 		total_weight = 0
 		topics = []

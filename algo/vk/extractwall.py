@@ -15,7 +15,7 @@ def download_wall(domain, dataset_folder, cut=1000000):
     
     
     id = 0
-    offset = 0
+    offset = 0 
     while True:
         posts = api.wall.get(domain=domain, offset = offset, count=100)
         for i in range(1, len(posts)):
@@ -30,11 +30,13 @@ def download_wall(domain, dataset_folder, cut=1000000):
                 text_file_name = os.path.join(docs_folder, text_id)
                 with open(text_file_name, "w", encoding = 'utf-8') as f:
                     f.write(text)
+            if id == cut:
+                break
         offset += 100
         print (offset)
         if len(posts) != 101:
             break 
-        if offset >= cut:
+        if id == cut:
             break
         
     with open(os.path.join(dataset_folder, "meta", "meta.json"), "wb") as f: 
@@ -43,4 +45,4 @@ def download_wall(domain, dataset_folder, cut=1000000):
 
      
 if __name__ == "__main__":
-    download_wall('lurkopub_alive', "D:\\visartm\\data\\datasets\\lurkopub")
+    download_wall('miptstream', "D:\\visartm\\data\\datasets\\miptstream", cut=50)

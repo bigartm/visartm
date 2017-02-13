@@ -146,22 +146,24 @@ class Dataset(models.Model):
 		self.log("Creating ARTM dictionary...")
 		dictionary = artm.Dictionary(name="dictionary")
 		batches_folder = os.path.join(self.get_folder(), "batches")
+		vocab_file_path = os.path.join(self.get_folder(), "vocab.txt")
 		if custom_vocab:
-			dictionary.gather(batches_folder, vocab_file_path=os.path.join(self.get_folder(), "vocab.txt"))
+			dictionary.gather(batches_folder, vocab_file_path=vocab_file_path)
 		else:
 			dictionary.gather(batches_folder)
+			vocab_file = open(vocab_file_path, "w", encoding="utf-8")
 		dictionary_file_name = os.path.join(self.get_folder(), "batches", "dictionary.txt")
 		dictionary.save_text(dictionary_file_name)
 		
 		self.log("Saving terms to database...")
-		term_index_id = -2
+		term_index_id = -3
 		self.modalities_count = 0
 		self.terms_index = dict()
 		modalities_index = dict()  
 		with open(dictionary_file_name, "r", encoding = 'utf-8') as f:
 			for line in f:
 				term_index_id += 1
-				if term_index_id <= 0:
+				if term_index_id < 0:
 					continue
 				parsed = line.replace(',',' ').split()
 				term = Term()
@@ -187,6 +189,9 @@ class Dataset(models.Model):
 				
 				term.save() 
 				
+				if not custom_vocab:
+					vocab_file.write("%s %s\n" % (parsed[0], parsed[1]))
+				
 				self.terms_index[term.text] = term
 				self.terms_index[term.text + "$#" + term.modality.name] = term
 				self.terms_index[term.index_id] = term
@@ -195,7 +200,11 @@ class Dataset(models.Model):
 					self.log(str(term_index_id))
 					#print(term_index_id)
 		
-		self.terms_count = term_index_id			
+		if not custom_vocab:
+			vocab_file.close()
+		
+		self.terms_count = term_index_id + 1	
+		self.terms_count = term_index_id + 1	
 					
 		self.log("Saving modalities...")
 		max_modality_size = 0
@@ -224,12 +233,12 @@ class Dataset(models.Model):
 					continue
 				doc = Document()
 				doc.dataset = self
-				doc_id += 1
 				doc.index_id = doc_id
 				doc.fetch_vw(line)
 				if doc.text_id in self.docs_info:
 					doc.fetch_meta(self.docs_info[doc.text_id])
 				doc.save()
+				doc_id += 1
 				if doc_id % 1000 == 0:
 					self.log(str(doc_id))
 		
@@ -321,20 +330,33 @@ class Dataset(models.Model):
 	
 	def get_terms_index(self, modality=None):
 		terms_index = dict()
-		query_set = Term.objects.filter(dataset=self).order_by("-modality__is_word")
+		query_set = Term.objects.filter(dataset=self) #.order_by("-modality__is_word")
 		if modality:
 			query_set = query_set.filter(modality=modality)
 		for term in query_set:
 				terms_index[term.text] = term.index_id
-				terms_index[term.text + "#$" + term.modality.name] = term.index_id
+				# terms_index[term.text + "#$" + term.modality.name] = term.index_id
 		return terms_index
  
- 
- 
+	def check_terms_order(self, index, full=True):
+		if self.terms_count != len(index):
+			return False
+		if full:
+			for term in Term.objects.filter(dataset=self):
+				if index[term.index_id] != term.text:
+					return False
+		else:
+			import random
+			for i in range(10):
+				term_iid = random.randint(0, self.terms_count-1)
+				if index[term_iid] != Term.objects.get(dataset_id=self.id, index_id=term_iid).text:
+					return False
+		return True
+		
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 @receiver(pre_delete, sender=Dataset, dispatch_uid='dataset_delete_signal')
-def remove_model_files(sender, instance, using, **kwargs):
+def remove_dataset_files(sender, instance, using, **kwargs):
 	folder = instance.get_folder()
 	print("Will delete folder " + folder)
 	try:
