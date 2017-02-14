@@ -193,7 +193,7 @@
 		topic_id = document.getElementById("formSelectTopic").elements["selected_topic"].value;
 		{% for x in topics %}
 			{% if x.color > 0 %}
-				if (topic_id == {{x.topic.id}}) {
+				if (topic_id == {{x.topic.index_id}}) {
 					descrTitle.innerHTML = "{{x.topic.name}}";
 					descrText.innerHTML = "" 
 					{% for line in x.topic.description_lines %}
