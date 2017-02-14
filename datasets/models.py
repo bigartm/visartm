@@ -330,9 +330,12 @@ class Dataset(models.Model):
 	
 	def get_terms_index(self, modality=None):
 		terms_index = dict()
-		query_set = Term.objects.filter(dataset=self) #.order_by("-modality__is_word")
+		 
 		if modality:
-			query_set = query_set.filter(modality=modality)
+			query_set = Term.objects.filter(dataset=self, modality=modality)
+		else:
+			query_set = Term.objects.filter(dataset=self).order_by("-modality__is_word")
+			
 		for term in query_set:
 				terms_index[term.text] = term.index_id
 				# terms_index[term.text + "#$" + term.modality.name] = term.index_id
