@@ -14,7 +14,7 @@
 /doc
 /visartm-env
 /visartm/settings.py
-
+/visartm.sqlite
 
 *.FEDIMSER.*
 *.batch

@@ -37,6 +37,7 @@
 
 
 {% block right %}
-	<h4>Management</h4>
-	<a href = "datasets/create">Create new dataset...</a>
+	{% if perms.datasets.can_add_dataset %}
+		<a href = "datasets/create">Create new dataset...</a>
+	{% endif %}
 {% endblock %}

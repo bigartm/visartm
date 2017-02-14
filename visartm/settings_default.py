@@ -74,12 +74,8 @@ WSGI_APPLICATION = 'visartm.wsgi.application'
 
 DATABASES = {
     'default': {
-		'ENGINE': 'django.db.backends.postgresql_psycopg2',
-		'NAME': '',
-		'USER': 'postgres',
-		'PASSWORD': '',
-		'HOST': '127.0.0.1',
-		'PORT': '5432', 
+		'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'visartm.sqlite',
     }
 }
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']

@@ -3,13 +3,11 @@
 {% block title %}VisARTM | {{account}}{% endblock %}
 
 {% block content %}
-	<h1>Account {{account.username}}</h1>
-	
-	<a href="/accounts/sendmail">Send test e-mail</a>
+	<h1>Account {{account.username}}</h1> 
 	<hr>
 	<h3>Permissions</h3> 
 	{% for permission in permissions %}
-		<p>{{permission.name}} {% if permission.value %}Yes{% else %}No{% endif %}   </p>
+		<p>{{permission.name}}: {% if permission.value %}Yes{% else %}No{% endif %}   </p>
 	{% endfor %}
 	
 	<hr>

@@ -46,6 +46,9 @@ def reload_model(request):
 	except:
 		model = ArtmModel.objects.get(id = request.GET['id'])
 	
+	if request.user != model.author:
+		return HttpResponseForbidden("You are not the author")
+	
 	if model.status == 1:
 		return general_views.message(request, "Model is locked.")
 	model.creation_time = datetime.now()
@@ -61,6 +64,8 @@ def reload_model(request):
 @login_required
 def arrange_topics(request):
 	model = ArtmModel.objects.get(id = request.GET['model'])
+	if request.user != model.author:
+		return HttpResponseForbidden("You are not the author")
 	if model.status != 0:
 		return general_views.message(request, "Model is locked.")
 	model.creation_time = datetime.now()
@@ -75,7 +80,9 @@ def arrange_topics(request):
 
 @login_required
 def reset_visuals(request):
-	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+	model = ArtmModel.objects.get(id=request.GET['model'])
+	if request.user != model.author:
+		return HttpResponseForbidden("You are not the author")
 	GlobalVisualization.objects.filter(model = model).delete()
 	return general_views.message(request, "Resetted. <a href ='/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
@@ -130,7 +137,9 @@ def create_model(request):
 	
 @login_required
 def delete_model(request):
-	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
+	model = ArtmModel.objects.get(id=request.GET['model'])
+	if request.user != model.author:
+		return HttpResponseForbidden("You are not the author")
 	dataset_name = model.dataset.text_id 
 	if request.user != model.author:
 		return HttpResponseForbidden("You are not the author of the model.")

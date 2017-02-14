@@ -22,7 +22,7 @@
 		<br>
 	{% endfor %}
 	Threshold: {{model.threshold}}%<br>
-	Author: <a href="/accounts/{{model.author}}">{{model.author}}</a>
+	Author: <a href="/accounts/user/{{model.author}}">{{model.author}}</a>
 <hr>
 
 <h4>Visualizations</h4>
@@ -44,20 +44,19 @@
 <hr>
 
 
-<h4>Options</h4>
-  {% if not user.is_anonymous %}
-	<a href = "/models/change_model?model={{model.id}}">Change</a> 
-	<br>
-	<a href = "/models/reload_model?model={{model.id}}">Reload</a> 
-	<br>
-	<a href = "/models/arrange_topics?model={{model.id}}&mode=alphabet">Arrange topics(alphabetically)</a> 
-	<br>
-	<a href = "/models/arrange_topics?model={{model.id}}&mode=hamilton">Arrange topics(Hamilton path)</a> 
-	<br>
-	<a href = "/models/arrange_topics?model={{model.id}}&mode=tsne">Arrange topics(t-SNE)</a> 
-	<br>
-	<a href = "/models/reset_visuals?model={{model.id}}">Reset visualizations</a> 
-	<br>
-	<a href = "/models/delete_model?model={{model.id}}">Delete</a>
-  {% endif %}  
+
+	{% if request.user == model.author %} 
+		<h4>Options</h4>
+		<a href = "/models/reload_model?model={{model.id}}">Reload</a> 
+		<br>
+		<a href = "/models/arrange_topics?model={{model.id}}&mode=alphabet">Arrange topics(alphabetically)</a> 
+		<br>
+		<a href = "/models/arrange_topics?model={{model.id}}&mode=hamilton">Arrange topics(Hamilton path)</a> 
+		<br>
+		<a href = "/models/arrange_topics?model={{model.id}}&mode=tsne">Arrange topics(t-SNE)</a> 
+		<br>
+		<a href = "/models/reset_visuals?model={{model.id}}">Reset visualizations</a> 
+		<br>
+		<a href = "/models/delete_model?model={{model.id}}">Delete</a>
+	{% endif %}  
 {% endblock %}

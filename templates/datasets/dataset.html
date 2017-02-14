@@ -221,11 +221,14 @@
 		<a href = "/model?model={{model.id}}" onClick = "useModel({{model.id}});"> {{model}}</a>
 		<br>
 	{% endfor %}
-	<br>
-	<a href = "/models/create?dataset={{dataset.text_id}}">Create new model...</a>
-	<br>
-	<a href = "/models/delete_all_models?dataset={{dataset.text_id}}">Clear</a>
-	 
+	{% if perms.models.can_add %}
+		<br>
+		<a href = "/models/create?dataset={{dataset.text_id}}">Create new model...</a>
+	{% endif %}
+	{% if dataset.owner == request.user %}
+		<br>
+		<a href = "/models/delete_all_models?dataset={{dataset.text_id}}">Clear</a>
+	{% endif %}
 {% endblock %}
 
 {% block javascript %}
