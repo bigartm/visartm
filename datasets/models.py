@@ -108,7 +108,8 @@ class Dataset(models.Model):
 		self.log("Parsing initialized.")
 		parser.process()
 		self.log("Parsing done.")
-		
+		 
+			
 		
 	def preprocess_filter(self, params):		
 		from algo.preprocessing.VocabFilter import VocabFilter

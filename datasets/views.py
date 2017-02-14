@@ -107,7 +107,7 @@ def	dataset_create(request):
 	dataset.save()	
 	
 	if settings.THREADING:
-		t = Thread(target = Dataset.reload, args = (dataset, ), daemon = True)
+		t = Thread(target = Dataset.reload_untrusted, args = (dataset, ), daemon = True)
 		t.start()
 	else:
 		dataset.reload()
