@@ -15,7 +15,5 @@ pymorphy2-dicts==2.4.393442.3710985
 pyparsing==2.1.10
 python-dateutil==2.6.0
 pytz==2016.10
-scikit-learn==0.18.1
 six==1.10.0
-sklearn==0.0
 tqdm==4.11.2
