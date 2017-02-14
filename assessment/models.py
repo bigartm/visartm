@@ -243,6 +243,7 @@ def text_to_span(text, start, end, class_id, css):
 
 		
 from contextlib import contextmanager		
+from django.db.models.functions import Lower
 import os
 		
 class AssessmentTask(models.Model):
@@ -268,7 +269,8 @@ class AssessmentTask(models.Model):
 				self.answer["topics_in"] = {}
 			
 			# Deal with topics
-			all_topics = Segmentation_Topic.objects.filter(problem=self.problem).order_by("name")
+			
+			all_topics = Segmentation_Topic.objects.filter(problem=self.problem).order_by(Lower("name"))
 			topics_colors = {}
 			for x, y in self.answer["topics_in"].items():
 				topics_colors[int(x)] = y
