@@ -197,7 +197,7 @@ class ArtmModel(models.Model):
 			for modality in Modality.objects.filter(dataset=self.dataset):
 				phi_path = os.path.join(self.get_folder(), "phi_" +  modality.name)
 				if os.path.exists(phi_path):
-					self.log("Found matrix for modality " + modality.name + ". Will load.")
+					self.log("Found matrix phi for modality " + modality.name + ". Will load.")
 					phi_raw = pd.read_pickle(phi_path)
 					terms_index = self.dataset.get_terms_index(modality=modality)
 					if phi is None:
@@ -208,7 +208,7 @@ class ArtmModel(models.Model):
 					for row in phi_raw.iterrows():
 						term_text = row[0]
 						if term_text in terms_index:
-							term_matrix_id = terms_index[term_text] - 1
+							term_matrix_id = terms_index[term_text]
 						else:
 							self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
 							continue
