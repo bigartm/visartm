@@ -80,6 +80,8 @@ class AssessmentProblem(models.Model):
 						topic.save()
 					except:
 						pass
+					topic.index_id = topic.id
+					topic.save()
 						
 			elif POST["action"] == "alter_topic":
 				topic_id = POST["topic_id"]
@@ -91,7 +93,7 @@ class AssessmentProblem(models.Model):
 				target.save()
 				
 			elif POST["action"] == "delete_topic":
-				Segmentation_Topic.objects.filter(id=POST["topic_id"]).delete()
+				Segmentation_Topic.objects.filter(dataset=self.dataset, index_id=POST["topic_id"]).delete()
 				
 			elif POST["action"] == "load_topics":
 				try:
@@ -110,6 +112,7 @@ class AssessmentProblem(models.Model):
 					topic = Segmentation_Topic()
 					topic.name = x["name"]
 					topic.description = x["description"]
+					topic.index_id = x["id"]
 					topic.problem=self
 					topic.save()
 					
@@ -153,11 +156,10 @@ class AssessmentProblem(models.Model):
 			term_index = Term.objects.filter(dataset=self.dataset).order_by("index_id")
 			topics_index = {-1:"-1"}
 			result_topics = []
-			i = 0
+			
 			for topic in Segmentation_Topic.objects.filter(problem=self):
-				result_topics.append({"id":i, "name": topic.name, "description": topic.description})
+				result_topics.append({"id":topic.index_id, "name": topic.name, "description": topic.description})
 				topics_index[topic.id] = str(i)				
-				i += 1
 				
 			results["topics"] = result_topics
 			results["documents"] = []
@@ -168,7 +170,7 @@ class AssessmentProblem(models.Model):
 					word_index = task.document.get_word_index()
 					terms = ""
 					for i in range(len(word_index)):
-						terms += term_index[word_index[i][2]-1].text + ":" + topics_index[terms_assessions[i]] + " "
+						terms += term_index[word_index[i][2]-1].text + ":" + terms_assessions[i] + " "
 					results["documents"].append({
 						"title" : task.document.title,
 						"terms" : terms 
@@ -414,6 +416,7 @@ class AssessmentTask(models.Model):
 					self.answer["topics_in"] = {}
 				if not topic_id in self.answer["topics_in"]:
 					used_colors = set([color for _, color in self.answer["topics_in"].items()])
+					print(used_colors)
 					for i in range(1,1000):
 						if not i in used_colors:
 							new_color = i
@@ -521,6 +524,7 @@ class Segmentation_Topic(models.Model):
 	problem = models.ForeignKey(AssessmentProblem, null=False)
 	name = models.TextField(null=False, default="New topic")
 	description = models.TextField(null=False, default="Description")
+	index_id = models.IntegerField(null=False, default = 0)
 		
 	def description_html(self):
 		return self.description.replace("\n","<br>")
@@ -529,8 +533,7 @@ class Segmentation_Topic(models.Model):
 		return [line[:-1] for line in self.description.split("\n")] 
 	
 	class Meta:
-		unique_together = (("problem", "name"))
-		
+		unique_together = (("problem", "name"),("problem", "index_id"))
 		
 class Segmentation_TypicalSegment(models.Model):
 	problem = models.ForeignKey(AssessmentProblem, null=False, default=0)

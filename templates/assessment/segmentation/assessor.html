@@ -4,13 +4,14 @@
 
 {% block style %}
 <style>
-	#content {
+	#content, #topics-list, #hint{
 		float: left; 
 		width:100%;
 		height: 100%;
 		overflow-y: scroll;
 		height:85%;
 	}
+ 
 	
 	.keyword {
 		font-weight: bold;
@@ -43,63 +44,65 @@
 					  {% autoescape off %}{{text}}{% endautoescape %}
 					</div>		
 				</div>
+				
+				<hr>
+				 
+				
+
+				<div>
+					<form method="POST">
+						<button type="submit" class="btn btn-success">Завершить</button>
+						<input type="hidden" name="task_id" value="{{task.id}}" />
+						<input type="hidden" name="finished" />
+						{% csrf_token %}
+					</form>
+				</div>
+				 
+				<a href="/assessment/get_task?problem_id={{task.problem.id}}">Пропустить</a>  
+				 
+					
+				
+				
 			</div>
 		</div>
 		<div class="col-sm-3">
+			<div  id="topics-list"> 
+				<form id="formSelectTopic">
+					<input type="radio" name='selected_topic' id="rb-1" value="-1" checked="checked" onclick="showDescription();">Нет темы</input><br>
+					{% for topic in topics %}
+						{% if topic.color > 0 %} 
+							<input 
+								type = "radio" 
+								name='selected_topic'
+								value='{{topic.topic.id}}'
+								onclick="showDescription();"
+								{% if selected_topic == topic.topic.id %} checked="checked" {% endif %}
+							><span 	id="rb{{topic.color}}">{{topic.topic.name}}</span></input>
+							<sup><a onClick="notUseTopic({{topic.topic.id}});"><big>x</big></a></sup>
+							<br>
+						{% endif %}
+					{% endfor %} 
+					<hr>					
+					{% for topic in topics %}
+						{% if topic.color < 0 %} 
+							<a onClick="useTopic({{topic.topic.id}});">{{topic.topic.name}}</a>
+							<br>
+						{% endif %}
+						
+					{% endfor %}  	
+				</form>
+			 
 			
-			
-					 
-					
-			 
-			<form id="formSelectTopic">
-				<input type="radio" name='selected_topic' id="rb-1" value="-1" checked="checked" onclick="showDescription();">Нет темы</input><br>
-				{% for topic in topics %}
-					{% if topic.color > 0 %} 
-						<input 
-							type = "radio" 
-							name='selected_topic'
-							value='{{topic.topic.id}}'
-							onclick="showDescription();"
-							{% if selected_topic == topic.topic.id %} checked="checked" {% endif %}
-						><span 	id="rb{{topic.color}}">{{topic.topic.name}}</span></input>
-						<sup><a onClick="notUseTopic({{topic.topic.id}});"><big>x</big></a></sup>
-						<br>
-					{% else %}
-						<a onClick="useTopic({{topic.topic.id}});">{{topic.topic.name}}</a>
-						<br>
-					{% endif %}
-					
-				{% endfor %}  	
-			</form>
-			 
-			
-			<form id = "formAddTopic" method="POST" action="/assessment/problem">
-				<input type="text" name='name' placeholder = "Название темы"></input>
-				<button type="submit">Добавить</button>
-				<input type="hidden" name='problem_id' value="{{task.problem.id}}"> </input>
-				<input type="hidden" name='action' value="add_topic"> </input>
-				<input type="hidden" name='next' value="/assessment/task?task_id={{task.id}}"> </input> 
-				{% csrf_token %}
-			</form>
-			<hr>
-			 
-			 
-			<div style="float: left;">
-				<form method="GET" action = "/assessment/get_task">
-					<input type="hidden" name="problem_id" value="{{task.problem.id}}" />
-					<button type="submit" class="btn btn-primary">Пропустить</button>  
-				</form> 
-			</div>
-				
-			<div style="float: right;">
-				<form method="POST">
-					<button type="submit" class="btn btn-success">Завершить</button>
-					<input type="hidden" name="task_id" value="{{task.id}}" />
-					<input type="hidden" name="finished" />
+				<form id = "formAddTopic" method="POST" action="/assessment/problem">
+					<input type="text" name='name' placeholder = "Название темы"></input>
+					<button type="submit">Добавить</button>
+					<input type="hidden" name='problem_id' value="{{task.problem.id}}"> </input>
+					<input type="hidden" name='action' value="add_topic"> </input>
+					<input type="hidden" name='next' value="/assessment/task?task_id={{task.id}}"> </input> 
 					{% csrf_token %}
 				</form>
-			</div>
-					 
+				
+			</div>	 
 			 
 				
 			<form id="formMain" method="POST">
@@ -112,9 +115,11 @@
 				{% csrf_token %}
 			</form> 
 		</div>
-		<div class="col-sm-2" id="descr">
-			<h3 id="descr-title"></h3>
-			<div id="descr-text"></div>
+		<div class="col-sm-2">
+			<div id = "hint">
+				<h3 id="descr-title"></h3>
+				<div id="descr-text"></div>
+			</div>
 		</div>
 	</div>
 	 
