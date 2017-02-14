@@ -66,7 +66,7 @@
 	 
       <ul class="nav navbar-nav navbar-right"> 
 		{% if not user.is_anonymous %}  
-			<li><a href="/accounts/{{ user.get_username }}">{{ user.get_username }}</a></li>
+			<li><a href="/accounts/user/{{ user.get_username }}">{{ user.get_username }}</a></li>
 			<li><a href="/accounts/logout">Log out</a></li>
 		{% else %}
 			<li><a href="/accounts/login?next={{request.get_full_path|urlencode}}">Log in</a></li>

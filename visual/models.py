@@ -20,7 +20,7 @@ class GlobalVisualization(models.Model):
 	def render(self):		
 		print("Rendering visualization " + self.name + " for model " + str(self.model.id) + "...")
 		params = self.name.split('_')
-		script_file_name = os.path.join(settings.VISUAL_SCRIPTS_DIR, params[0] + ".py")
+		script_file_name = os.path.join(settings.BASE_DIR, "algo", "visualizations", params[0] + ".py")
 		spec = importlib.util.spec_from_file_location("algo.visualizations." + params[0], script_file_name)
 		visual_module = importlib.util.module_from_spec(spec)
 		

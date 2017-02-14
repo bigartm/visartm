@@ -11,8 +11,10 @@ from datasets.models import Dataset
 from models.models import ArtmModel
 from assessment.models import AssessmentProblem
 import visartm.views as general_views
+from django.contrib.auth.decorators import login_required, permission_required
 
-
+@login_required
+@permission_required("add_reserach")
 def create_research(request):
 	if request.method == 'POST':
 		print(request.POST) 

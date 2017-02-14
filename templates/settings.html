@@ -99,7 +99,7 @@
              .attr("height", 50);
 			 
 	svg1.selectAll("circle")
-		.data( d3.range(-1,26) )
+		.data( d3.range(-1,21) )
 		.enter()
 		.append("circle")
 		.attr("r", 18 )
@@ -125,7 +125,7 @@
 		;
 		
 	svg1.selectAll("text")
-		.data( d3.range(-1,26) )
+		.data( d3.range(-1,21) )
 		.enter()
 		.append("text")
 		.text(function(d){

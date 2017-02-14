@@ -51,8 +51,9 @@ def dataset_delete(request):
 				"Are you sure that you want delete dataset " + str(dataset) + " permanently?<br>" + 
 				"<a href = '/datasets/delete?id=" + str(dataset.id) + "&sure=yes'>Yes</a><br>" +
 				"<a href = '/dataset?dataset=" + dataset.text_id + "'>No</a>")		
-	
+
 @login_required
+@permission_required('add_dataset')
 def	dataset_create(request):	
 	if request.method == 'GET': 
 		existing_datasets = [dataset.text_id for dataset in Dataset.objects.all()]
@@ -192,14 +193,15 @@ def visual_dataset(request):
 	elif mode == 'settings':
 		context['settings'] = {
 			'modalities': Modality.objects.filter(dataset = dataset),
-			'languages': settings.LANGUAGES
+			'languages': ['english', 'russian', 'ukrainian']
 		}
 	elif mode == 'assessment':
 		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor	
 		context['assessment'] = dict()
 		if request.user == dataset.owner:
 			supervised_problems = AssessmentProblem.objects.filter(dataset=dataset)
-			problems_to_create = [x for x in settings.ASSESSMENT_TYPES]
+			assessment_folders = os.listdir(os.path.join(settings.BASE_DIR, "templates", "assessment"))
+			problems_to_create = [x for x in assessment_folders if not '.' in x]
 			for problem in supervised_problems:
 				if problem.type in problems_to_create: 
 					problems_to_create.remove(problem.type)				

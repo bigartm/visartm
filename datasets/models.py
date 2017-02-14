@@ -133,8 +133,12 @@ class Dataset(models.Model):
 			rmtree(batches_folder)
 		os.makedirs(batches_folder)  
 				 
+		vw_path = os.path.join(self.get_folder(), "vw.txt") 
+		if not os.path.exists(vw_path):
+			raise ValueError("FATAL ERROR! vw.txt file wasn't found.")
+				
 		batch_vectorizer = artm.BatchVectorizer(
-			data_path = os.path.join(self.get_folder(), "vw.txt"),
+			data_path = vw_path,
 			data_format = "vowpal_wabbit", 
 			batch_size = 1000,
 			collection_name = self.text_id, 
@@ -355,6 +359,12 @@ class Dataset(models.Model):
 				if index[term_iid] != Term.objects.get(dataset_id=self.id, index_id=term_iid).text:
 					return False
 		return True
+		
+	def check_access(self, user):
+		if self.is_public:
+			return True
+		else:
+			return (user == self.owner)
 		
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver

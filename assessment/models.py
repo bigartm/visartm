@@ -94,7 +94,10 @@ class AssessmentProblem(models.Model):
 				Segmentation_Topic.objects.filter(id=POST["topic_id"]).delete()
 				
 			elif POST["action"] == "load_topics":
-				topics_file = request.FILES['topics_file']
+				try:
+					topics_file = request.FILES['topics_file']
+				except:
+					return
 				path = os.path.join(self.get_folder(), "topics.txt") 
 				with open(path, 'wb+') as f:
 					for chunk in topics_file.chunks():

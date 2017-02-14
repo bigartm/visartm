@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from datasets.models import Dataset, Modality, Term
 from django.template import RequestContext, Context, loader
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from models.models import ArtmModel, Topic, TopicRelated, TopicInTopic, TopTerm
 from visual.models import GlobalVisualization
 from django.contrib.auth.decorators import login_required, permission_required
@@ -79,13 +79,13 @@ def reset_visuals(request):
 	GlobalVisualization.objects.filter(model = model).delete()
 	return general_views.message(request, "Resetted. <a href ='/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
-	
+@permission_required("add_artmmodel")
 @login_required
 def create_model(request):
 	if request.method == 'GET': 
-		dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-
-		
+		dataset = Dataset.objects.get(text_id=request.GET['dataset'])
+		if not dataset.check_access(request.user):
+			return HttpResponceForbidden("You have not access to this dataset")
 		modalities = Modality.objects.filter(dataset = dataset)
 		scripts = os.listdir(os.path.join(settings.DATA_DIR, "scripts"))
 		
@@ -105,7 +105,9 @@ def create_model(request):
 		return render(request, 'models/create_model.html', context)
 	
 	#print(request.POST)
-	dataset = Dataset.objects.filter(text_id = request.POST['dataset'] )[0]
+	dataset = Dataset.objects.get(text_id = request.POST['dataset'])
+	if not dataset.check_access(request.user):
+		return HttpResponceForbidden("You have not access to this dataset")
 	model = ArtmModel()
 	model.dataset = dataset
 	model.name = request.POST['model_name']
@@ -130,6 +132,8 @@ def create_model(request):
 def delete_model(request):
 	model = ArtmModel.objects.filter(id = request.GET['model'])[0]
 	dataset_name = model.dataset.text_id 
+	if request.user != model.author:
+		return HttpResponseForbidden("You are not the author of the model.")
 	if 'sure' in request.GET and request.GET['sure'] == 'yes': 
 		ArtmModel.objects.filter(id = request.GET['model']).delete()
 		return general_views.message(request, "Model was deleted. <a href ='/dataset?dataset=" + dataset_name + "'> Return to dataset</a>.")
@@ -143,7 +147,8 @@ def delete_model(request):
 @login_required
 def delete_all_models(request):
 	dataset = Dataset.objects.filter(text_id = request.GET['dataset'])[0]
-	
+	if request.user != dataset.owner:
+		return HttpResponseForbidden("You are not the owner of the dataset.")
 	if 'sure' in request.GET and request.GET['sure'] == 'yes': 
 		ArtmModel.objects.filter(dataset = dataset).delete()
 		return general_views.message(request, "All models were deleted. <a href ='/dataset?dataset=" + 
@@ -181,6 +186,8 @@ def	visual_topic(request):
 	
 @login_required
 def rename_topic(request):
-	topic = Topic.objects.filter(id = request.POST['id'])[0]
+	topic = Topic.objects.get(id = request.POST['id'])
+	if request.user != topic.model.author:
+		return HttpResponseForbidden("You are not the author of the model.")
 	topic.rename(request.POST['new_title'])
 	return redirect("/topic?id=" + request.POST['id'])	

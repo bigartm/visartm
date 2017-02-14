@@ -5,7 +5,6 @@ import visartm.views as general_views
 import datasets.views as datasets_views
 import visual.views as visual_views
 import models.views as models_views
-import accounts.views as accounts_views
 import api.views as api_views
 import assessment.views as assessment_views
 import research.views as research_views
@@ -28,12 +27,8 @@ urlpatterns = [
 	 
 	
 	# auth
-	url(r'^accounts/login', accounts_views.login_view),
-	url(r'^accounts/logout', accounts_views.logout_view),
-	url(r'^accounts/signup', accounts_views.signup),
-	url(r'^accounts/(?P<user_name>\w+)/$', accounts_views.account_view),
-	
-	
+	url('accounts/', include('accounts.urls')),
+ 
 	# Datasets	
 	url(r'^datasets/reload$', datasets_views.dataset_reload),
 	url(r'^datasets/create$', datasets_views.dataset_create),

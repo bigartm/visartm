@@ -13,6 +13,7 @@
 /temp
 /doc
 /visartm-env
+/visartm/settings.py
 
 
 *.FEDIMSER.*
