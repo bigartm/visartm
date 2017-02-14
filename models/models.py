@@ -674,7 +674,8 @@ def on_start():
 		model.status = 2
 		model.error_message = "Model processing was interrupted."
 		model.save()
-	
+
+'''
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 @receiver(pre_delete, sender=ArtmModel, dispatch_uid='artmmodel_delete_signal')
@@ -686,7 +687,8 @@ def remove_model_files(sender, instance, using, **kwargs):
 		rmtree(folder)
 	except:
 		pass
-				
+'''
+		
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null=False)
 	index_id = models.IntegerField(null=True)	# in layer
