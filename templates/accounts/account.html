@@ -14,7 +14,7 @@
 	{% if models %}
 		<h3>Models</h3>
 		{% for model in models %}
-			<p> <a href="/visual/model?model={{model.id}}">{{model.dataset}}/{{model}}</a></p>
+			<p> <a href="/model?model={{model.id}}">{{model.dataset}}/{{model}}</a></p>
 		{% endfor %}
 		<hr>
 	{% endif %}
