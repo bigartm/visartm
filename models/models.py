@@ -718,7 +718,7 @@ class Topic(models.Model):
 		return [struct.unpack('I', self.documents[8*i : 8*i+4])[0] for i in range(self.documents_count)]
 		
 	def top_words(self, count = 10):
-		return [x.term.text for x in TopTerm.objects.filter(topic=self).order_by('-weight')[0:count]]
+		return [x.term.text for x in TopTerm.objects.filter(topic=self, term__modality__is_word=True).order_by('-weight')[0:count]]
 			
 class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

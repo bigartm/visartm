@@ -199,7 +199,7 @@ def visual_dataset(request):
 		}
 	elif mode == 'assessment':
 		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor	
-		context['assessment'] = dict()
+		context['assessment'] = {}
 		if request.user == dataset.owner:
 			supervised_problems = AssessmentProblem.objects.filter(dataset=dataset)
 			assessment_folders = os.listdir(os.path.join(settings.BASE_DIR, "templates", "assessment"))
@@ -208,8 +208,13 @@ def visual_dataset(request):
 				if problem.type in problems_to_create: 
 					problems_to_create.remove(problem.type)				
 			context['assessment']['supervised_problems'] = supervised_problems
-			context['assessment']['problems_to_create'] = problems_to_create			
-		context['assessment']['problems_to_assess'] = ProblemAssessor.objects.filter(assessor=request.user,problem__dataset=dataset)
+			context['assessment']['problems_to_create'] = problems_to_create		
+	
+		try:
+			context['assessment']['problems_to_assess'] = ProblemAssessor.objects.filter(assessor=request.user,problem__dataset=dataset)
+		except:
+			context['assessment']['problems_to_assess'] = []
+			
 	elif mode == 'docs':
 		docs = Document.objects.filter(dataset = dataset)
 		if "search" in request.GET and len(search_query) >= 2: 

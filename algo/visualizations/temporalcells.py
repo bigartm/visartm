@@ -17,8 +17,7 @@ def top_words_html(tw):
 	return ret
 
 def visual(model, params): 		
-	group_by = params[1]		# year,month,week,day
-	intense_mode = params[2]	# row,column,all 
+	group_by = params[1]		# year,month,week,day 
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")
 	
 	cells, dates = model.group_matrix(group_by=group_by, named_groups=True)
@@ -42,13 +41,8 @@ def visual(model, params):
 	for x in range(dates_count):
 		for y in range(topics_count):
 			size = len(cells[x][y])
-			if intense_mode == "all":
-				intense = size / max_size 
-			elif intense_mode == "row":
-				intense = size / row_max_size[y] 
-			elif intense_mode == "column":
-				intense = size / column_max_size[x] 
-		
+			# [all, row, column]
+			intense = [size / max_size, size / row_max_size[y], size / column_max_size[x]]
 			cells_send.append({"X" : x, "Y" : y, "intense": intense, "docs" : cells[x][y]})
 	
 	topics_send = [{"Y": topic.spectrum_index,

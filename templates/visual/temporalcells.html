@@ -98,6 +98,15 @@
 	var selected_cell; 
 	var shift_x = 0;
 	
+	
+	var params = getUrlParameter("type").split('_');
+	var norm_mode = getUrlParameter("norm", "all");
+	document.getElementById("select_group").value = params[1];
+	document.getElementById("select_norm").value = norm_mode;
+	if (norm_mode == "all") norm_mode = 0;
+	if (norm_mode == "row") norm_mode = 1;
+	if (norm_mode == "column") norm_mode = 2;
+	
 	var tooltip = D3Tooltip();
 	
 	var drag = d3.behavior.drag()
@@ -126,7 +135,7 @@
 		.attr("height", square_size - 2)	
 		.attr("stroke-width", 1)
 		.attr("fill", function(d, i) {
-			return get_color(d["intense"], d["Y"]);
+			return get_color(d["intense"][norm_mode], d["Y"]);
 		}) 
 		.on("mouseover", function(d, i) {
 			//d3.select(this) 
@@ -239,13 +248,13 @@
 	 
 	 
 	function get_cell_x(d, i){
-		x = topic_label_width+square_size * d["X"] + shift_x;
+		x = topic_label_width + topic_labels_shift + square_size * d["X"] + shift_x;
 		if (x < topic_labels_shift + topic_label_width) x = -1000;
 		return x;
 	}
 	
 	function get_label_x(d, i){
-		x = topic_label_width + square_size * d["X"] + shift_x;
+		x = topic_label_width + topic_labels_shift + square_size * d["X"] + shift_x;
 		if (x < topic_labels_shift + topic_label_width) x = -1000;
 		return x;
 	}
@@ -321,15 +330,9 @@
 	} 
 	
 	
-	 
-	
-	params = getUrlParameter("type").split('_');
-	document.getElementById("select_group").value = params[1];
-	document.getElementById("select_norm").value = params[2];
-	
 	function changeMode() { 
 		window.location = "/visual/global?model={{model.id}}&type=temporalcells_" +
-				document.getElementById("select_group").value + "_" +
+				document.getElementById("select_group").value + "&norm=" + 
 				document.getElementById("select_norm").value;
 	}
 </script>
