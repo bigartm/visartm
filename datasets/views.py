@@ -120,6 +120,8 @@ def visual_dataset(request):
 	if request.method == "POST":
 		print(request.POST)
 		dataset = Dataset.objects.get(text_id = request.POST['dataset'])
+		if request.user != dataset.owner:
+			return HttpResponseForbidden("You are not the owner.")
 		dataset.name = request.POST['name']
 		dataset.description = request.POST['description']
 		dataset.preprocessing_params = request.POST['preprocessing_params']	
