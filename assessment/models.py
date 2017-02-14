@@ -80,7 +80,8 @@ class AssessmentProblem(models.Model):
 						topic.save()
 					except:
 						pass
-					topic.index_id = topic.id
+					used_ids = set([topic.index_id for topic in Segmentation_Topic.objecs.filter(problem=self)])
+					topic.index_id = mex(used_ids)
 					topic.save()
 						
 			elif POST["action"] == "alter_topic":
@@ -154,12 +155,10 @@ class AssessmentProblem(models.Model):
 		
 		if self.type == "segmentation":
 			term_index = Term.objects.filter(dataset=self.dataset).order_by("index_id")
-			topics_index = {-1:"-1"}
 			result_topics = []
 			
 			for topic in Segmentation_Topic.objects.filter(problem=self):
-				result_topics.append({"id":topic.index_id, "name": topic.name, "description": topic.description})
-				topics_index[topic.id] = str(i)				
+				result_topics.append({"id":topic.index_id, "name": topic.name, "description": topic.description})			
 				
 			results["topics"] = result_topics
 			results["documents"] = []
@@ -170,7 +169,7 @@ class AssessmentProblem(models.Model):
 					word_index = task.document.get_word_index()
 					terms = ""
 					for i in range(len(word_index)):
-						terms += term_index[word_index[i][2]-1].text + ":" + terms_assessions[i] + " "
+						terms += term_index[word_index[i][2]].text + ":" + str(terms_assessions[i]) + " "
 					results["documents"].append({
 						"title" : task.document.title,
 						"terms" : terms 
@@ -241,6 +240,11 @@ def text_to_span(text, start, end, class_id, css):
 			ret += text[pos]
 	return ret + "</span>"
 		 
+		 
+def mex(values):
+	for i in range(1,1000000):
+		if not i in values:
+			return i
 		
 
 		
@@ -279,8 +283,8 @@ class AssessmentTask(models.Model):
 				
 			topics_send = [] 
 			for topic in all_topics: 
-				if topic.id in topics_colors:
-					topics_send.append({"topic": topic, "color": topics_colors[topic.id]})
+				if topic.index_id in topics_colors:
+					topics_send.append({"topic": topic, "color": topics_colors[topic.index_id]})
 				else:
 					topics_send.append({"topic": topic, "color": -1})
 				
@@ -416,12 +420,7 @@ class AssessmentTask(models.Model):
 					self.answer["topics_in"] = {}
 				if not topic_id in self.answer["topics_in"]:
 					used_colors = set([color for _, color in self.answer["topics_in"].items()])
-					print(used_colors)
-					for i in range(1,1000):
-						if not i in used_colors:
-							new_color = i
-							break
-					self.answer["topics_in"][topic_id] = new_color 
+					self.answer["topics_in"][topic_id] = mex(used_colors) 
 					self.answer["selected_topic"] = topic_id
 			elif POST["action"] == "topic_not_use":
 				topic_id = str(POST["topic_id"])

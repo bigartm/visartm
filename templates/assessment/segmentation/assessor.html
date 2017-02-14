@@ -74,18 +74,18 @@
 							<input 
 								type = "radio" 
 								name='selected_topic'
-								value='{{topic.topic.id}}'
+								value='{{topic.topic.index_id}}'
 								onclick="showDescription();"
-								{% if selected_topic == topic.topic.id %} checked="checked" {% endif %}
+								{% if selected_topic == topic.topic.index_id %} checked="checked" {% endif %}
 							><span 	id="rb{{topic.color}}">{{topic.topic.name}}</span></input>
-							<sup><a onClick="notUseTopic({{topic.topic.id}});"><big>x</big></a></sup>
+							<sup><a onClick="notUseTopic({{topic.topic.index_id}});"><big>x</big></a></sup>
 							<br>
 						{% endif %}
 					{% endfor %} 
 					<hr>					
 					{% for topic in topics %}
 						{% if topic.color < 0 %} 
-							<a onClick="useTopic({{topic.topic.id}});">{{topic.topic.name}}</a>
+							<a onClick="useTopic({{topic.topic.index_id}});">{{topic.topic.name}}</a>
 							<br>
 						{% endif %}
 						
@@ -208,7 +208,7 @@
 	 
 	showDescription();
 	
-	function useTopic(topic_id) {
+	function useTopic(topic_id) { 
 		document.getElementById("action").value = "topic_use";
 		document.getElementById("topic_id").value = topic_id;
 		document.getElementById("formMain").submit();
