@@ -65,8 +65,7 @@
 						<sup><a onClick="notUseTopic({{topic.topic.id}});"><big>x</big></a></sup>
 						<br>
 					{% else %}
-						{{topic.topic.name}}
-						<sup><a onClick="useTopic({{topic.topic.id}});"><big>+</big></a></sup>
+						<a onClick="useTopic({{topic.topic.id}});">{{topic.topic.name}}</a>
 						<br>
 					{% endif %}
 					
