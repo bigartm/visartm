@@ -159,8 +159,7 @@ class ArtmModel(models.Model):
 			print("Saving matrices psi...")
 			for layer_id in range(1, self.layers_count): 
 				psi = layers[layer_id].get_psi().to_pickle(os.path.join(self.get_folder(), "psi" + str(layer_id)))
-		
-	
+		 
 	def gather_phi(self):
 		self.log("Loading matrix phi...")
 		phi_path = os.path.join(self.get_folder(), "phi")
@@ -282,21 +281,26 @@ class ArtmModel(models.Model):
 		theta = np.load(os.path.join(self.get_folder(), "theta.npy"))
 		theta_t = theta.transpose()
 		
-		layers_count = self.layers_count
-		if layers_count > 1:
-			self.log("Loading matrix psi...")
-			psi = [0 for i in range(layers_count)]		
-			for i in range(1, self.layers_count):
-				psi[i] = pd.read_pickle(os.path.join(self.get_folder(), "psi" + str(i))).values
-				np.save(os.path.join(self.get_folder(), "psi"+ str(i) + ".npy"), psi[i])
-		
+		self.layers_count = 1
+		psi = [0]
+		for i in range(1, 100):
+			path = os.path.join(self.get_folder(), "psi" + str(i))
+			if os.path.exists(path):
+				self.log("Loading matrix psi" + str(i))
+				psi.append(pd.read_pickle(path).values)
+				np.save(os.path.join(path + ".npy"), psi[i])
+				self.layers_count = i + 1
+			else: 
+				break
+				
 		self.log("Counting topics...")			
-		if layers_count == 1: 
+		if self.layers_count == 1: 
 			self.topics_count = "1 "  + str(theta.shape[0])
 		else:		
 			self.topics_count = "1 " + str(psi[1].shape[1])
-			for layer_id in range(1, layers_count):  
+			for layer_id in range(1, self.layers_count):  
 				self.topics_count += " " + str(psi[layer_id].shape[0])
+		self.log("Topics number: " + self.topics_count)
 		
 		terms_count = self.dataset.terms_count
 		documents_count = self.dataset.documents_count		
@@ -304,9 +308,9 @@ class ArtmModel(models.Model):
 		total_topics_count = sum(topics_count)-1
 		
 		# Extracting topic names from theta index
-		topic_names = [[] for i in range(layers_count + 1)]
+		topic_names = [[] for i in range(self.layers_count + 1)]
 		offset = 0
-		for layer_id in range(1, layers_count + 1):
+		for layer_id in range(1, self.layers_count + 1):
 			topic_names[layer_id] = self.theta_index[offset : offset + topics_count[layer_id]]
 		offset += topics_count[layer_id]
 		
@@ -325,7 +329,7 @@ class ArtmModel(models.Model):
 		
 		# Creating topics, loading top terms, topic labeling
 		self.log("Creating topics...")
-		topics_index = [[] for i in range(layers_count + 1)]
+		topics_index = [[] for i in range(self.layers_count + 1)]
 		
 		# Creating root topic
 		root_topic = Topic()
@@ -341,7 +345,7 @@ class ArtmModel(models.Model):
 		top_terms_size = 100
 		
 		row_counter = 0
-		for layer_id in range(1, layers_count + 1):
+		for layer_id in range(1, self.layers_count + 1):
 			for topic_id in range(topics_count[layer_id]):
 				topic = Topic()
 				topic.model = self
@@ -413,7 +417,7 @@ class ArtmModel(models.Model):
 		threshold = self.threshold / 100.0
 		
 		# Building topics hierarchy
-		for bottom_layer in range (2, layers_count + 1):
+		for bottom_layer in range (2, self.layers_count + 1):
 			top_layer = bottom_layer - 1
 			self.log("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
 			for bottom_topic_id in range(topics_count[bottom_layer]):
@@ -441,8 +445,8 @@ class ArtmModel(models.Model):
 		
 		#Extracting documents in topics
 		self.log("Extracting documents in topics...")
-		theta_t_low = theta_t[:, total_topics_count - topics_count[layers_count] : total_topics_count]
-		document_bags = [[] for i in range(topics_count[layers_count])]
+		theta_t_low = theta_t[:, total_topics_count - topics_count[self.layers_count] : total_topics_count]
+		document_bags = [[] for i in range(topics_count[self.layers_count])]
 		for doc_index_id in range(0, documents_count):
 			#doc_id = documents_index[doc_index_id].id 
 			distr = theta_t_low[doc_index_id]
@@ -451,7 +455,7 @@ class ArtmModel(models.Model):
 			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id))
 			# self.log("Document " +  str(doc_index_id) + " appended to topic " + str(best_topic_id))
 			if self.threshold <= 50:
-				for topic_id in range(topics_count[layers_count]):
+				for topic_id in range(topics_count[self.layers_count]):
 					if distr[topic_id] > threshold and topic_id != best_topic_id:
 						document_bags[topic_id].append(distr[topic_id], doc_index_id)
 			
@@ -460,8 +464,8 @@ class ArtmModel(models.Model):
 		
 		
 		self.log("Saving topics...")
-		for topic_id in range(topics_count[layers_count]):
-			topic = topics_index[layers_count][topic_id]
+		for topic_id in range(topics_count[self.layers_count]):
+			topic = topics_index[self.layers_count][topic_id]
 			topic.documents = bytes()
 			document_bags[topic_id].sort(reverse = True)
 			for weight, doc_index_id in document_bags[topic_id]:
