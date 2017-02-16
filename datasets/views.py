@@ -472,12 +472,14 @@ def dump(request):
 	folder = dataset.get_folder()
 	with zipfile.ZipFile(outfile, 'w') as zf:
 		for root, dirs, files in os.walk(folder):
-			if root[-7:] == "batches" or "_MACOSX" in root:
+			if "batches" in root or "_MACOSX" in root:
 				continue
 			rel_path = root[len(folder)+1:]
 			for file in files:
-				if file[0] != '.':
-					# print(os.path.join(rel_path, file))
+					if file[0] == '.':
+						continue
+					if 'models' in root and '.' in file and (not file[:-4] == '.txt'):
+						continue
 					zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
 
 	zipped_file = outfile.getvalue()
