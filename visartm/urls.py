@@ -17,7 +17,7 @@ urlpatterns = [
 	url(r'^research/', include('research.urls')),
 	
 	# general
-	url(r'^$', general_views.start_page),
+	url(r'^$', general_views.start_page, name='home'),
 	url(r'^settings', general_views.settings_page),
 	
 	 

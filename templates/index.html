@@ -73,8 +73,8 @@
 		window.onresize = function(){ location.reload(); }
 		
 		buttons =  document.getElementsByClassName("slideshow-nav");
-		buttons[0].style.backgroundImage = "url('/static/slideshow/arrow.svg')";
-		buttons[1].style.backgroundImage = "url('/static/slideshow/arrow.svg')";
+		buttons[0].style.backgroundImage = "url('{{request.get_host }}/static/slideshow/arrow.svg')";
+		buttons[1].style.backgroundImage = "url('{{request.get_host }}/static/slideshow/arrow.svg')";
 		
 		
 		setInterval(function(){
