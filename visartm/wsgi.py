@@ -1,5 +1,5 @@
 """
-WSGI config for artmonline project.
+WSGI config for visartm project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,7 +11,7 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "artmonline.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "visartm.settings")
 
 application = get_wsgi_application()
 
