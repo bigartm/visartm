@@ -150,10 +150,8 @@ def visual_dataset(request):
 	if 'mode' in request.GET:
 		mode = request.GET['mode'] 
 		
-	if mode == 'terms':
-		print("Start term query")
-		terms = Term.objects.filter(dataset = dataset)
-		print("End term query")
+	if mode == 'terms': 
+		terms = Term.objects.filter(dataset = dataset) 
 		if "search" in request.GET and len(search_query) >= 2: 
 			terms = terms.filter(text__icontains = search_query).order_by("text")
 			context['search'] = True
