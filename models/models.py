@@ -278,7 +278,7 @@ class ArtmModel(models.Model):
 		phi_t = phi.transpose()
 		
 		self.gather_theta()
-		theta = np.load(os.path.join(self.get_folder(), "theta.npy"))
+		theta = self.get_theta()
 		theta_t = theta.transpose()
 		
 		self.layers_count = 1

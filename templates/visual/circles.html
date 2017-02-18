@@ -98,7 +98,7 @@ root = {{data}};
     .on("click", function(d) { 
 		id = d.data.id;
 		if (id) {
-			window.location = "/visual/document?id=" + id;
+			window.location = "/document?id=" + id;
 			d3.event.stopPropagation();
 		} else { 
 			if (focus !== d) zoom(d), d3.event.stopPropagation(); 
@@ -108,7 +108,7 @@ root = {{data}};
 		id = d.data.id;
 		if (id) {
 			api.getDocument(id, function(doc){
-				doc_title.href = "/visual/document?id=" + id;
+				doc_title.href = "/document?id=" + id;
 				doc_title.innerHTML = doc["title"];
 				document.getElementById("doc_snippet").innerHTML = doc["snippet"]; 
 			});
