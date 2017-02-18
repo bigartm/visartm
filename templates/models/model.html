@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}VisARTM | Dataset overview{% endblock %}
+{% block title %}VisARTM | Model {{model}}{% endblock %}
 
 {% block content %}
 	<h1>Model {{model}}</h1>
@@ -45,6 +45,8 @@
 
 	{% if request.user == model.author %} 
 		<h4>Options</h4>
+		<a href = "/models/settings?model_id={{model.id}}">Settings</a> 
+		<br>
 		<a href = "/models/reload_model?model={{model.id}}">Reload</a> 
 		<br>
 		<a href = "/models/arrange_topics?model={{model.id}}&mode=alphabet">Arrange topics(alphabetically)</a> 

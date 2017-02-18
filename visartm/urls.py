@@ -45,5 +45,6 @@ urlpatterns = [
 	url(r'^models/create$', models_views.create_model),
 	url(r'^models/delete_model$', models_views.delete_model),
 	url(r'^models/delete_all_models$', models_views.delete_all_models),
+	url(r'^models/settings$', models_views.model_settings),
 	url(r'^topics/rename$', models_views.rename_topic),
 ]

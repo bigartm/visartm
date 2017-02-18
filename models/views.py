@@ -119,7 +119,8 @@ def create_model(request):
 	model.dataset = dataset
 	model.name = request.POST['model_name']
 	#model.main_modality = Modality.objects.filter(dataset = dataset, name = request.POST['word_modality'])[0]
-	model.threshold = int(request.POST['threshold'])
+	model.threshold_hier = int(request.POST['threshold_hier'])
+	model.threshold_docs = int(request.POST['threshold_docs'])	
 	model.author = request.user
 	model.creation_time = datetime.now()
 	model.status = 1
@@ -211,3 +212,31 @@ def rename_topic(request):
 		return HttpResponseForbidden("You are not the author of the model.")
 	topic.rename(request.POST['new_title'])
 	return redirect("/topic?id=" + request.POST['id'])	
+	
+@login_required
+def model_settings(request):
+	if request.method == 'POST':
+		model = ArtmModel.objects.get(id=request.POST['model_id'])
+		if request.user != model.author:
+			return HttpResponseForbidden("You are not the author.")
+		
+		new_threshold_docs = int(request.POST['threshold_docs'])
+		new_threshold_hier = int(request.POST['threshold_hier'])
+		
+		if new_threshold_docs != model.threshold_docs:
+			model.threshold_docs = new_threshold_docs
+			model.save()
+			model.extract_docs()
+			
+		if new_threshold_hier != model.threshold_hier:
+			model.threshold_hier = new_threshold_hier
+			model.save()
+			model.build_hier() 
+			
+		return redirect('/model?model=' + str(model.id))
+
+	model = ArtmModel.objects.get(id=request.GET['model_id'])
+	if request.user != model.author:
+		return HttpResponseForbidden("You are not the author.")
+	context = {'model': model}
+	return render(request, 'models/model_settings.html', Context(context))

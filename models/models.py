@@ -27,7 +27,9 @@ class ArtmModel(models.Model):
 	topics_count = models.TextField(null = False, default = "")
 	status = models.IntegerField(null = False, default = 0)  # 1-running, 2-error, 3-OK
 	error_message = models.TextField(null=True) 
-	threshold = models.IntegerField(null = False, default = 100) 
+	threshold_hier = models.IntegerField(null = False, default = 100) 
+	threshold_docs = models.IntegerField(null = False, default = 100) 
+	
 	
 	def __str__(self):
 		if not self.name or len(self.name) == 0:
@@ -265,7 +267,89 @@ class ArtmModel(models.Model):
 		np.save(os.path.join(self.get_folder(), "theta.npy"), theta)	
 		self.log("Matrix theta saved...")	
 
+	@transaction.atomic
+	def build_hier(self):
+		self.log("Building topics hierarchy")
+		threshold_hier = self.threshold_hier / 100.0
+		TopicInTopic.objects.filter(model = self).delete()
+		topics_count = [int(x) for x in self.topics_count.split()]
+		self.build_topics_index()
 		
+		# Adding topics of top layer as children of root
+		for topic_id in self.topics_index[1]:
+			relation = TopicInTopic()
+			relation.model = self
+			relation.parent_id = self.topics_index[0][0]
+			relation.child_id = topic_id
+			relation.save()		
+			
+			
+		for bottom_layer in range (2, self.layers_count + 1):
+			top_layer = bottom_layer - 1
+			psi = self.get_psi(top_layer)
+			self.log("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
+			for bottom_topic_id in range(topics_count[bottom_layer]):
+				best_top_topic_id = np.argmax(psi[bottom_topic_id])
+				relation = TopicInTopic()
+				relation.model = self
+				relation.parent_id = self.topics_index[top_layer][best_top_topic_id]
+				relation.child_id = self.topics_index[bottom_layer][bottom_topic_id]
+				relation.weight = psi[bottom_topic_id][best_top_topic_id]
+				relation.save()
+				
+				if threshold_hier <= 0.5:
+					for top_topic_id in range(topics_count[top_layer]):
+						if psi[bottom_topic_id][top_topic_id] > threshold_hier and top_topic_id != best_top_topic_id:
+							relation = TopicInTopic()
+							relation.model = self
+							relation.parent_id = self.topics_index[top_layer][top_topic_id]
+							relation.child_id = self.topics_index[bottom_layer][bottom_topic_id]
+							relation.weight = psi[bottom_topic_id][top_topic_id]
+							relation.save()
+			
+		
+	def extract_docs(self):
+		self.log("Extracting documents in topics...")
+		threshold_docs = self.threshold_docs / 100.0
+		topics_count = [int(x) for x in self.topics_count.split()]
+		total_topics_count = sum(topics_count)-1
+		theta_t = self.get_theta().transpose()
+		theta_t_low = theta_t[:, total_topics_count - topics_count[self.layers_count] : total_topics_count]
+		document_bags = [[] for i in range(topics_count[self.layers_count])]
+		for doc_index_id in range(0, self.dataset.documents_count):
+			#doc_id = documents_index[doc_index_id].id 
+			distr = theta_t_low[doc_index_id]
+			best_topic_id = distr.argmax()
+			
+			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id))
+			# self.log("Document " +  str(doc_index_id) + " appended to topic " + str(best_topic_id))
+			if threshold_docs <= 0.5:
+				for topic_id in range(topics_count[self.layers_count]):
+					if distr[topic_id] > threshold_docs and topic_id != best_topic_id:
+						document_bags[topic_id].append(distr[topic_id], doc_index_id)
+			
+			if doc_index_id % 1000 == 0:
+				self.log(str(doc_index_id)) 
+		
+		
+		self.log("Building topics index...")
+		
+		
+		self.log("Saving topics...") 
+		for topic in Topic.objects.filter(layer=self.layers_count).order_by("index_id"): 
+			topic.documents = bytes()
+			document_bags[topic.index_id].sort(reverse = True)
+			for weight, doc_index_id in document_bags[topic.index_id]:
+				topic.documents += struct.pack('I', doc_index_id) + struct.pack('f', weight) 
+			topic.documents_count = len(topic.documents) // 8
+			topic.save()	
+		
+	def build_topics_index(self):
+		self.topics_index = [0 for i in range(self.layers_count + 1)]
+		
+		for layer_id in range(0, self.layers_count + 1):
+			self.topics_index[layer_id] = [topic.id for topic in Topic.objects.filter(model=self, layer=layer_id).order_by("index_id")]
+				
 	@transaction.atomic
 	def reload(self):  
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
@@ -279,7 +363,6 @@ class ArtmModel(models.Model):
 		
 		self.gather_theta()
 		theta = self.get_theta()
-		theta_t = theta.transpose()
 		
 		self.layers_count = 1
 		psi = [0]
@@ -322,14 +405,14 @@ class ArtmModel(models.Model):
 		# Removing existing topics and related objects
 		from visual.models import GlobalVisualization
 		Topic.objects.filter(model = self).delete() 
-		TopicInTopic.objects.filter(model = self).delete()
+		
 		GlobalVisualization.objects.filter(model = self).delete()
 		
 		
 		
 		# Creating topics, loading top terms, topic labeling
 		self.log("Creating topics...")
-		topics_index = [[] for i in range(self.layers_count + 1)]
+		
 		
 		# Creating root topic
 		root_topic = Topic()
@@ -337,9 +420,7 @@ class ArtmModel(models.Model):
 		root_topic.index_id = 0
 		root_topic.title = "root"
 		root_topic.layer = 0
-		root_topic.save()		
-		
-		topics_index[0].append(root_topic)		
+		root_topic.save()		 	
 		
 		title_size = 3 
 		top_terms_size = 100
@@ -396,9 +477,7 @@ class ArtmModel(models.Model):
 					topic.title_multiline = '\n'.join(topic.title.split())
 					
 				topic.title_short = topic.title[0:20]			
-				topic.save()
-				
-				topics_index[layer_id].append(topic)
+				topic.save() 
 				 
 					
 				row_counter += 1
@@ -406,72 +485,19 @@ class ArtmModel(models.Model):
 					self.log("Created topic %d/%d." % (row_counter, total_topics_count))
 				
 		
-		# Adding topics of top layer as children of root
-		for topic in topics_index[1]:
-			relation = TopicInTopic()
-			relation.model = self
-			relation.parent = root_topic
-			relation.child = topic
-			relation.save()
 		
-		threshold = self.threshold / 100.0
 		
-		# Building topics hierarchy
-		for bottom_layer in range (2, self.layers_count + 1):
-			top_layer = bottom_layer - 1
-			self.log("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
-			for bottom_topic_id in range(topics_count[bottom_layer]):
-				best_top_topic_id = np.argmax(psi[top_layer][bottom_topic_id])
-				relation = TopicInTopic()
-				relation.model = self
-				relation.parent = topics_index[top_layer][best_top_topic_id]
-				relation.child = topics_index[bottom_layer][bottom_topic_id]
-				relation.save()
-				
-				if self.threshold <= 50:
-					for top_topic_id in range(topics_count[top_layer]):
-						if psi[top_layer][bottom_topic_id][top_topic_id] > threshold and top_topic_id != best_top_topic_id:
-							relation = TopicInTopic()
-							relation.model = self
-							relation.parent = topics_index[top_layer][top_topic_id]
-							relation.child = topics_index[bottom_layer][bottom_topic_id]
-							relation.save()
+		
+		self.build_hier()
+		
 			
 		
 		# Loading temporary reference for documents
-		documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
- 
+		# documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
+		self.extract_docs()
 		
 		
-		#Extracting documents in topics
-		self.log("Extracting documents in topics...")
-		theta_t_low = theta_t[:, total_topics_count - topics_count[self.layers_count] : total_topics_count]
-		document_bags = [[] for i in range(topics_count[self.layers_count])]
-		for doc_index_id in range(0, documents_count):
-			#doc_id = documents_index[doc_index_id].id 
-			distr = theta_t_low[doc_index_id]
-			best_topic_id = distr.argmax()
-			
-			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id))
-			# self.log("Document " +  str(doc_index_id) + " appended to topic " + str(best_topic_id))
-			if self.threshold <= 50:
-				for topic_id in range(topics_count[self.layers_count]):
-					if distr[topic_id] > threshold and topic_id != best_topic_id:
-						document_bags[topic_id].append(distr[topic_id], doc_index_id)
-			
-			if doc_index_id % 1000 == 0:
-				self.log(str(doc_index_id)) 
 		
-		
-		self.log("Saving topics...")
-		for topic_id in range(topics_count[self.layers_count]):
-			topic = topics_index[self.layers_count][topic_id]
-			topic.documents = bytes()
-			document_bags[topic_id].sort(reverse = True)
-			for weight, doc_index_id in document_bags[topic_id]:
-				topic.documents += struct.pack('I', doc_index_id) + struct.pack('f', weight) 
-			topic.documents_count = len(topic.documents) // 8
-			topic.save()
 		
 		self.creation_time = datetime.now()
 		self.arrange_topics()
@@ -499,9 +525,11 @@ class ArtmModel(models.Model):
 		if settings.DEBUG:
 			print(string)
 		if settings.THREADING:
-			with open(self.log_file_name, "a") as f:
-				f.write(string + "<br>\n")
-			
+			try: 
+				with open(self.log_file_name, "a") as f:
+					f.write(string + "<br>\n")
+			except:
+				pass
 		
 	def read_log(self):
 		try:
@@ -724,7 +752,7 @@ class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
 	document = models.ForeignKey(Document, null = False)
 	topic = models.ForeignKey(Topic, null = False)
-	probability = models.FloatField()
+	probability = models.FloatField(default=0)
 	def __str__(self):
 		return str(self.topic) + " " + "{0:.1f}%".format(100 * self.probability)
 		
@@ -732,6 +760,7 @@ class TopicInTopic(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
 	parent = models.ForeignKey(Topic, null = False, related_name = 'parent')
 	child = models.ForeignKey(Topic, null = False, related_name = 'child')
+	weight = models.FloatField(default=0)
 	
 class TopTerm(models.Model):
 	topic = models.ForeignKey(Topic)

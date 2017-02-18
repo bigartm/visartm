@@ -34,7 +34,7 @@
 			<p><a id = "morelink" onclick = "append(100)"></a></p>
 		{% else %} 
 			{% for topic in topics %}
-				<a href = "/topic?id={{topic.child.id}}" >{{topic.child}}</a>
+				<a href = "/topic?id={{topic.child.id}}" >{{topic.child}}</a> ({{topic.weight | floatformat:4}})
 				<br>
 			{% endfor %}
 		{% endif %}
