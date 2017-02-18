@@ -51,8 +51,7 @@
 -->
 {% endblock %}
 
-{% block right %}
-	
+{% block right %} 
 	{% if not user.is_anonymous %}
 		<p>Hi, {{user}}!</p>
 	{% endif %}
@@ -72,6 +71,11 @@
 		slideshowImages.init('.js-slideshow-images', true);	
 		//cont.style.visibility = "visible";
 		window.onresize = function(){ location.reload(); }
+		
+		buttons =  document.getElementsByClassName("slideshow-nav");
+		buttons[0].style.backgroundImage = "url('/static/slideshow/arrow.svg')";
+		buttons[1].style.backgroundImage = "url('/static/slideshow/arrow.svg')";
+		
 		
 		setInterval(function(){
 			slideshowImages.goToNext("m"); 

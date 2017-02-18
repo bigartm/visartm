@@ -30,7 +30,7 @@
 	width: 100%;
 }
 
-//@media screen and (max-width: 779px) {
+@media screen and (max-width: 779px) {
     .slideshow-slide--content {
         width: 100%;
         height: 100%;
@@ -40,9 +40,9 @@
         box-sizing: border-box;
         white-space: initial;
     }
-// }
+}
 
-// @media screen and (min-width: 780px) {
+@media screen and (min-width: 780px) {
     .slideshow-slide--content {
         width: 100%;
         height: 100%;
@@ -52,11 +52,10 @@
         box-sizing: border-box;
         white-space: initial;
     }
-//}
+}
 
 .slideshow-nav {
-    background-color: transparent;
-    background-image: url('/static/slideshow/arrow.svg');
+    background-color: transparent; 
     background-repeat: no-repeat;
     background-size: contain;
     position: absolute;
