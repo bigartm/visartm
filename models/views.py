@@ -174,7 +174,18 @@ def	visual_topic(request):
 	related_topics = TopicRelated.objects.filter(model = topic.model, topic1 = topic).order_by("weight")	
 	context = {'topic': topic, 'related_topics' : related_topics}
 	
-	 
+	if 'mode' in request.GET and request.GET['mode'] == 'phi_column':
+		terms = Term.objects.filter(dataset=model.dataset).order_by('index_id')
+		mod_index = dict()
+		for modality in Modality.objects.filter(dataset=model.dataset):
+			mod_index[modality.id] = modality.name
+		
+		ans = ""
+		phi = model.get_phi()
+		for term in terms:
+			ans += "%s %s %f<br>" % (term.text, mod_index[term.modality_id], phi[term.index_id, topic.matrix_id])
+		return HttpResponse(ans)
+	
 	if 'mode' in request.GET and request.GET['mode'] == 'topterms':
 		context['modalities'] = Modality.objects.filter(dataset=model.dataset)
 		top_terms = TopTerm.objects.filter(topic=topic)
