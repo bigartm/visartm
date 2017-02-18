@@ -56,7 +56,7 @@
 
 .slideshow-nav {
     background-color: transparent;
-    background-image: url('arrow.svg');
+    background-image: url('/static/slideshow/arrow.svg');
     background-repeat: no-repeat;
     background-size: contain;
     position: absolute;
