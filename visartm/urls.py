@@ -15,6 +15,8 @@ urlpatterns = [
 	url(r'^api/', include('api.urls')), 
 	url(r'^assessment/', include('assessment.urls')), 
 	url(r'^research/', include('research.urls')),
+	url(r'^tools/', include('tools.urls')),
+	
 	
 	# general
 	url(r'^$', general_views.start_page, name='home'),

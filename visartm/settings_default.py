@@ -35,6 +35,7 @@ INSTALLED_APPS = [
 	'models',
 	'assessment',
 	'research',
+	'tools'
 ]
 
 MIDDLEWARE = [
