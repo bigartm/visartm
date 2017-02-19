@@ -58,7 +58,7 @@
     background-color: transparent; 
     background-repeat: no-repeat;
     background-size: contain;
-	background-image : url(arrow.png);
+	background-image : url(arrow.svg);
     position: absolute;
     border: none;
     z-index: 100;

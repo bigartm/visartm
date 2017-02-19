@@ -1,3 +1,5 @@
-# VisARTM - visualizator for BigARTM
+# VisARTM - visualizer for BigARTM
 
-To install and use it, please refer to [manual](http://docs.bigartm.org/en/master/visartm/index.html)
+Address on the Internet: [visartm.vdi.mipt.ru](http://visartm.vdi.mipt.ru)
+
+To install it locally, please refer to [manual](http://docs.bigartm.org/en/master/visartm/index.html)
