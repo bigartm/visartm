@@ -165,7 +165,6 @@ def visual_dataset(request):
 		freq = ['freq'] 
 		x = 0
 		last_y = -1
-		#print("loop in")
 		for term in terms:
 			y = term.token_tf
 			if y != last_y:
@@ -173,7 +172,6 @@ def visual_dataset(request):
 				freq.append(y)
 				last_y = y 
 			x+=1	
-		#print("loop out")
 		word.append(x)
 		freq.append(y)		
 		context['stats'] = {'word_freq':[word, freq]}
@@ -344,7 +342,6 @@ def visual_document(request):
 		 
 		# Word highlight
 		if highlight_terms:
-			print(highlight_terms)
 			if not model is None: 
 				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
 				theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]

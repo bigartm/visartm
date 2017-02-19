@@ -18,7 +18,7 @@ class GlobalVisualization(models.Model):
 	error_message = models.TextField(null = False, default = "")
 	
 	def render(self):		
-		print("Rendering visualization " + self.name + " for model " + str(self.model.id) + "...")
+		self.model.log("Rendering visualization " + self.name + " for model " + str(self.model.id) + "...")
 		params = self.name.split('_')
 		# script_file_name = os.path.join(settings.BASE_DIR, "algo", "visualizations", params[0] + ".py") 
 		visual_module = importlib.import_module("algo.visualizations." + params[0])
@@ -30,7 +30,7 @@ class GlobalVisualization(models.Model):
 		with open(data_file_name, "w", encoding = 'utf-8') as f:
 			f.write(result)
 		
-		print("Render OK")
+		self.model.log("Render OK")
 		self.error_message = "OK"
 		self.finish_time = datetime.now()
 		self.status = 1
@@ -60,12 +60,9 @@ class Polygon(models.Model):
 	
 	@transaction.atomic
 	def place_children(self):
-		print("PLACE CHILDREN")
 		if self.children_placed:
 			return
 		
-
-		print("WILL DO IT")
 		Polygon.objects.filter(parent = self).delete		
 		polygons = []	 
 			 
@@ -104,7 +101,7 @@ class Polygon(models.Model):
 		if d < 0 or d >= nh:
 			raise ValueError("Unexpected.")
 		
-		print("N=%d, nh=%d, nw=%d, d=%d" %(N,  nh, nw, d))
+		# print("N=%d, nh=%d, nw=%d, d=%d" %(N,  nh, nw, d))
 		
 		dh = self.rect_height / nh
 		

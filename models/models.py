@@ -158,7 +158,7 @@ class ArtmModel(models.Model):
 			is_hierarchial = False
 		
 		if is_hierarchial: 
-			print("Saving matrices psi...")
+			self.log("Saving matrices psi...")
 			for layer_id in range(1, self.layers_count): 
 				psi = layers[layer_id].get_psi().to_pickle(os.path.join(self.get_folder(), "psi" + str(layer_id)))
 		 
@@ -582,7 +582,7 @@ class ArtmModel(models.Model):
 	@transaction.atomic
 	def arrange_topics(self, mode = "alphabet"):
 		# Counting horizontal relations topic-topic
-		print("Counting horizontal relations topic-topic...")	
+		self.log("Counting horizontal relations topic-topic...")	
 		phi = self.get_phi()
 		phi_t = phi.transpose()
 		layers_count = self.layers_count
@@ -703,19 +703,18 @@ def on_start():
 		model.error_message = "Model processing was interrupted."
 		model.save()
 
-'''
+
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 @receiver(pre_delete, sender=ArtmModel, dispatch_uid='artmmodel_delete_signal')
 def remove_model_files(sender, instance, using, **kwargs):
-	print("Now removing model " + str(instance.id))
-	folder = instance.get_folder()
-	print("Will delete folder " + folder)
+	if settings.DEBUG:
+		return
 	try:
 		rmtree(folder)
 	except:
 		pass
-'''
+
 		
 class Topic(models.Model):
 	model = models.ForeignKey(ArtmModel, null=False)
