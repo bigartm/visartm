@@ -58,7 +58,6 @@ def get_documents(request):
 			count = topic.documents_count - offset
 		dataset_id = topic.model.dataset.id
 		s = topic.documents[8 * offset : 8 * (offset + count)]
-		print(type(s))
 		for i in range(count): 
 			document = Document.objects.get(dataset_id = dataset_id, index_id = struct.unpack('I', s[8 * i : 8 * i + 4])[0])
 			result.append({
@@ -93,7 +92,6 @@ def get_documents(request):
 	 
 @allow
 def get_polygon_children(request):
-	print("API for" + request.GET['id'])
 	polygon = Polygon.objects.filter(id = request.GET['id'])[0]
 	polygon.place_children()
 	result = []

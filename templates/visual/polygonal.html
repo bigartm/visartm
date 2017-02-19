@@ -48,7 +48,7 @@
 	
 	
 	var zoom = d3.behavior.zoom()
-		.scaleExtent([0.000001, 1])
+		.scaleExtent([0.01, 1])
 		.on("zoom", zoomed)
 		.scale(initScale);
 
