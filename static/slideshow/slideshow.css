@@ -58,7 +58,7 @@
     background-color: transparent; 
     background-repeat: no-repeat;
     background-size: contain;
-	background-image : url('http://visartm.vdi.mipt.ru/static/slideshow/arrow.svg');
+	background-image : url(http://visartm.vdi.mipt.ru/static/slideshow/arrow.svg);
     position: absolute;
     border: none;
     z-index: 100;
