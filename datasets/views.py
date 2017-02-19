@@ -66,11 +66,9 @@ def	dataset_create(request):
 		})
 		return render(request, "datasets/create_dataset.html", context) 
 	
-	#print(request.POST)
 	dataset = Dataset()
 	if request.POST['mode'] == 'upload':
 		dataset.upload_from_archive(request.FILES['archive'])
-		#return HttpResponse("OK")
 	else:
 		dataset.text_id = request.POST['unreg_name']
 	
@@ -118,7 +116,6 @@ def	dataset_create(request):
 from django.conf import settings
 def visual_dataset(request):  
 	if request.method == "POST":
-		print(request.POST)
 		dataset = Dataset.objects.get(text_id = request.POST['dataset'])
 		if request.user != dataset.owner:
 			return HttpResponseForbidden("You are not the owner.")
