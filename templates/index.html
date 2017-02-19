@@ -39,7 +39,7 @@
         </div>
 		
         <aside>
-            <div class="slideshow-counter js-slideshow-counter" ;"></div>
+            <div class="slideshow-counter js-slideshow-counter" ></div>
         </aside>
     </section>
 </div> 
@@ -72,9 +72,9 @@
 		//cont.style.visibility = "visible";
 		window.onresize = function(){ location.reload(); }
 		
-		buttons =  document.getElementsByClassName("slideshow-nav");
-		buttons[0].style.backgroundImage = "url('http://{{request.get_host }}/static/slideshow/arrow.svg')";
-		buttons[1].style.backgroundImage = "url('http://{{request.get_host }}/static/slideshow/arrow.svg')";
+		// buttons =  document.getElementsByClassName("slideshow-nav");
+		// buttons[0].style.backgroundImage = "url('http://{{request.get_host }}/static/slideshow/arrow.svg')";
+		// buttons[1].style.backgroundImage = "url('http://{{request.get_host }}/static/slideshow/arrow.svg')";
 		
 		
 		setInterval(function(){
