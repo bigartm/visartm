@@ -20,3 +20,9 @@ import research, models, datasets
 research.models.on_start()
 models.models.on_start()
 datasets.models.on_start()
+
+from django.conf import settings
+from shutil import rmtree
+temp_folder = os.path.join(settings.DATA_DIR, "temp")
+if os.path.exists(temp_folder):
+	rmtree(temp_folder)

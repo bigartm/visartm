@@ -5,5 +5,35 @@
 {% block content %}
 	<h1>UCI → Vowpal Wabbit converter</h1>
 	<hr> 
+	
+	<form method="post" enctype="multipart/form-data">
+		
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Vocabulary file</label>
+			<div class="col-sm-1">
+				<input type="file" name="vocab" required/>
+			</div>
+		</div>
+		
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Docword file</label>
+			
+			<div class="col-sm-1">
+				<input type="file" name="docword" required/>
+			</div>
+		</div>
+		
+		<div class="form-group row">
+			<div class="offset-sm-2 col-sm-10">
+				<button type="submit" class="btn btn-primary">Convert</button>
+			</div>
+		</div> 
+ 			
+		{% csrf_token %}
+	
+	
+	</form>
+	
 {% endblock %}
+
  

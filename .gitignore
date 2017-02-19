@@ -4,6 +4,7 @@
 /cpp
 /data/datasets/*
 /data/research/*
+/data/temp/*
 !/data/datasets/example
 /data/datasets/example/*
 !/data/datasets/example/vw.txt

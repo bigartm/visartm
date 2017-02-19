@@ -6,8 +6,6 @@ import json
 def download_wall(domain, dataset_folder, cut=1000000):
     session = vk.Session() #'c9a2edf19ed42f0ee1ba6a768ad6de25016971d24589165769987567a92cabbb2364bf3f4c050a868969f')
     api = vk.API(session)
-    posts = api.wall.get(domain = 'lurkopub_alive', offset = 13700, count=100)
-    #print(len(posts))
     info = dict() 
     docs_folder = os.path.join(dataset_folder, "documents")
     os.makedirs(docs_folder, exist_ok=True)
@@ -23,7 +21,7 @@ def download_wall(domain, dataset_folder, cut=1000000):
             text = post["text"].replace("<br>","\n")
             if len(text)>50:
                 id += 1
-                text_id = str(id) + ".txt"
+                text_id = "%06d.txt" % id
                 info[text_id] = dict()        
                 info[text_id]["url"] = "https://vk.com/" + domain + "?w=wall" + str(post["from_id"]) + "_" + str(post["id"]) 
                 info[text_id]["time"] = post["date"]
