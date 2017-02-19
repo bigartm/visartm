@@ -395,7 +395,7 @@ class ArtmModel(models.Model):
 		offset = 0
 		for layer_id in range(1, self.layers_count + 1):
 			topic_names[layer_id] = self.theta_index[offset : offset + topics_count[layer_id]]
-		offset += topics_count[layer_id]
+			offset += topics_count[layer_id]
 		
 		# Building temporary index for terms
 		self.log("Building temporary index for words...")
