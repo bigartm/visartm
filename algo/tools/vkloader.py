@@ -1,9 +1,9 @@
-import vk
 import os
 import json
 
 
 def download_wall(domain, dataset_folder, cut=1000000):
+	import vk
     session = vk.Session() #'c9a2edf19ed42f0ee1ba6a768ad6de25016971d24589165769987567a92cabbb2364bf3f4c050a868969f')
     api = vk.API(session)
     info = dict() 
