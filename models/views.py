@@ -26,10 +26,7 @@ def visual_model(request):
 				"<a href = '/models/delete_model?model=" + str(model.id) + "'>Delete this model</a><br>" +
 				"<a href = '/models/reload_model?model=" + str(model.id) + "'>Reload this model</a><br>" )
 		if model.status == 3:
-			return general_views.message(request, 
-				"This is empty model.<br>" +
-				"Place matrices in folder " + model.get_folder() + "<br>"
-				"Then <a href='/models/reload_model?model=" + str(model.id) + "'>reload model</a>.")
+			return redirect('/models/settings?model_id=%d' % model.id) 
 		
 	topics_count = model.topics_count.split()
 	topics = Topic.objects.filter(model = model)
@@ -108,6 +105,9 @@ def create_model(request):
 						   'modalities': modalities,
 						   'scripts': scripts,
 						   'unreg': unreg})
+						   
+		if settings.DEBUG:
+			context['DEBUG'] = True
 						   
 		return render(request, 'models/create_model.html', context)
 	
@@ -216,25 +216,45 @@ def rename_topic(request):
 @login_required
 def model_settings(request):
 	if request.method == 'POST':
+		action = request.POST['action']
 		model = ArtmModel.objects.get(id=request.POST['model_id'])
 		if request.user != model.author:
 			return HttpResponseForbidden("You are not the author.")
 		
-		new_threshold_docs = int(request.POST['threshold_docs'])
-		new_threshold_hier = int(request.POST['threshold_hier'])
+		if action == 'parameters':
+			new_threshold_docs = int(request.POST['threshold_docs'])
+			new_threshold_hier = int(request.POST['threshold_hier'])
+			
+			if new_threshold_docs != model.threshold_docs:
+				model.threshold_docs = new_threshold_docs
+				model.save()
+				model.extract_docs()
+				
+			if new_threshold_hier != model.threshold_hier:
+				model.threshold_hier = new_threshold_hier
+				model.save()
+				model.build_hier() 
+		elif action == 'matrices':
+			model.log("Archive uploaded.")
+			archive = request.FILES['archive'] 
+			from tools.views import get_temp_folder
+			import zipfile
+			
+			with get_temp_folder() as folder:
+				zip_file_name = os.path.join(folder, "a.zip")
+				with open(zip_file_name, 'wb+') as f:
+					for chunk in archive.chunks():
+						f.write(chunk)
+						
+				zip_ref = zipfile.ZipFile(zip_file_name, 'r')
+				zip_ref.extractall(model.get_folder())
+				zip_ref.close() 
+				model.log("Archive unpacked.")
+					
+			return redirect('/models/reload_model?model=' + str(model.id))
 		
-		if new_threshold_docs != model.threshold_docs:
-			model.threshold_docs = new_threshold_docs
-			model.save()
-			model.extract_docs()
-			
-		if new_threshold_hier != model.threshold_hier:
-			model.threshold_hier = new_threshold_hier
-			model.save()
-			model.build_hier() 
-			
 		return redirect('/model?model=' + str(model.id))
-
+		
 	model = ArtmModel.objects.get(id=request.GET['model_id'])
 	if request.user != model.author:
 		return HttpResponseForbidden("You are not the author.")
