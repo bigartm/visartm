@@ -10,12 +10,7 @@
     <div class="form-group row">
       <input type="checkbox" id="highlight_terms" onchange="settingUpdate('highlight_terms', 'checked')" />
 	  <label   class="col-sm-2 col-form-label">Highlight terms</label>
-    </div> 
-	
-	<div class="form-group row">
-      <input type="checkbox" id="temporal_spectrum" onchange="settingUpdate('temporal_spectrum', 'checked')" />
-	  <label   class="col-sm-2 col-form-label">Spectrum in TS</label>
-    </div> 
+    </div>  
 	
 	<div class="form-group row">
 		<label 
@@ -75,16 +70,8 @@
 	document.getElementById("cut_bow").value = getCookie("cut_bow", "1");
 
 	
-	function getCookie(name, default_value) {
-	  var matches = document.cookie.match(new RegExp(
-		"(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-	  ));
-	  return matches ? decodeURIComponent(matches[1]) : default_value;
-	}
+
 	
-	function setCookie(name, value) {
-	  document.cookie = name + "=" + value;
-	} 
 	function settingUpdate(name, attribute) {
 		value = document.getElementById(name)[attribute];
 		console.log(value);

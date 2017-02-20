@@ -18,6 +18,16 @@ function getUrlParameter(parameterName, defaultValue) {
 	else {return defaultValue;}
 };
 
+function getCookie(name, default_value) {
+  var matches = document.cookie.match(new RegExp(
+	"(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+  ));
+  return matches ? decodeURIComponent(matches[1]) : default_value;
+}
+
+function setCookie(name, value) {
+  document.cookie = name + "=" + value;
+} 
 
 //D3 Tooltip
 var D3Tooltip = function() {

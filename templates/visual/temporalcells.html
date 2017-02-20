@@ -10,8 +10,7 @@
 </div>
 {% endblock %}
 
-{% block right %} 
-	TS: {% temporal_spectrum %}
+{% block right %}  
 	Group by :
 	<select id = "select_group" onchange="changeMode();">
 		<option>year</option>
@@ -26,6 +25,10 @@
 		<option>column</option>
 		<option>row</option> 
 	</select>
+	<br>
+	
+	<input type="checkbox" id = "cb_spectrum" onchange="changeMode();">Spectrum</input>
+	
 	<hr>
 	
 	<div>
@@ -107,6 +110,10 @@
 	if (norm_mode == "all") norm_mode = 0;
 	if (norm_mode == "row") norm_mode = 1;
 	if (norm_mode == "column") norm_mode = 2;
+	
+	var use_spectrum = getUrlParameter("spectrum", "false");
+	use_spectrum = (use_spectrum == 'true');
+	if (use_spectrum) document.getElementById("cb_spectrum").checked = "checked";
 	
 	var tooltip = D3Tooltip();
 	
@@ -316,7 +323,7 @@
 	
 	function get_color(kz, y) {
 		ky = (y / topics_count); 
-		if ({% temporal_spectrum %}) {
+		if (use_spectrum) {
 			R = topColor[0] * (1 - ky) + bottomColor[0] * ky; 
 			G = topColor[1] * (1 - ky) + bottomColor[1] * ky;  
 			B = topColor[2] * (1 - ky) + bottomColor[2] * ky;  
@@ -332,9 +339,11 @@
 	
 	
 	function changeMode() { 
-		window.location = "/visual/global?model={{model.id}}&type=temporalcells_" +
+		loc =  "/visual/global?model={{model.id}}&type=temporalcells_" +
 				document.getElementById("select_group").value + "&norm=" + 
 				document.getElementById("select_norm").value;
+		if (document.getElementById("cb_spectrum").checked) loc += "&spectrum=true";
+		window.location = loc;
 	}
 </script>
 {% endblock %}
