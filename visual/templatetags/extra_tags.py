@@ -15,4 +15,4 @@ def temporal_spectrum(context):
 	try:
 		return context['request'].COOKIES["temporal_spectrum"]
 	except:
-		return 'false'
+		return 'true'
