@@ -336,7 +336,7 @@ class ArtmModel(models.Model):
 		
 		
 		self.log("Saving topics...") 
-		for topic in Topic.objects.filter(layer=self.layers_count).order_by("index_id"): 
+		for topic in Topic.objects.filter(model=self, layer=self.layers_count).order_by("index_id"): 
 			topic.documents = bytes()
 			document_bags[topic.index_id].sort(reverse = True)
 			for weight, doc_index_id in document_bags[topic.index_id]:
