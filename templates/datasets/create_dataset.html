@@ -11,14 +11,27 @@
 			<div class="container">
 
 			<h3>Source</h3>
-			<div class="container">
+			<div class="container"> 
 				<ul class="nav nav-tabs">
-					<li class="active"><a  href="#local" data-toggle="tab" onclick="setMode('local')">Local</a></li>
-					<li class=""><a   href="#upload" data-toggle="tab" onclick="setMode('upload')">Upload</a></li>
-				</ul>
+					<li class="active"><a   href="#upload" data-toggle="tab" onclick="setMode('upload')">Upload</a></li>
+					{% if DEBUG %}<li class=""><a  href="#local" data-toggle="tab" onclick="setMode('local')">Local</a></li>{% endif %}
+				</ul> 
 				<p></p>
 				<div class="tab-content">
-					<div id="local" class="tab-pane fade active in">
+				
+					<div id="upload" class="tab-pane fade active in">
+						<div class="row"><p>
+							Pack everything in archive, then upload.
+						</p> </div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Archive</label>
+							
+							<div class="col-sm-1">
+								<input type="file" name="archive"/>
+							</div>
+						</div>
+					</div> 
+					<div id="local" class="tab-pane fade">
 						<div class="row"><p>
 							Please place dataset in specified format into <b>visartm/data/datasets</b> folder, then select dataset:
 						</p> </div>
@@ -32,20 +45,9 @@
 								</select>
 							</div>
 						</div>
-					</div>
+					</div> 
 					
-					<div id="upload" class="tab-pane fade">
-						<div class="row"><p>
-							Pack everything in archive, then upload.
-						</p> </div>
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label">Archive</label>
-							
-							<div class="col-sm-1">
-								<input type="file" name="archive"/>
-							</div>
-						</div>
-					</div>
+					
 				</div>
 				<input type="hidden" name="mode" id="mode" value="local" />
 			</div>

@@ -64,6 +64,8 @@ def	dataset_create(request):
 			'unreg': unreg,
 			'languages': settings.LANGUAGES
 		})
+		if settings.DEBUG:
+			context['DEBUG'] = True
 		return render(request, "datasets/create_dataset.html", context) 
 	
 	dataset = Dataset()
