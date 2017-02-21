@@ -47,9 +47,9 @@ def visual_model(request):
 		ret += "<br><br><br>MATRIX THETA<br>"
 		ret += pd.read_pickle(os.path.join(model.get_folder(), "theta"))[0:head].to_html()
 		
-		theta = model.get_phi()
-		for i in range(head):
-			for j in range(theta.shape[1]):
+		theta = model.get_theta()
+		for i in range(min(theta.shape[0],head)):
+			for j in range(min(theta.shape[1],head)):
 				ret += ("%.02e " % theta[i][j])
 			ret += "<br>"
 		

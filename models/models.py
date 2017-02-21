@@ -241,9 +241,11 @@ class ArtmModel(models.Model):
 		self.log("Loading matrix theta...")
 		theta_raw = pd.read_pickle(os.path.join(self.get_folder(), "theta"))
 		self.theta_index = theta_raw.index
+		
+				
 		if (1 in theta_raw) and theta_raw.shape[1] == self.dataset.documents_count:
-			theta_raw.sort_index(axis=1)
-			theta = theta_raw.values
+			self.log("Theta has correct index.")
+			theta = theta_raw.sort_index(axis=1).values
 		else:
 			self.log("Will load theta column by column.")
 			if theta_raw.shape[1] != self.dataset.documents_count:
@@ -259,7 +261,7 @@ class ArtmModel(models.Model):
 					self.log("WARNING! Document " + document.text_id + " wasn't found in matrix theta.")
 					continue
 					
-				doc_matrix_id = document.index_id - 1
+				doc_matrix_id = document.index_id
 				for i in range(topics_count):
 					theta[i][doc_matrix_id] = column[i]
 						 
