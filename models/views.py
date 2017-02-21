@@ -27,7 +27,34 @@ def visual_model(request):
 				"<a href = '/models/reload_model?model=" + str(model.id) + "'>Reload this model</a><br>" )
 		if model.status == 3:
 			return redirect('/models/settings?model_id=%d' % model.id) 
+	
+	if 'matrices' in request.GET:
+		try:
+			head = int(request.GET['matrices'])
+		except:
+			head = 10
+		import pandas as pd
+		ret = ""
+		ret += "MATRIX PHI<br>"
+		ret += pd.read_pickle(os.path.join(model.get_folder(), "phi"))[0:head].to_html() +  "<br>"
 		
+		phi = model.get_phi()
+		for i in range(head):
+			for j in range(phi.shape[1]):
+				ret += ("%.05f " % phi[i][j])
+			ret += "<br>"
+			
+		ret += "<br><br><br>MATRIX THETA<br>"
+		ret += pd.read_pickle(os.path.join(model.get_folder(), "theta"))[0:head].to_html()
+		
+		theta = model.get_phi()
+		for i in range(head):
+			for j in range(theta.shape[1]):
+				ret += ("%.02e " % theta[i][j])
+			ret += "<br>"
+		
+		return HttpResponse(ret)
+	
 	topics_count = model.topics_count.split()
 	topics = Topic.objects.filter(model = model)
 	topics_layers = [{"i": i + 1, "topics_count": topics_count[i+1], \

@@ -242,7 +242,8 @@ class ArtmModel(models.Model):
 		theta_raw = pd.read_pickle(os.path.join(self.get_folder(), "theta"))
 		self.theta_index = theta_raw.index
 		if (1 in theta_raw) and theta_raw.shape[1] == self.dataset.documents_count:
-			theta = theta_raw.sort_index(axis=1).values
+			theta_raw.sort_index(axis=1)
+			theta = theta_raw.values
 		else:
 			self.log("Will load theta column by column.")
 			if theta_raw.shape[1] != self.dataset.documents_count:
