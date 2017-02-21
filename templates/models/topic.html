@@ -54,8 +54,9 @@
 		Rename: <input type="text" name='new_title' class="" placeholder = "" value="{{topic.title}}"></input>
 		<input type="hidden" name='id' value="{{topic.id}}"> </input> 
 		{% csrf_token %}
-	</form>
-	
+	</form> 
+	<a href="/topic?id={{topic.id}}&mode=phi_column">Phi column</a>
+ 
 	<hr>
 	
 	<h4>Related topics</h4>
@@ -64,7 +65,7 @@
 		<br>
 	{% endfor %} 
 	
-	<a href="/topic?id={{topic.id}}&mode=phi_column">Phi column</a>
+	
 		
 </div>
 

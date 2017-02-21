@@ -1,5 +1,6 @@
 import datetime
 from django import template
+from django.conf import settings
 
 register = template.Library()
 
@@ -10,6 +11,11 @@ def color_theme(context):
 	except:
 		return "default"
 
+@register.simple_tag(takes_context=False)
+def debug_on():
+	return settings.DEBUG
+
+		
 '''
 @register.simple_tag(takes_context=True)
 def temporal_spectrum(context):
