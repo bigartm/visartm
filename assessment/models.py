@@ -80,8 +80,9 @@ class AssessmentProblem(models.Model):
 						topic.save()
 					except:
 						pass
-					used_ids = set([topic.index_id for topic in Segmentation_Topic.objecs.filter(problem=self)])
+					used_ids = set([topic.index_id for topic in Segmentation_Topic.objects.filter(problem=self)])
 					topic.index_id = mex(used_ids)
+					topic.name = "New topic %d" % topic.index_id
 					topic.save()
 						
 			elif POST["action"] == "alter_topic":

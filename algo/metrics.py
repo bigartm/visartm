@@ -31,7 +31,7 @@ def jaccard(P, Q):
 	union = 0
 	intersection = 0
 	N = len(P)
-	eps = 1e-9
+	eps = 1.0 / N
 	for i in range(N):
 		if P[i] > eps:
 			union +=1
@@ -39,7 +39,10 @@ def jaccard(P, Q):
 				intersection += 1
 		elif Q[i] > eps:
 			union +=1
-	return (1.0 * intersection) / union
+	if union == 0:
+		print("FUCK")
+		return 1.0
+	return 1.0 - (1.0 * intersection) / union
 	
 	
 def filter_tails(matrix, start, end):

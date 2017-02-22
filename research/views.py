@@ -71,7 +71,9 @@ def show_research(request, research_id):
 		return HttpResponseForbidden("You are not authorized to see this report.")
 	
 	if research.status == 3:
-		return general_views.message(request, "Error during rendering.<br>" + research.error_message.replace('\n', "<br>"))
+		return general_views.message(request, "Error during research.<br>" + \
+			research.error_message.replace('\n', "<br>") + \
+			"<a href='/research/rerun?id=" + str(research.id) + "'>Rerun</a>")
 		
 	with open(research.get_report_file(), "r", encoding = "utf-8") as f:
 		response = HttpResponse(f.read(), content_type='text/html')

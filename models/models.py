@@ -573,7 +573,7 @@ class ArtmModel(models.Model):
 			from algo.metrics import jsd
 			metric = metrics.jsd
 		elif metric == "jaccard": 
-			phi_t = metrics.filter_tails(phi_t, 0.1, 0.9)
+			#phi_t = metrics.filter_tails(phi_t, 0.1, 0.9)
 			metric = metrics.jaccard
 			
 		for i in range(topics_count[layer]):

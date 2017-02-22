@@ -12,7 +12,7 @@ class HamiltonPath:
         self.N = adj.shape[0]        
         for i in range (0, self.N):
             if abs(self.A[i][i]) > 1e-6:
-                raise ValueError ("Diagonal elements should be 0")
+                raise ValueError ("Diagonal elements should be 0 ,but A[%d][%d]=%f" % (i,i,self.A[i][i]))
             self.A[i][i] = 0
             for j in range (i+1, self.N):
                 if (self.A[i][j]!=self.A[j][i]):

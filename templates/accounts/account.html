@@ -81,7 +81,7 @@
 			{% for research in researches %}
 				<tr>
 					<td><a href="/research/{{research.id}}/">{{research.id}}</a></td>
-					<td>{{research.dataset}}</td>
+					<td><a href="/dataset?dataset={{research.dataset.text_id}}">{{research.dataset}}</a></td>
 					<td>{{research.script_name}}</td>
 					<td>{{research.model}}</td>
 					<td>{{research.problem}}</td>

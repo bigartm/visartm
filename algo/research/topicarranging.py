@@ -18,12 +18,12 @@ research.report_table([[str(topic.index_id), topic.title] for topic in topics])
 	
 
  
-for metric in ["euclidean", "hellinger", "cosine"]:	
+for metric in ["jaccard"]:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<hr>")
 	research.report_html("<h2>Метрика %s</h2>" % metric)
 	research.report("Матрица расстояний")
-	#research.report_table(dist)
+	research.report_table(dist)
 	research.gca().imshow(dist, interpolation = "nearest")
 	research.report_picture()
 
