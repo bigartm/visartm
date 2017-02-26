@@ -76,6 +76,8 @@ class Research(models.Model):
 			f.write("<p>" + text + "</p>\n")
 	
 	def gca(self, figsize=None):
+		import matplotlib as mpl
+		mpl.use("Agg")
 		import matplotlib.pyplot as plt 
 		self.figure = plt.figure(figsize=figsize)
 		return self.figure.gca()
