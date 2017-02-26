@@ -76,6 +76,23 @@
 		{% csrf_token %}
 	</form>
 	<hr>
+	<form method="post" id="formOrderMode">
+		<p>Assessment order</p>
+		<input type="radio" name="order_mode" value="topic_first" 
+			onchange="document.getElementById('formOrderMode').submit();"
+			{% if params.order_mode == "topic_first"%} checked {% endif %}>
+			Topic first
+		</input>
+		<input type="radio" name="order_mode" value="text_first"
+			onchange="document.getElementById('formOrderMode').submit();"
+			{% if params.order_mode == "text_first" %} checked {% endif %}>
+			Text first
+		</input>
+		<input type="hidden" name='action' value="change_order_mode"> </input>
+		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+		{% csrf_token %}
+	</form>
+	
 {% endblock %}
 
 {% block javascript %}

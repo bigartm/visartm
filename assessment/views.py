@@ -61,10 +61,9 @@ def problem(request):
 				return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can create assessment problem.")
 			problem = AssessmentProblem()
 			problem.dataset = dataset
-			problem.type = type
-			problem.initialize()
+			problem.type = type 
 			problem.save()
-			
+			problem.get_module().initialize_problem(problem)
 			
 			relation = ProblemAssessor()
 			relation.problem = problem

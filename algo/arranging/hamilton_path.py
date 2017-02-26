@@ -106,17 +106,17 @@ class HamiltonPath:
         self.iter_counter = 0
         
         while (time.time() - start_time < run_time):
-            elapsed = time.time() - start_time
+            self.elapsed = time.time() - start_time
             quality = self.path_weight()
-            print(elapsed, quality)
-            self.chart_time.append(elapsed)
+            #print(self.elapsed, quality)
+            self.chart_time.append(self.elapsed)
             self.chart_iterations.append(self.iter_counter)
             self.chart_weight.append(quality)
             self.iter_counter += self.atomic_iterations
             
-            if elapsed > run_time:
+            if self.elapsed > run_time:
                 break
-            q = cur_weight * 0.05 * (1 - elapsed/run_time)
+            q = cur_weight * 0.05 * (1 - self.elapsed/run_time)
             for c in range(self.atomic_iterations):
                 i = randint(0, self.N - 1)
                 j = randint(0, self.N - 1)

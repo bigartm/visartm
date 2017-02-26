@@ -1,12 +1,15 @@
 import numpy as np
 #from scipy.spatial.distance import euclidean
-#from scipy.stats import entropy 			
+from scipy.stats import entropy 			
 
 def euclidean(p, q):
 	return np.linalg.norm(p-q)
 			
 def cosine(p, q):
 	return 1 - (np.dot(p,q) / (np.linalg.norm(p)*np.linalg.norm(q)))
+
+def minkovsky(p, q):
+	return np.sum(np.abs(p-q))
 
 def cov(p, q):
 	return np.dot(p,q)	
@@ -15,19 +18,24 @@ def hellinger(p,q):
 	_SQRT2 = np.sqrt(2)
 	return euclidean(np.sqrt(p), np.sqrt(q)) / _SQRT2
 	
+'''
 # Kullbak-Leibler divirgence
 def kld(A, B):
-    return np.sum([A[i] * np.log(A[i]/B[i]) for i in range(len(A)) if (A[i]!=0 and B[i]!=0)])	
+    return np.sum([A[i] * np.log(A[i]/B[i]) for i in range(len(A))] )	
 	
-# Jensen-Shannon Divergence
-def jsd(P, Q):
-    P = np.array(P)
-    Q = np.array(Q)
-    M = 0.5 * (P + Q)
-    return 0.5 * (kld(P, M) + kld(Q, M)) 
+def jsd_bad(P, Q):
+	P = np.array(P)
+	Q = np.array(Q)
+	M = 0.5 * (P + Q)
+	return 0.5 * (kld(P, M) + kld(Q, M)) 
+'''
 
 # Jensen-Shannon Divergence
-def jaccard(P, Q):
+def jsd(P, Q): 
+	return entropy(0.5 * (P + Q)) - 0.5 * (entropy(P) + entropy(Q))
+
+'''
+def jaccard_bad(P, Q):
 	union = 0
 	intersection = 0
 	N = len(P)
@@ -42,9 +50,19 @@ def jaccard(P, Q):
 	if union == 0:
 		print("FUCK")
 		return 1.0
+	return 1.0 - (1.0 * intersection) / union	
+'''
+# Jaccard
+def jaccard(P, Q):
+	N = len(P)
+	eps = 1.0 / N
+	P = P > eps
+	Q = Q > eps
+	union = (P | Q).sum()
+	intersection = (P & Q).sum()
 	return 1.0 - (1.0 * intersection) / union
 	
-	
+'''	
 def filter_tails(matrix, start, end):
 	for row in matrix:
 		s = 0
@@ -53,3 +71,4 @@ def filter_tails(matrix, start, end):
 			if s < start or s > end:
 				row[j] = 0
 	return matrix
+'''

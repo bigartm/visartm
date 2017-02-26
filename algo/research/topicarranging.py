@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 import numpy as np 
 import json 
-from algo.hamilton.hamilton_path import HamiltonPath
+from algo.arranging.hamilton_path import HamiltonPath
 
-try:
-	params = json.loads(research.problem.params)
-except:
-	pass
-	
+
 model = research.model
 topics = model.get_topics()
+
+
+assessment_results = research.problem.get_results()
+N = len(topics)
+ass_matrix = np.zeros((N, N))
+for a in assessment_results:
+	print(a)
+	target_topic = topics.get(id=a["target_topic_id"])
+	for topic_id in a["selected_topics"]:
+		topic = topics.get(id=topic_id)
+		ass_matrix[target_topic.index_id][topic.index_id] += 1
+		
+research.show_matrix(ass_matrix)
 
 
 
@@ -18,12 +27,12 @@ research.report_table([[str(topic.index_id), topic.title] for topic in topics])
 	
 
  
-for metric in ["jaccard"]:	
+for metric in []: # ["euclidean", "minkovsky", "hellinger", "cosine", "jaccard", "jsd"]:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<hr>")
 	research.report_html("<h2>Метрика %s</h2>" % metric)
 	research.report("Матрица расстояний")
-	research.report_table(dist)
+	# research.report_table(dist)
 	research.gca().imshow(dist, interpolation = "nearest")
 	research.report_picture()
 
@@ -52,7 +61,7 @@ for metric in ["jaccard"]:
 	
 	research.report("Симмуляция отжига.")
 	hp = HamiltonPath(dist)
-	hp.solve_annealing(run_time=10)
+	hp.solve_annealing(run_time=2)
 	research.report("Новая матрица расстояний.")
 	research.gca().imshow(hp.permute_adj_matrix(), interpolation = "nearest")
 	research.report_picture()

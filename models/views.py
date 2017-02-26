@@ -97,9 +97,13 @@ def arrange_topics(request):
 	model.save()
 	model.prepare_log()
 	
-	t = Thread(target = ArtmModel.arrange_topics, args = (model, request.GET['mode'],), daemon = True)
-	t.start()
-	
+	mode = request.GET['mode']
+	if settings.THREADING:
+		t = Thread(target = ArtmModel.arrange_topics, args = (model, mode,), daemon = True)
+		t.start()
+	else:
+		model.arrange_topics(mode)
+		
 	return redirect("/model?model=" + str(model.id))
 
 @login_required

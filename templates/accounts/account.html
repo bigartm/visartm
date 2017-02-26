@@ -95,15 +95,19 @@
 							<span style="color:red;">Error</span>
 						{% elif research.status == 4 %}
 							<span style="color:red;">Interrupted</span>
+						{% elif research.status == 5 %}
+							Backup
 						{% endif %}
 					</td>
 					<td>
-						{% if research.status == 2 %}
-							<a href="/research/rerun?id={{research.id}}">Rerun</a>
-						{% elif research.status == 3 %}
-							<a href="/research/rerun?id={{research.id}}">Rerun</a>
-						{% elif research.status == 4 %}
-							<a href="/research/rerun?id={{research.id}}">Rerun</a>
+						{% if not research.sealed %}
+							{% if research.status == 2 %}
+								<a href="/research/rerun?id={{research.id}}">Rerun</a>
+							{% elif research.status == 3 %}
+								<a href="/research/rerun?id={{research.id}}">Rerun</a>
+							{% elif research.status == 4 %}
+								<a href="/research/rerun?id={{research.id}}">Rerun</a>
+							{% endif %}
 						{% endif %}
 					</td>
 				</tr>

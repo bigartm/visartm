@@ -10,17 +10,18 @@ from assessment.models import AssessmentProblem
 from django.contrib.auth.models import User	
 
 class Research(models.Model):
-	dataset = models.ForeignKey(Dataset, null = False)
-	model = models.ForeignKey(ArtmModel, null = True)
-	problem = models.ForeignKey(AssessmentProblem, null = True)
-	researcher = models.ForeignKey(User, null = False) 
+	dataset = models.ForeignKey(Dataset, null = True, blank=True)
+	model = models.ForeignKey(ArtmModel, null = True, blank=True)
+	problem = models.ForeignKey(AssessmentProblem, null = True, blank=True)
+	researcher = models.ForeignKey(User, null=False) 
 	script_name = models.TextField(null=False)
 	start_time = models.DateTimeField(null=False, default = datetime.now)
-	finish_time = models.DateTimeField(null=True)
-	status = models.IntegerField(null=False, default = 0)  # 1-running,2-OK,3-errror,4-interrupted
-	error_message = models.TextField(null=True)
+	finish_time = models.DateTimeField(null=True, blank=True)
+	sealed = models.BooleanField(default=False)
+	status = models.IntegerField(null=False, default = 0)  # 1-running,2-OK,3-errror,4-interrupted, 5-backup
+	error_message = models.TextField(null=True, blank=True)
 	
-	def run(self):
+	def run(self):	
 		with open(self.get_report_file(), "w", encoding="utf-8") as f:
 			f.write("<html>\n<head></head>\n<body>")
 			f.write("<h1>Research report</h1>\n")
@@ -36,9 +37,8 @@ class Research(models.Model):
 			f.write("<hr>\n")
 			
 		script_file_name = os.path.join(settings.BASE_DIR, "algo", "research", self.script_name)
-		self.img_counter = 0
-
-		
+		self.img_counter = 0 
+			
 		try:
 			with open(script_file_name, "r", encoding="utf-8") as f:
 				code = compile(f.read(), script_file_name, "exec")		
@@ -58,6 +58,7 @@ class Research(models.Model):
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<hr>\n")
 			f.write("<p>Research finished: %s</p>\n" % self.finish_time.strftime("%d.%m.%y %H:%M:%S") )
+			# f.write("<p><a href='/research/rerun?id=%d'>Rerun</a></p>\n" % self.id)
 			f.write("</body>\n</html>\n")
 		
 	
@@ -68,18 +69,26 @@ class Research(models.Model):
 	
 	def report(self, text):
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
+			f.write(text + "<br>\n")
+	
+	def report_p(self, text=""):
+		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<p>" + text + "</p>\n")
 	
-	def gca(self):
+	def gca(self, figsize=None):
 		import matplotlib.pyplot as plt 
-		self.figure = plt.figure()
+		self.figure = plt.figure(figsize=figsize)
 		return self.figure.gca()
 	
-	def report_picture(self, height=400, width=400, align='left'):
+	def show_matrix(self, m):
+		self.gca().imshow(m, interpolation = "nearest")
+		self.report_picture()
+	
+	def report_picture(self, height=400, width=400, align='left', bbox_extra_artists=None):
 		self.img_counter += 1
 		file_name = str(self.img_counter) + '.png'
 		path = os.path.join(self.get_pic_folder(), file_name)
-		self.figure.savefig(path)
+		self.figure.savefig(path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<div align='%s'><img src='pic/%s' width='%d' heigth='%d' /></div>\n" % (align, file_name, width, height))	
 
@@ -133,13 +142,22 @@ from django.dispatch import receiver
 from shutil import rmtree 
 @receiver(pre_delete, sender=Research, dispatch_uid='research_delete_signal')
 def remove_research_files(sender, instance, using, **kwargs):
-	folder = instance.get_folder()
-	# print("deleting folder " + folder)
-	try:
-		rmtree(folder)
-	except:
-		pass
-		
+	if instance.sealed:
+		backup = Research()
+		backup.researcher = instance.researcher
+		backup.status = 5
+		backup.sealed = True
+		backup.start_time = instance.start_time
+		backup.finish_time = instance.finish_time
+		backup.script_name = instance.script_name
+		backup.save()
+		os.rename(instance.get_folder(), os.path.join(settings.DATA_DIR, "research", str(backup.id)))
+	else: 
+		try:
+			rmtree(instance.get_folder())
+		except:
+			pass
+			
 from django.contrib import admin
 admin.site.register(Research)
 

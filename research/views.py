@@ -52,8 +52,12 @@ def create_research(request):
 def rerun_research(request):
 	research = Research.objects.get(id=request.GET['id'])
 	if research.researcher != request.user:
-		return HttpResponseForbidden("You are not authorized to rerun this report.")
+		return HttpResponseForbidden("You are not authorized to rerun this report.")	
+	if research.sealed:
+		return HttpResponseForbidden("Research is sealed.")
+		
 	research.start_time = datetime.now()
+	research.finish_time = None
 	research.status = 1 
 	research.save()		
 	
@@ -78,8 +82,8 @@ def show_research(request, research_id):
 	with open(research.get_report_file(), "r", encoding = "utf-8") as f:
 		response = HttpResponse(f.read(), content_type='text/html')
 	
-	if research.status == 1:
-		response['Refresh'] = "10"
+	# if research.status == 1:
+	#	response['Refresh'] = "10"
 	return response
 	
 def get_picture(request, research_id, pic_id):

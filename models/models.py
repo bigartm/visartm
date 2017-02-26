@@ -223,15 +223,7 @@ class ArtmModel(models.Model):
 			raise ValueError("No phi matrix")
 		
 		self.log("Matrix phi loaded.")
-		
-		'''
-		self.log("Norming phi...")
-		sums = np.sum(phi, axis = 0)
-		topics_count = len(sums)
-		for row in phi:
-			for j in range(topics_count):
-				row[j] /= sums[j]
-		'''
+		 
 		
 		np.save(os.path.join(self.get_folder(), "phi.npy"), phi)
 		self.log("Matrix phi saved in numpy format.")
@@ -358,6 +350,10 @@ class ArtmModel(models.Model):
 		vocab_file = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "UCI", "vocab." + self.dataset.text_id + ".txt")
 		self.prepare_log()
 		self.log("Reloading model " + str(self.id) + "...")
+		
+		rmtree(self.get_visual_folder())
+		rmtree(self.get_dist_folder())
+		
 		
 		# Loading matrices
 		self.gather_phi()
@@ -552,33 +548,52 @@ class ArtmModel(models.Model):
 			layer=self.layers_count
 		if layer == 0:
 			return np.zeros((1,1))
+		
+		matrix_name = os.path.join(self.get_dist_folder(), metric + "_" + str(layer) + ".npy")
+		try:
+			ret = np.load(matrix_name)
+		except:
+			topics_count = [int(x) for x in self.topics_count.split()]
+			ret = np.zeros((topics_count[layer], topics_count[layer]))
+			shift = 0
+			for i in range (1, layer):
+				shift += topics_count[i]
+				
+			phi_t = self.get_phi().transpose()[shift : shift + topics_count[layer]]
 			
-		topics_count = [int(x) for x in self.topics_count.split()]
-		ret = np.zeros((topics_count[layer], topics_count[layer]))
-		shift = 0
-		for i in range (1, layer):
-			shift += topics_count[i]
+			sums = np.sum(phi_t, axis = 1)
+			if (np.max(sums) - np.min(sums)) / np.mean(sums) > 1e-3:
+				self.log(str(sums))
+				self.log("max=" + str(np.max(sums)))
+				self.log("min=" + str(np.min(sums)))
+				self.log("avg=" + str(np.mean(sums)))
+				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized")
+			  
+			j = 0
+			for row in phi_t:
+				row /= sums[j]
+				j += 1 
 			
-		phi_t = self.get_phi().transpose()
-		import algo.metrics as metrics
-		if metric == "euclidean": 
-			metric = metrics.euclidean 
-		elif metric == "cosine": 
-			metric = metrics.cosine  
-		elif metric == "hellinger": 
-			metric = metrics.hellinger
-		elif metric == "kld": 
-			metric = metrics.kld
-		elif metric == "jsd":
-			from algo.metrics import jsd
-			metric = metrics.jsd
-		elif metric == "jaccard": 
-			#phi_t = metrics.filter_tails(phi_t, 0.1, 0.9)
-			metric = metrics.jaccard
-			
-		for i in range(topics_count[layer]):
-			for j in range(topics_count[layer]):
-				ret[i][j] = metric(phi_t[shift + i], phi_t[shift + j])
+			import algo.metrics as metrics
+			if metric == "euclidean": 
+				metric = metrics.euclidean 
+			elif metric == "cosine": 
+				metric = metrics.cosine  
+			elif metric == "minkovsky":
+				metric = metrics.minkovsky
+			elif metric == "hellinger": 
+				metric = metrics.hellinger
+			elif metric == "kld": 
+				metric = metrics.kld
+			elif metric == "jsd": 
+				metric = metrics.jsd
+			elif metric == "jaccard":  
+				metric = metrics.jaccard
+				
+			for i in range(topics_count[layer]):
+				for j in range(topics_count[layer]):
+					ret[i][j] = metric(phi_t[i], phi_t[j])
+			np.save(matrix_name, ret)
 		return ret
 	
 	# Only horizontal arranging
@@ -616,14 +631,24 @@ class ArtmModel(models.Model):
 				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
 				idx = np.argsort(titles)
 			if mode == "hamilton":
-				from algo.hamilton.hamilton_path import HamiltonPath 
+				from algo.arranging.hamilton_path import HamiltonPath 
 				hp = HamiltonPath(topic_distances[layer_id])
 				idx = hp.solve()
 			elif mode == "tsne": 
 				from sklearn.manifold import TSNE
-				tsne_model = TSNE(n_components = 1, random_state=0, metric = "precomputed")
+				tsne_model = TSNE(n_components=1, random_state=0, metric = "precomputed")
 				tsne_result = tsne_model.fit_transform(topic_distances[layer_id]).reshape(-1) 
 				idx = np.argsort(tsne_result)
+			elif mode == "mds":
+				from sklearn.manifold import MDS
+				mds = MDS(n_components=1, max_iter=3000, eps=1e-9, random_state=0,dissimilarity="precomputed", n_jobs=4)
+				result = mds.fit_transform(topic_distances[layer_id]).reshape(-1) 
+				idx = np.argsort(result)
+			elif mode == "dendro":
+				from algo.arranging.dendro_arranger import DendroArranger
+				da = DendroArranger(topic_distances[layer_id])
+				idx = da.arrange()
+			
 			i = 0
 			for topic in topics_index[layer_id]:
 				topic = topics_index[layer_id][idx[i]]
@@ -646,6 +671,13 @@ class ArtmModel(models.Model):
 		if not os.path.exists(path): 
 			os.makedirs(path) 
 		return path			
+		
+	def get_dist_folder(self):
+		path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "models", self.text_id, "dist")
+		if not os.path.exists(path): 
+			os.makedirs(path) 
+		return path			
+	
 
 	def get_phi(self):
 		return np.load(os.path.join(self.get_folder(), "phi.npy"))

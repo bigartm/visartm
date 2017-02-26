@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+	
+	Target topic:{{target_topic}}
+	<hr>
+	{% for topic in topics %}
+		{% if topic != target_topic %}
+			<input type="checkbox" onclick="checkChanged({{topic.id}});">
+				{{topic}}
+			</input>
+			<br>
+		{% endif %}
+	{% endfor %}
+	
+	<form method='post'>
+		<input type="hidden" name="task_id" value="{{task.id}}" />
+		<input type="hidden" name="selected_topics" id="selected_topics" value="{{task.id}}" />
+		<button class="btn btn-success">Done</button>
+		<input type="hidden" name="finished" />
+		{% csrf_token %}
+	</form>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+	var topics = {};
+	function checkChanged(topic_id) {
+		if (!topics[topic_id]) topics[topic_id] = true;
+		else topics[topic_id] = false;
+		val = "";
+		for (var i in topics) {
+			if (topics[i]) {
+				val += i + ",";
+			}
+		}
+		// alert(val);
+		document.getElementById("selected_topics").value = "[" + val.substr(0, val.length - 1) + "]";
+	}
+</script>
+{% endblock %}
+ 

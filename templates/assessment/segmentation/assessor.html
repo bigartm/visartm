@@ -35,10 +35,9 @@
 	<div class='container-fluid'>
 		<div class="col-sm-7">
 			<div id="content">			
-				<div  onmouseup="sendSelection()">
+				<div  onmouseup="doSelection()">
 					<p>Assesment task #{{task.id}}</p>
 					<p>{{task}}.</p>
-					  
 				 
 					<div id="text">
 					  {% autoescape off %}{{text}}{% endautoescape %}
@@ -68,16 +67,25 @@
 		<div class="col-sm-3">
 			<div  id="topics-list"> 
 				<form id="formSelectTopic">
-					<input type="radio" name='selected_topic' id="rb-1" value="-1" checked="checked" onclick="showDescription();">Нет темы</input><br>
+					{% if topic_first %}
+						<input type="radio" name='selected_topic' id="rb-1" value="-1" checked="checked" onclick="showDescription();">Нет темы</input>
+					{% else %}
+						<a id="rb-1" onclick="clickTopic(-1);" class="nolink">Нет темы</a>
+					{% endif %}
+					<br>
 					{% for topic in topics %}
 						{% if topic.color > 0 %} 
-							<input 
-								type = "radio" 
-								name='selected_topic'
-								value='{{topic.topic.index_id}}'
-								onclick="showDescription();"
-								{% if selected_topic == topic.topic.index_id %} checked="checked" {% endif %}
-							><span 	id="rb{{topic.color}}">{{topic.topic.name}}</span></input>
+							{% if topic_first %}
+								<input 
+									type = "radio" 
+									name='selected_topic'
+									value='{{topic.topic.index_id}}'
+									onclick="showDescription();"
+									{% if selected_topic == topic.topic.index_id %} checked="checked" {% endif %}
+								><span 	id="rb{{topic.color}}">{{topic.topic.name}}</span></input>
+							{% else %}
+								<a id="rb{{topic.color}}" onclick="clickTopic({{topic.topic.index_id}});">{{topic.topic.name}}</a>
+							{% endif %}
 							<sup><a onClick="notUseTopic({{topic.topic.index_id}});"><big>x</big></a></sup>
 							<br>
 						{% endif %}
@@ -163,7 +171,8 @@
 	
 	var somethingSelected = false;
 	
-	function sendSelection() {
+	
+	function doSelection() {
 		selection = window.getSelection();
 		selectedText = selection.toString(); 
 		if (selectedText.length > 1) {
@@ -177,20 +186,35 @@
 			somethingSelected = false;
 		}
 		
+		{% if topic_first %}
+			document.getElementById("topic_id").value = document.getElementById("formSelectTopic").elements["selected_topic"].value;
+			sendSelection();
+		{% endif %}
+	}
+	
+	function clickTopic(topic_id) {
+		showDescription(topic_id);
+		document.getElementById("topic_id").value = topic_id;
+		sendSelection();
+	}
+	
+	
+	function sendSelection() {
 		if (somethingSelected) { 
 			document.getElementById("action").value = "selection";
-			document.getElementById("topic_id").value = document.getElementById("formSelectTopic").elements["selected_topic"].value;
 			document.getElementById("formMain").submit();
 		} 
 	}
 	
 	{% autoescape off %}
-	function showDescription() {
+	function showDescription(topic_id=-2) {
 		descrTitle = document.getElementById("descr-title");
 		descrText = document.getElementById("descr-text");
 		descrTitle.innerHTML = "Нет темы";
 		descrText.innerHTML = "";
-		topic_id = document.getElementById("formSelectTopic").elements["selected_topic"].value;
+		if (topic_id == -2) {
+			topic_id = document.getElementById("formSelectTopic").elements["selected_topic"].value;
+		}
 		{% for x in topics %}
 			{% if x.color > 0 %}
 				if (topic_id == {{x.topic.index_id}}) {
