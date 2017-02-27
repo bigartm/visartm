@@ -141,10 +141,11 @@ class Dataset(models.Model):
 		batch_vectorizer = artm.BatchVectorizer(
 			data_path = vw_path,
 			data_format = "vowpal_wabbit", 
-			batch_size = 1000,
+			batch_size = 10000,
 			collection_name = self.text_id, 
 			target_folder = batches_folder
 		)
+		self.log("Batches created.")
 			
 	@transaction.atomic	
 	def gather_dictionary(self, custom_vocab=False):
@@ -443,7 +444,7 @@ class Document(models.Model):
 				with open(wordpos_file, "r", encoding = "utf-8") as f2:
 					for line in f2.readlines():
 						parsed = line.split()
-						if len(parsed) != 3:
+						if len(parsed) < 3:
 							continue
 						key = parsed[2]
 						if key in self.dataset.terms_index:
@@ -465,7 +466,7 @@ class Document(models.Model):
 				parsed_term = term.split(':')
 				key = parsed_term[0] + "$#" + current_modality
 				if ':' in term:
-					count = int(parsed_term[1])	
+					count = int(float(parsed_term[1]))	
 				else:
 					count = 1
 				try:

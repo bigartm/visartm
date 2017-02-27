@@ -44,6 +44,31 @@ def obtuse_angle_conserving(dist, perm):
 					
 	return (6.0 * ctr) / (N * (N-1) * (N-2))
 	
+def AD(dist, perm):
+	N = dist.shape[0]
+	avg_cos = np.zeros(N,N)
+	for i in range(N):
+		for j in range(i, N):
+			sum = 0
+			for k in range(N):
+				A = dist[i][k]
+				B = dist[j][k]
+				C = dist[i][j]
+				sum += (A*A+B*B-C*C) / (2*A*B)  
+			avg_cos[i][j] = sum / N
+	
+	ans = np.zeros(N)
+	for l in range(N):
+		for i in range(0, N - l):
+			ans[l] += avg_cos[perm[i]][perm[i+l]]
+		ans[l] /= (N - l)
+
+	return ans
+	
+	
+	
+	
+	
 def user_score(assessment, perm):	
 	N = len(perm)
 	rev = [i for i in range(N)]

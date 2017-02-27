@@ -63,58 +63,6 @@
 		{% endfor %} 
 		<hr>
 	{% endif %}
-	
-	{% if researches %}
-		<h3>Researches</h3>
-		<table class = "table table-bordered table-hover">
-			<thead><tr>
-				<td>Id</td>
-				<td>Dataset</td>
-				<td>Script</td>
-				<td>Model</td>
-				<td>Assesment problem</td>
-				<td>Duration</td>
-				<td>Status</td>
-				<td>Rerun</td>
-			</tr></thead>
-			<tbody>
-			{% for research in researches %}
-				<tr>
-					<td><a href="/research/{{research.id}}/">{{research.id}}</a></td>
-					<td><a href="/dataset?dataset={{research.dataset.text_id}}">{{research.dataset}}</a></td>
-					<td>{{research.script_name}}</td>
-					<td>{{research.model}}</td>
-					<td>{{research.problem}}</td>
-					<td>{{research.duration}}</td>
-					<td>
-						{% if research.status == 1 %}
-							Running
-						{% elif research.status == 2 %}
-							<span style="color:green;">OK</span>
-						{% elif research.status == 3 %}
-							<span style="color:red;">Error</span>
-						{% elif research.status == 4 %}
-							<span style="color:red;">Interrupted</span>
-						{% elif research.status == 5 %}
-							Backup
-						{% endif %}
-					</td>
-					<td>
-						{% if not research.sealed %}
-							{% if research.status == 2 %}
-								<a href="/research/rerun?id={{research.id}}">Rerun</a>
-							{% elif research.status == 3 %}
-								<a href="/research/rerun?id={{research.id}}">Rerun</a>
-							{% elif research.status == 4 %}
-								<a href="/research/rerun?id={{research.id}}">Rerun</a>
-							{% endif %}
-						{% endif %}
-					</td>
-				</tr>
-			{% endfor %}
-			</tbody>
-		</table>  
-	{% endif %}
- 
+	 
   
 {% endblock %}

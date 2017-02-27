@@ -75,7 +75,7 @@ def account_view(request, user_name):
 		context["private_datasets"] = Dataset.objects.filter(owner = account, is_public = False)
 		context["assessment_problems"] = assessment_problems
 		context["models"] = ArtmModel.objects.filter(author = account)
-		context["researches"] = Research.objects.filter(researcher = account).order_by("id")
+		
 		
 		
 	permissions = []

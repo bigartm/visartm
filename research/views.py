@@ -13,6 +13,10 @@ from assessment.models import AssessmentProblem
 import visartm.views as general_views
 from django.contrib.auth.decorators import login_required, permission_required
 
+def researches(request):
+	context = {"researches": Research.objects.all().order_by("id")}
+	return render(request, 'research/researches.html', Context(context)) 
+	
 @login_required
 @permission_required("add_reserach")
 def create_research(request):

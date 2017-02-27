@@ -53,21 +53,19 @@ class HamiltonPath:
 		
 		
 	def solve(self, fast=False):
-		start_time =  time.time()
+		# start_time =  time.time()
 		print ("Quality before = ", self.path_weight()) 
 		if self.N <= 10: 
 			self.solve_branch() 
 		elif self.N <= 13: 
 			self.solve_branch(3)
-		elif self.N <= 18: 
-			self.solve_branch(2)
 		else:
 			if fast:
 				self.solve_annealing(run_time=10)
 			else:
-				self.solve_annealing(run_time=min(30,self.N))
-		print ("Quality after = ", self.path_weight())
-		print ("Time:  %fs " % (time.time() - start_time) )
+				self.solve_annealing(run_time=max(25, 0.25*self.N))
+		# print ("Quality after = ", self.path_weight())
+		# print ("Time:  %fs " % (time.time() - start_time) )
 		return self.path
 		
 	def solve_stupid_brute_force(self):

@@ -91,6 +91,7 @@ class Research(models.Model):
 		file_name = str(self.img_counter) + '.png'
 		path = os.path.join(self.get_pic_folder(), file_name)
 		self.figure.savefig(path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
+		self.figure.clf()
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<div align='%s'><img src='pic/%s' width='%d' heigth='%d' /></div>\n" % (align, file_name, width, height))	
 
