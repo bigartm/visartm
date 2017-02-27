@@ -38,7 +38,7 @@ class DendroArranger:
 	def arrange(self):
 		self.pieces = [[i] for i in range(self.N)] 
 		while(len(self.pieces) != 1):
-			print(self.pieces)
+			#print(self.pieces)
 			M = len(self.pieces)
 			self.min_dist = np.inf 
 			for x in range(M):

@@ -8,6 +8,7 @@ import json
 import os
 
 from datasets.models import Dataset
+from models.models import ArtmModel
 from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
 from django.contrib.auth.models import User	
 import visartm.views as general_views
@@ -26,51 +27,53 @@ def problem(request):
 			return redirect("/assessment/problem?problem_id=" + str(problem.id) + "&mode=settings")
 		
 	
-	if "problem_id" in request.GET:
-		problem = AssessmentProblem.objects.get(id = request.GET["problem_id"])
-		problem.refresh()
-		if problem.dataset.owner != request.user:
-			return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can see assessment problem.")
-		
-		if "mode" in request.GET and request.GET["mode"] == "settings":
-			context = problem.get_view_context()
-			context["no_footer"] = True
-			return render(request, os.path.join("assessment", problem.type, "settings.html"), Context(context))
-		else:
-			from django.contrib.auth.models import User
-			not_assessors = [x.username for x in User.objects.all()]
-			assessors = [x.assessor.username for x in ProblemAssessor.objects.filter(problem = problem)]
-			for assessor in assessors:
-				not_assessors.remove(assessor)
-			context = Context({
-				"problem": problem,
-				"assessors": assessors,
-				"not_assessors": not_assessors,
-				"tasks_in_progress": AssessmentTask.objects.filter(problem=problem, status=1),
-				"count_tasks": problem.count_tasks()
-			})
-		return render(request, "assessment/problem.html", context)
+	problem = AssessmentProblem.objects.get(id = request.GET["problem_id"])
+	problem.refresh()
+	if problem.dataset.owner != request.user:
+		return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can see assessment problem.")
+	
+	if "mode" in request.GET and request.GET["mode"] == "settings":
+		context = problem.get_view_context()
+		context["no_footer"] = True
+		return render(request, os.path.join("assessment", problem.type, "settings.html"), Context(context))
 	else:
-		dataset_id = int(request.GET["dataset_id"])
-		type = request.GET["type"]
-		try:
-			problem = AssessmentProblem.objects.get(dataset_id=dataset_id, type=type)
-		except:
-			dataset = Dataset.objects.get(id = dataset_id)		
-			if dataset.owner != request.user:
-				return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can create assessment problem.")
-			problem = AssessmentProblem()
-			problem.dataset = dataset
-			problem.type = type 
-			problem.save()
-			problem.get_module().initialize_problem(problem)
-			
-			relation = ProblemAssessor()
-			relation.problem = problem
-			relation.assessor = request.user
-			relation.save()
-			
-		return redirect("/assessment/problem?problem_id=" + str(problem.id))
+		from django.contrib.auth.models import User
+		not_assessors = [x.username for x in User.objects.all()]
+		assessors = [x.assessor.username for x in ProblemAssessor.objects.filter(problem = problem)]
+		for assessor in assessors:
+			not_assessors.remove(assessor)
+		context = Context({
+			"problem": problem,
+			"assessors": assessors,
+			"not_assessors": not_assessors,
+			"tasks_in_progress": AssessmentTask.objects.filter(problem=problem, status=1),
+			"count_tasks": problem.count_tasks(),
+			"models": ArtmModel.objects.filter(dataset=problem.dataset)
+		})
+	return render(request, "assessment/problem.html", context)
+ 
+	
+@login_required	
+def create_problem(request):
+	dataset_id = int(request.GET["dataset_id"])
+	type = request.GET["type"]
+	dataset = Dataset.objects.get(id = dataset_id)		
+	if dataset.owner != request.user:
+		return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can create assessment problem.")
+	problem = AssessmentProblem()
+	problem.dataset = dataset
+	problem.type = type 
+	problem.save()
+	problem.get_module().initialize_problem(problem)
+	
+	relation = ProblemAssessor()
+	relation.problem = problem
+	relation.assessor = request.user
+	relation.save()
+	
+	return redirect("/assessment/problem?problem_id=" + str(problem.id))
+	
+	
 	
 @login_required
 def problem_instruction(request):

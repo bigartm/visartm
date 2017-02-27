@@ -3,6 +3,7 @@ import assessment.views as assessment_views
 
 urlpatterns = [
 	url(r'^problem$', assessment_views.problem),
+	url(r'^create_problem$', assessment_views.create_problem),
 	url(r'^task$', assessment_views.task),
 	url(r'^get_task$', assessment_views.get_task),	
 	url(r'^add_assessor$', assessment_views.add_assessor),	

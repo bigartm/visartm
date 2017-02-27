@@ -596,9 +596,13 @@ class ArtmModel(models.Model):
 			np.save(matrix_name, ret)
 		return ret
 	
+	
+		
+	
+	
 	# Only horizontal arranging
 	@transaction.atomic
-	def arrange_topics(self, mode = "alphabet"):
+	def arrange_topics(self, mode = "alphabet", metric="euclidean"):
 		# Counting horizontal relations topic-topic
 		self.log("Counting horizontal relations topic-topic...")	
 		phi = self.get_phi()
@@ -610,7 +614,7 @@ class ArtmModel(models.Model):
 		
 		
 		TopicRelated.objects.filter(model = self).delete()
-		topic_distances = [self.get_topics_distances(layer=i) for i in range(layers_count + 1)]
+		topic_distances = [self.get_topics_distances(metric=metric, layer=i) for i in range(layers_count + 1)]
 		
 		for layer_id in range (1, layers_count + 1): 
 			for i in range(0, topics_count[layer_id]):
@@ -630,24 +634,9 @@ class ArtmModel(models.Model):
 			if mode == "alphabet":
 				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
 				idx = np.argsort(titles)
-			if mode == "hamilton":
-				from algo.arranging.hamilton_path import HamiltonPath 
-				hp = HamiltonPath(topic_distances[layer_id])
-				idx = hp.solve()
-			elif mode == "tsne": 
-				from sklearn.manifold import TSNE
-				tsne_model = TSNE(n_components=1, random_state=0, metric = "precomputed")
-				tsne_result = tsne_model.fit_transform(topic_distances[layer_id]).reshape(-1) 
-				idx = np.argsort(tsne_result)
-			elif mode == "mds":
-				from sklearn.manifold import MDS
-				mds = MDS(n_components=1, max_iter=3000, eps=1e-9, random_state=0,dissimilarity="precomputed", n_jobs=4)
-				result = mds.fit_transform(topic_distances[layer_id]).reshape(-1) 
-				idx = np.argsort(result)
-			elif mode == "dendro":
-				from algo.arranging.dendro_arranger import DendroArranger
-				da = DendroArranger(topic_distances[layer_id])
-				idx = da.arrange()
+			else:
+				from algo.arranging.base import get_arrangement_permutation
+				idx = get_arrangement_permutation(topic_distances[layer_id], mode)
 			
 			i = 0
 			for topic in topics_index[layer_id]:
@@ -782,6 +771,17 @@ class Topic(models.Model):
 	def top_words(self, count = 10):
 		return [x.term.text for x in TopTerm.objects.filter(topic=self, term__modality__is_word=True).order_by('-weight')[0:count]]
 			
+	def top_words_html(self, count=10):
+		ret = ""
+		tw = self.top_words(count=count)
+		i = 0
+		for w in tw:
+			ret += w + " "
+			i += 1
+			if i % 3 == 0:
+				ret +="<br>"
+		return ret
+		
 class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
 	document = models.ForeignKey(Document, null = False)

@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.conf import settings
-from django.http import HttpResponseForbidden, HttpResponse
+from django.http import HttpResponseForbidden, HttpResponseNotFound, HttpResponse
 from django.template import Context
 import os
 from threading import Thread
@@ -91,6 +91,12 @@ def get_picture(request, research_id, pic_id):
 	with open(path, "rb") as f:
 		return HttpResponse(f.read(), content_type="image/png")
 		
-		
-		
+def view_script(request, script_name):
+	path = os.path.join(settings.BASE_DIR, "algo", "research", script_name + ".py")
+	if os.path.exists(path):
+		with open(path, "r", encoding="utf-8") as f:
+			text = f.read()
+		return HttpResponse(text, content_type='text/plain')
+	else:
+		return HttpResponseNotFound("No such script.")
 		

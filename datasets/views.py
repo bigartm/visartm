@@ -199,9 +199,9 @@ def visual_dataset(request):
 			supervised_problems = AssessmentProblem.objects.filter(dataset=dataset)
 			assessment_folders = os.listdir(os.path.join(settings.BASE_DIR, "templates", "assessment"))
 			problems_to_create = [x for x in assessment_folders if not '.' in x]
-			for problem in supervised_problems:
-				if problem.type in problems_to_create: 
-					problems_to_create.remove(problem.type)				
+			#for problem in supervised_problems:
+			#	if problem.type in problems_to_create: 
+			#		problems_to_create.remove(problem.type)				
 			context['assessment']['supervised_problems'] = supervised_problems
 			context['assessment']['problems_to_create'] = problems_to_create		
 	

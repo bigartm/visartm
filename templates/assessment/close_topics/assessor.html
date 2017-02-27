@@ -3,12 +3,24 @@
 
 {% block content %}
 	
-	Target topic:{{target_topic}}
+	Target topic: <span  
+				data-toggle="tooltip" 
+				data-placement="right" 
+				title="{{target_topic.top_words_html}}"
+				data-html="true">
+				{{target_topic}}
+				</span>
 	<hr>
 	{% for topic in topics %}
 		{% if topic != target_topic %}
-			<input type="checkbox" onclick="checkChanged({{topic.id}});">
+			<input type="checkbox" onclick="checkChanged({{topic.index_id}});">
+				<span  
+				data-toggle="tooltip" 
+				data-placement="right" 
+				title="{{topic.top_words_html}}"
+				data-html="true">
 				{{topic}}
+				</span>
 			</input>
 			<br>
 		{% endif %}
@@ -25,6 +37,12 @@
 
 {% block javascript %}
 <script type="text/javascript">
+
+	// Enable all tooltips
+	$(document).ready(function(){
+		$('[data-toggle="tooltip"]').tooltip(); 
+	});
+	
 	var topics = {};
 	function checkChanged(topic_id) {
 		if (!topics[topic_id]) topics[topic_id] = true;
@@ -34,8 +52,7 @@
 			if (topics[i]) {
 				val += i + ",";
 			}
-		}
-		// alert(val);
+		} 
 		document.getElementById("selected_topics").value = "[" + val.substr(0, val.length - 1) + "]";
 	}
 </script>

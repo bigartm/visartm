@@ -22,7 +22,7 @@ class AssessmentProblem(models.Model):
 	timeout = models.IntegerField(null=False, default=3600)
 	
 	def __str__(self):
-		return self.dataset.name + "/" + self.type
+		return "#" + str(self.id) + " (" + self.dataset.name + "," + self.type + (","+ str(self.model) if self.model else "") + ")"
 		
 	def get_module(self):
 		if self.type in AssessmentProblem.modules:
@@ -52,7 +52,15 @@ class AssessmentProblem(models.Model):
 		
 	# Allows superviser or assessor alter some global parameters of assessment problem
 	def alter(self, request):
-		self.get_module().alter_problem(self, request)
+		if request.POST["action"] == "change_model":
+			try:
+				self.model = ArtmModel.objects.get(id=request.POST["model_id"])
+			except:
+				self.model = None
+			self.save()
+			self.get_module().initialize_problem(self)
+		else:
+			self.get_module().alter_problem(self, request)
 		
 	
 	# Return number of completed and current task. Estimates how many tasks are to be done

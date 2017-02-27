@@ -48,6 +48,26 @@
 	<p><a href="/assessment/problem?problem_id={{problem.id}}&mode=settings">Specific settings</a></p>
 	<p><a href="/assessment/get_results?problem_id={{problem.id}}">Get results</a></p>
 	<p><a href="/assessment/get_results?problem_id={{problem.id}}&mode=file">Get results (as file)</a></p>
+	{% if problem.type != 'assessment' %}	
+		<hr>
+		<form method="POST">
+			<div>
+				Model: 
+				<select name="model_id">
+					<option value="-1" {% if not model %}selected="selected"{% endif %}>None</option>
+					{% for x in models %}
+						<option value="{{x.id}}"{% if problem.model == x %}selected="selected"{% endif %}>{{x}}</option>
+					{% endfor %}								
+				</select>
+				<button type="submit">Change model</button>
+			</div>
+			<input type="hidden" name='action' value="change_model"> </input>
+			<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+			<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}"> </input>
+			{% csrf_token %}
+		</form> 
+	{% endif %}
+	
 {% endblock %}
 			
 			
