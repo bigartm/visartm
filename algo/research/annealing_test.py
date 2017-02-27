@@ -16,7 +16,7 @@ topics = model.get_topics()
 research.report_html("<h1>Annealing test.</h1>")
 dist =	model.get_topics_distances(metric="euclidean")	
 N = dist.shape[0]	
-annealing_grid = [1, 5, 10, 20, 50, 100]
+annealing_grid = [1, 5, 10, 25, 50]
 topics_grid = range(4, 24)
 
 algo_names = ["exact", "branch-2", "branch-3", "greedy"] + ["annealing-" + str(i) for i in annealing_grid]

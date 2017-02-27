@@ -26,7 +26,7 @@ class ArtmModel(models.Model):
 	layers_count = models.IntegerField(default = 1) 
 	topics_count = models.TextField(null = False, default = "")
 	status = models.IntegerField(null = False, default = 0)  # 1-running, 2-error, 3-OK
-	error_message = models.TextField(null=True) 
+	error_message = models.TextField(null=True, blank=True) 
 	threshold_hier = models.IntegerField(null = False, default = 100) 
 	threshold_docs = models.IntegerField(null = False, default = 100) 
 	
