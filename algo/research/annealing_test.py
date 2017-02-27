@@ -17,7 +17,7 @@ research.report_html("<h1>Annealing test.</h1>")
 dist =	model.get_topics_distances(metric="euclidean")	
 N = dist.shape[0]	
 annealing_grid = [1, 5, 10, 20, 50, 100]
-topics_grid = range(4, 25)
+topics_grid = range(4, 24)
 
 algo_names = ["exact", "branch-2", "branch-3", "greedy"] + ["annealing-" + str(i) for i in annealing_grid]
 answers = dict()
@@ -32,7 +32,7 @@ for topics_count in topics_grid:
 	hp = HamiltonPath(matrix)
 	research.report("Качество вначале: " + str(hp.path_weight()))
 	
-	if topics_count <= 12:
+	if topics_count <= 11:
 		research.report_p()
 		research.report("Точное решение.")
 		hp = HamiltonPath(matrix)
