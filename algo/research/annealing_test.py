@@ -16,8 +16,8 @@ topics = model.get_topics()
 research.report_html("<h1>Annealing test.</h1>")
 dist =	model.get_topics_distances(metric="euclidean")	
 N = dist.shape[0]	
-annealing_grid = [10, 20, 30, 40]
-topics_grid = range(4, 24)
+annealing_grid = [1, 5, 10, 20, 50, 100]
+topics_grid = range(4, 25)
 
 algo_names = ["exact", "branch-2", "branch-3", "greedy"] + ["annealing-" + str(i) for i in annealing_grid]
 answers = dict()
@@ -32,7 +32,7 @@ for topics_count in topics_grid:
 	hp = HamiltonPath(matrix)
 	research.report("Качество вначале: " + str(hp.path_weight()))
 	
-	if topics_count <= 11:
+	if topics_count <= 12:
 		research.report_p()
 		research.report("Точное решение.")
 		hp = HamiltonPath(matrix)
@@ -41,7 +41,7 @@ for topics_count in topics_grid:
 		research.report("Качество " + str(hp.path_weight()))
 		answers["exact"][topics_count] = {"time": hp.elapsed, "q": hp.path_weight()}	
 	
-	if topics_count <= 15:		
+	if topics_count <= 16:		
 		research.report_p()
 		research.report("Метод ветвей и границ (3).")
 		hp = HamiltonPath(matrix)
@@ -114,7 +114,7 @@ for algo_name in algo_names:
 axes.set_xlabel("Number of topics", fontsize=20)
 axes.set_ylabel("Time", fontsize=20)
 axes.set_title("Running time of arranging algorithms", fontsize=30)
-#axes.set_xlim(topics_grid[0], topics_grid[0] + len(topics_grid) - 1)
+axes.set_xlim(topics_grid[0], topics_grid[0] + len(topics_grid) - 1)
 
 lgd = axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 research.report_picture(bbox_extra_artists=(lgd,), width=800)
@@ -126,6 +126,7 @@ for algo_name in algo_names:
 axes.set_xlabel("Number of topics", fontsize=20)
 axes.set_ylabel("Quality", fontsize=20)
 axes.set_title("Relative quality of arranging algorithms", fontsize=30)
+axes.set_xlim(topics_grid[0], topics_grid[0] + len(topics_grid) - 1)
 lgd = axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 research.report_picture(bbox_extra_artists=(lgd,), width=800)
 

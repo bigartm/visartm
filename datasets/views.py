@@ -70,6 +70,9 @@ def	dataset_create(request):
 	
 	dataset = Dataset()
 	if request.POST['mode'] == 'upload':
+		name = str(request.FILES['archive']).split('.')[0]
+		if len(Dataset.objects.filter(text_id = name)) != 0:
+			return HttpResponseForbidden("Dataset %s already exists. Try another name." % name)
 		dataset.upload_from_archive(request.FILES['archive'])
 	else:
 		dataset.text_id = request.POST['unreg_name']
