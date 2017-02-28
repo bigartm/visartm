@@ -84,7 +84,7 @@
 									{% if selected_topic == topic.topic.index_id %} checked="checked" {% endif %}
 								><span 	id="rb{{topic.color}}">{{topic.topic.name}}</span></input>
 							{% else %}
-								<a id="rb{{topic.color}}" onclick="clickTopic({{topic.topic.index_id}});">{{topic.topic.name}}</a>
+								<a id="rb{{topic.color}}" onclick="clickTopic({{topic.topic.index_id}}, true);">{{topic.topic.name}}</a>
 							{% endif %}
 							<sup><a onClick="notUseTopic({{topic.topic.index_id}});"><big>x</big></a></sup>
 							<br>
@@ -93,7 +93,7 @@
 					<hr>					
 					{% for topic in topics %}
 						{% if topic.color < 0 %} 
-							<a onClick="useTopic({{topic.topic.index_id}});">{{topic.topic.name}}</a>
+							<a onClick="clickTopic({{topic.topic.index_id}}, false);">{{topic.topic.name}}</a>
 							<br>
 						{% endif %}
 						
@@ -192,10 +192,16 @@
 		{% endif %}
 	}
 	
-	function clickTopic(topic_id) {
+	function clickTopic(topic_id, active) {
 		showDescription(topic_id);
 		document.getElementById("topic_id").value = topic_id;
-		sendSelection();
+		if (somethingSelected) {
+			sendSelection();
+		} else {
+			if (! active) {
+				useTopic(topic_id);
+			}
+		}
 	}
 	
 	
@@ -219,11 +225,7 @@
 			{% if x.color > 0 %}
 				if (topic_id == {{x.topic.index_id}}) {
 					descrTitle.innerHTML = "{{x.topic.name}}";
-					descrText.innerHTML = "" 
-					{% for line in x.topic.description_lines %}
-						+ "{{line}}<br>"
-					{% endfor %}
-					;
+					descrText.innerHTML = "{{x.topic.description_html}}";
 				}
 			{% endif %}
 		{% endfor %}

@@ -197,6 +197,7 @@ def alter_task(self, POST):
 		if new_selection_start >= new_selection_end:
 			return 
 		topic_id = int(POST["topic_id"])
+		topic_use(self, topic_id)
 		#if topic_id != -1:
 		#	if not topic_id in answer["topics_in"]:
 		#		answer["topics_in"].append(topic_id)
@@ -214,13 +215,7 @@ def alter_task(self, POST):
 		self.answer["selections"] = selections
 		self.answer["selected_topic"] = topic_id
 	elif POST["action"] == "topic_use": 
-		topic_id = int(POST["topic_id"]) 
-		if not "topics_in" in self.answer:
-			self.answer["topics_in"] = {}
-		if not topic_id in self.answer["topics_in"]:
-			used_colors = set([color for _, color in self.answer["topics_in"].items()])
-			self.answer["topics_in"][topic_id] = mex(used_colors) 
-			self.answer["selected_topic"] = topic_id
+		topic_use(self, POST["topic_id"])
 	elif POST["action"] == "topic_not_use":
 		topic_id = str(POST["topic_id"])
 		if "topics_in" in self.answer and topic_id in self.answer["topics_in"]:
@@ -231,7 +226,14 @@ def alter_task(self, POST):
 
 	self.save_answer() 
 	
-	
+def topic_use(self, topic_id): 
+	if not str(topic_id) in self.answer["topics_in"]:
+		print("NEWW")
+		used_colors = set([color for _, color in self.answer["topics_in"].items()])
+		self.answer["topics_in"][str(topic_id)] = mex(used_colors) 
+		self.answer["selected_topic"] = topic_id
+	else:
+		print("ALREADY IS")
 def initialize_task(self):
 	self.load_answer()	
 	if not 'selections' in self.answer:
@@ -309,7 +311,8 @@ def get_problem_results(self):
 				terms += term_index[word_index[i][2]].text + ":" + str(terms_assessions[i]) + " "
 			results["documents"].append({
 				"title" : task.document.title,
-				"terms" : terms 
+				"terms" : terms, 
+				"selections" : task.answer["selections"]
 			})
 	return results
 	
@@ -332,10 +335,10 @@ class Segmentation_Topic(models.Model):
 	index_id = models.IntegerField(null=False, default = 0)
 		
 	def description_html(self):
-		return self.description.replace("\n","<br>")
+		return '<br>'.join(self.description_lines())
 	
 	def description_lines(self):
-		return [line[:-1] for line in self.description.split("\n")] 
+		return [line.strip() for line in self.description.split("\n")] 
 	
 	class Meta:
 		unique_together = (("problem", "name"),("problem", "index_id"))

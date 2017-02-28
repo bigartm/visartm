@@ -19,16 +19,16 @@
 			<tr>
 				<form method="POST" action="/assessment/problem" id="formAlterTopic{{topic.id}}">
 					<td>
-						<input 
-							type="text" 
+						<textarea 
+							cols="25" 
+							rows="5" 
 							name='name' 
-							value="{{topic.name}}" 
 							onkeydown="showItem('btnUpd{{topic.id}}');"
-						</input>
+						>{{topic.name}}</textarea>
 					</td>
 					<td>
 						<textarea
-							cols="60" 
+							cols="55" 
 							rows="5" 
 							name='description'  
 							onkeydown="showItem('btnUpd{{topic.id}}');"
