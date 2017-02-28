@@ -48,7 +48,7 @@
 	<p><a href="/assessment/problem?problem_id={{problem.id}}&mode=settings">Specific settings</a></p>
 	<p><a href="/assessment/get_results?problem_id={{problem.id}}">Get results</a></p>
 	<p><a href="/assessment/get_results?problem_id={{problem.id}}&mode=file">Get results (as file)</a></p>
-	{% if problem.type != 'assessment' %}	
+	{% if problem.type != 'segmentation' %}	
 		<hr>
 		<form method="POST">
 			<div>

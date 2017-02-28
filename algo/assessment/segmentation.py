@@ -1,6 +1,7 @@
 from models.models import ArtmModel, Topic 
 from datasets.models import Document, Term
 
+import os
 import json
 from django.db.models.functions import Lower
 		
@@ -66,7 +67,7 @@ def alter_problem(self, request):
 		target.save()
 		
 	elif POST["action"] == "delete_topic":
-		Segmentation_Topic.objects.filter(dataset=self.dataset, index_id=POST["topic_id"]).delete()
+		Segmentation_Topic.objects.filter(problem=self, index_id=POST["topic_id"]).delete()
 		
 	elif POST["action"] == "load_topics":
 		try:

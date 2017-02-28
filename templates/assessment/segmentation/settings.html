@@ -44,7 +44,7 @@
 				</form>
 				<form method="POST" action="/assessment/problem">
 					<button type="submit" class="btn btn-danger">Delete</button></td>
-					<input type="hidden" name='topic_id' value="{{topic.id}}"> </input>
+					<input type="hidden" name='topic_id' value="{{topic.index_id}}"> </input>
 					<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
 					<input type="hidden" name='action' value="delete_topic"> </input>
 					<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}&mode=settings"> </input> 
