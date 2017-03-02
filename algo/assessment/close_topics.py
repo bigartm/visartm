@@ -1,23 +1,22 @@
 from models.models import ArtmModel, Topic 
-
 import json
 
+ASSESS_RATIO = 3
 
 def initialize_problem(problem):
 	if problem.model:
 		topics = dict()
-		for topic in  Topic.objects.filter(model=problem.model, layer=problem.model.layers_count):
+		for topic in problem.model.get_topics(layer=problem.layer):
 			topics[str(topic.index_id)] = 0
 		N = len(topics)
 		matrix = [[0 for j in range(N)] for i in range(N)]
-		problem.params = json.dumps({"topics" :topics, "matrix": matrix})
+		problem.params = json.dumps({"topics": topics, "matrix": matrix, "tasks_left": ASSESS_RATIO * N})
 	else:
 		problem.params = json.dumps({})
 	problem.save()
 
 def alter_problem(problem, request):
-	print("ALTER PROBLEM")
-	from assessment.models import AssessmentTask
+	print("ALTER PROBLEM")	
 	POST = request.POST
 	if POST["action"] == "change_model":
 		if len(AssessmentTask.objects.filter(problem=problem)) > 0:
@@ -70,17 +69,24 @@ def create_task(problem, request):
 
 	from assessment.models import AssessmentTask
 	
-	params = json.loads(problem.params)
-	#print (params)
+	params = json.loads(problem.params) 
+	min_count = ASSESS_RATIO
+	
 	for key, value in params["topics"].items():
-		if value == 0:
-			task = AssessmentTask() 
-			task.answer = json.dumps({"target_topic_index_id": key})
-			task.problem = problem
-			task.assessor = request.user
-			task.save()
-			return task
-	return None
+		if value < min_count:
+			min_count = value
+			min_topic = key
+	
+	if min_count == ASSESS_RATIO:
+		return None
+	else:
+		params["topics"][min_topic] += 1
+		params["tasks_left"] -= 1
+		problem.params = json.dumps(params)		
+		problem.save()
+		task = AssessmentTask() 
+		task.answer = json.dumps({"target_topic_index_id": min_topic})
+		return task
 	
  
 	
@@ -88,7 +94,7 @@ def finalize_task(task, POST):
 	params = json.loads(task.problem.params)
 	answer = json.loads(task.answer)
 	target_id = int(answer["target_topic_index_id"])
-	params["topics"][str(target_id)] += 1
+	# params["topics"][str(target_id)] += 1
 	
 	selected_topics = json.loads( POST["selected_topics"])
 	
@@ -116,11 +122,8 @@ def get_problem_results(problem):
 def initialize_task(self):
 	pass
 	
-def count_tasks(problem):
-	from assessment.models import AssessmentTask
-	ret = dict()
-	ret["done"] = len(AssessmentTask.objects.filter(problem=problem, status=2))
-	ret["current"] = len(AssessmentTask.objects.filter(problem=problem, status=1))
-	ret["estimate"] = "Unknown" 
-	return ret
+def estimate_tasks(problem):
+	return json.loads(problem.params)["tasks_left"]
+		
+		
 	

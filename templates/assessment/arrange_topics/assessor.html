@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+
+{% block style %}
+<style>
+	.btn-left { 
+		border-radius: 9999em 0 0 9999em;
+		heigth:10px;
+	}
+	.btn-right { 
+		border-radius: 0 9999em 9999em 0;
+	}
+</style>
+{% endblock %}
+
+{% block content %}
+	 
+	{% for topic in topics %} 
+		<p>
+			<form method='post' style="display: inline-block;">
+				<input type="hidden" name="task_id" value="{{task.id}}" />
+				<input type="hidden" name="action" value="topic_up" />
+				<input type="hidden" name="topic_index_id" value="{{topic.index_id}}" />			
+				<button class="btn btn-left">↑</button>
+				{% csrf_token %}
+			</form>
+			<form method='post' style="display: inline-block;">
+				<input type="hidden" name="task_id" value="{{task.id}}" />
+				<input type="hidden" name="action" value="topic_down" />
+				<input type="hidden" name="topic_index_id" value="{{topic.index_id}}" />			
+				<button class="btn btn-right">↓</button>
+				{% csrf_token %}
+			</form>
+			{{topic}}
+		</p>
+		
+	{% endfor %}
+	
+	<form method='post'>
+		<input type="hidden" name="task_id" value="{{task.id}}" />
+		<button class="btn btn-success">Done</button>
+		<input type="hidden" name="finished" />
+		{% csrf_token %}
+	</form>
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+
+	// Enable all tooltips
+	$(document).ready(function(){
+		$('[data-toggle="tooltip"]').tooltip(); 
+	});
+	
+	var topics = {};
+	function checkChanged(topic_id) {
+		if (!topics[topic_id]) topics[topic_id] = true;
+		else topics[topic_id] = false;
+		val = "";
+		for (var i in topics) {
+			if (topics[i]) {
+				val += i + ",";
+			}
+		} 
+		document.getElementById("selected_topics").value = "[" + val.substr(0, val.length - 1) + "]";
+	}
+</script>
+{% endblock %}
+ 

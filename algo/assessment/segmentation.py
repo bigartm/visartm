@@ -99,7 +99,7 @@ def alter_problem(self, request):
 def get_task_context(self):
 	context = {"task": self}  	
 	params = json.loads(self.problem.params)
-	self.load_answer()
+	load_answer(self)
 	if not "selections" in self.answer:
 		self.answer["selections"] = []
 	if not "topics_in" in self.answer:
@@ -183,71 +183,72 @@ def get_task_context(self):
 	return context
  
  
-def alter_task(self, POST):
-	self.load_answer()	
+def alter_task(task, POST):
+	load_answer(task)	
 	if POST["action"] == "selection":
 		new_selection_start = int(POST["selection_start"])
 		new_selection_end = int(POST["selection_end"]) 
 		
 		if new_selection_start < 0:
 			new_selection_start = 0
-		doc_length = len(self.document.text)
+		doc_length = len(task.document.text)
 		if new_selection_end > doc_length:
 			new_selection_end = doc_length
 		if new_selection_start >= new_selection_end:
 			return 
 		topic_id = int(POST["topic_id"])
-		topic_use(self, topic_id)
+		topic_use(task, topic_id)
 		#if topic_id != -1:
 		#	if not topic_id in answer["topics_in"]:
 		#		answer["topics_in"].append(topic_id)
 		
-		if not "selections" in self.answer:
-			self.answer["selections"] = []
+		if not "selections" in task.answer:
+			task.answer["selections"] = []
 		
-		selections = [x for x in self.answer["selections"] if (x[0] >= new_selection_end or x[1] <= new_selection_start)]
+		selections = [x for x in task.answer["selections"] if (x[0] >= new_selection_end or x[1] <= new_selection_start)]
 		if topic_id != -1:
 			selections.append([new_selection_start, new_selection_end, topic_id])
 			
 		# define selected terms and select such in that dataset, if they are not any other selection	
 			
 		selections.sort()
-		self.answer["selections"] = selections
-		self.answer["selected_topic"] = topic_id
+		task.answer["selections"] = selections
+		task.answer["selected_topic"] = topic_id
 	elif POST["action"] == "topic_use": 
-		topic_use(self, POST["topic_id"])
+		topic_use(task, POST["topic_id"])
 	elif POST["action"] == "topic_not_use":
 		topic_id = str(POST["topic_id"])
-		if "topics_in" in self.answer and topic_id in self.answer["topics_in"]:
-			del self.answer["topics_in"][topic_id]
+		if "topics_in" in task.answer and topic_id in task.answer["topics_in"]:
+			del task.answer["topics_in"][topic_id]
 	
 	if "scroll_top" in POST:
-		self.answer["scroll_top"] = POST["scroll_top"]
+		task.answer["scroll_top"] = POST["scroll_top"]
 
-	self.save_answer() 
+	save_answer(task) 
 	
-def topic_use(self, topic_id): 
-	if not str(topic_id) in self.answer["topics_in"]:
+def topic_use(task, topic_id): 
+	if not str(topic_id) in task.answer["topics_in"]:
 		print("NEWW")
-		used_colors = set([color for _, color in self.answer["topics_in"].items()])
-		self.answer["topics_in"][str(topic_id)] = mex(used_colors) 
-		self.answer["selected_topic"] = topic_id
+		used_colors = set([color for _, color in task.answer["topics_in"].items()])
+		task.answer["topics_in"][str(topic_id)] = mex(used_colors) 
+		task.answer["selected_topic"] = topic_id
 	else:
 		print("ALREADY IS")
-def initialize_task(self):
-	self.load_answer()	
-	if not 'selections' in self.answer:
-		self.answer["selections"] = []
-	if not 'topics_in' in self.answer:
-		self.answer["topics_in"] = {}
-	word_index = self.document.get_word_index()
+		
+def initialize_task(task):
+	load_answer(task)	
+	if not 'selections' in task.answer:
+		task.answer["selections"] = []
+	if not 'topics_in' in task.answer:
+		task.answer["topics_in"] = {}
+	word_index = task.document.get_word_index()
 	text_terms = [x[2] for x in word_index]
 	
 	cur_term = 0
 	while cur_term < len(text_terms): 
 		segment = None
 		length = 0
-		candidates = Segmentation_TypicalSegment.objects.filter(problem=self.problem, first_term_id=text_terms[cur_term]).order_by("-length")
+		candidates = Segmentation_TypicalSegment.objects.filter(problem=task.problem, first_term_id=text_terms[cur_term]).order_by("-length")
 		for candidate in candidates:
 			candidate_terms = json.loads(candidate.terms)
 			length = len(candidate_terms)
@@ -256,20 +257,20 @@ def initialize_task(self):
 				break
 		if segment:
 			topic_id = candidate.get_best_topic()
-			if not topic_id in self.answer["topics_in"]:
-				self.save_answer()
-				self.alter({"action": "topic_use", "topic_id": str(topic_id)})
+			if not topic_id in task.answer["topics_in"]:
+				task.save_answer()
+				task.alter({"action": "topic_use", "topic_id": str(topic_id)})
 			end_pos = word_index[cur_term + length - 1][0] + word_index[cur_term + length - 1][1] 
-			self.answer["selections"].append([word_index[cur_term][0], end_pos, topic_id])
+			task.answer["selections"].append([word_index[cur_term][0], end_pos, topic_id])
 			cur_term += length
 		else:
 			cur_term += 1 
-	self.save_answer()
+	save_answer(task)
 
-def finalize_task(self, POST):
-	self.load_answer() 
-	selections = self.answer["selections"]
-	word_index = self.document.get_word_index()
+def finalize_task(task, POST):
+	load_answer(task) 
+	selections = task.answer["selections"]
+	word_index = task.document.get_word_index()
 	terms_assessions = [-1 for i in range(len(word_index))]
 	assessed_segments = []
 	for selection_start, selection_end, topic_id in selections:
@@ -282,26 +283,26 @@ def finalize_task(self, POST):
 			i += 1
 		if len(terms) > 1:
 			assessed_segments.append([terms, topic_id])
-			segment = Segmentation_TypicalSegment.get_segment(self.problem, terms)
+			segment = Segmentation_TypicalSegment.get_segment(task.problem, terms)
 			segment.add_topic(topic_id)
 			
-	self.answer["terms_assessions"] = terms_assessions
-	self.answer["assessed_segments"] = assessed_segments 
-	self.save_answer()
+	task.answer["terms_assessions"] = terms_assessions
+	task.answer["assessed_segments"] = assessed_segments 
+	save_answer(task)
 	
-def get_problem_results(self):
+def get_problem_results(problem):
 	from assessment.models import AssessmentTask
-	params = json.loads(self.params) 
+	params = json.loads(problem.params) 
 	results = dict()
-	term_index = Term.objects.filter(dataset=self.dataset).order_by("index_id")
+	term_index = Term.objects.filter(dataset=problem.dataset).order_by("index_id")
 	result_topics = []
 	
-	for topic in Segmentation_Topic.objects.filter(problem=self):
+	for topic in Segmentation_Topic.objects.filter(problem=problem):
 		result_topics.append({"id":topic.index_id, "name": topic.name, "description": topic.description})			
 		
 	results["topics"] = result_topics
 	results["documents"] = []
-	for task in AssessmentTask.objects.filter(problem=self):
+	for task in AssessmentTask.objects.filter(problem=problem):
 		if task.status == 2:
 			task.load_answer()
 			terms_assessions = task.answer["terms_assessions"]
@@ -316,15 +317,27 @@ def get_problem_results(self):
 			})
 	return results
 	
-def count_tasks(problem):
+def estimate_tasks(problem):
 	from assessment.models import AssessmentTask
-	ret = dict()
-	ret["done"] = len(AssessmentTask.objects.filter(problem=problem, status=2))
-	ret["current"] = len(AssessmentTask.objects.filter(problem=problem, status=1))
-	ret["estimate"] = problem.dataset.documents_count - ret["done"] - ret["current"] 
-	return ret
+	done = len(AssessmentTask.objects.filter(problem=problem, status=2))
+	current = len(AssessmentTask.objects.filter(problem=problem, status=1))
+	return problem.dataset.documents_count - ret["done"] - ret["current"]
 		
-	
+		
+def load_answer(task):
+	path = os.path.join(task.problem.get_folder(), task.document.text_id)
+	try:
+		with open(path, "r") as f:
+			text = f.read()
+		task.answer = json.loads(text)
+	except:
+		task.answer =  {}
+	 
+def save_answer(task): 
+	path = os.path.join(task.problem.get_folder(), task.document.text_id)
+	with open(path, "w") as f:
+		f.write(json.dumps(task.answer))
+
 ### Specific models for segmentation assessment
 from django.db import models 
 

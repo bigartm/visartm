@@ -12,6 +12,20 @@ from models.models import ArtmModel
 from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
 from django.contrib.auth.models import User	
 import visartm.views as general_views
+
+@login_required		
+def problems_list(request):
+	assessment_problems = []
+	for entry in ProblemAssessor.objects.filter(assessor=request.user):
+		assessment_problems.append({
+			"problem": entry.problem,
+			"tasks": AssessmentTask.objects.filter(assessor=request.user, problem=entry.problem, status=1),
+			"supervise": (entry.problem.dataset.owner == request.user)
+	})	
+	context = {"assessment_problems": assessment_problems}
+	return render(request, 'assessment/problems_list.html', Context(context)) 
+		
+
 	
 @login_required	
 def problem(request):

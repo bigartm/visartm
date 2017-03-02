@@ -13,6 +13,10 @@ from threading import Thread
 from datetime import datetime
 import numpy as np
 
+def models_list(request):
+	context = {"models": ArtmModel.objects.filter(author = request.user).order_by("id")}
+	return render(request, 'models/models_list.html', context) 
+
 def visual_model(request):
 	model = ArtmModel.objects.get(id = request.GET['model'])
 		

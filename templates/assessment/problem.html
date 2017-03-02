@@ -59,8 +59,15 @@
 						<option value="{{x.id}}"{% if problem.model == x %}selected="selected"{% endif %}>{{x}}</option>
 					{% endfor %}								
 				</select>
-				<button type="submit">Change model</button>
 			</div>
+			{% if problem.model %}
+				<div>
+					Layer:
+					<input type='number' name='layer' value='{{problem.layer}}' min='0' max='{{problem.model.layers_count}}'></input>
+					
+				</div>
+			{% endif %}
+			<button type="submit">Change</button>
 			<input type="hidden" name='action' value="change_model"> </input>
 			<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
 			<input type="hidden" name='next' value="/assessment/problem?problem_id={{problem.id}}"> </input>

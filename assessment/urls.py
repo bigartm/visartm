@@ -2,6 +2,7 @@ from django.conf.urls import url
 import assessment.views as assessment_views
 
 urlpatterns = [
+	url(r'^$', assessment_views.problems_list),
 	url(r'^problem$', assessment_views.problem),
 	url(r'^create_problem$', assessment_views.create_problem),
 	url(r'^task$', assessment_views.task),

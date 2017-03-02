@@ -17,12 +17,17 @@ class AssessmentProblem(models.Model):
 	type = models.TextField() 
 	dataset = models.ForeignKey(Dataset, null=False)
 	model = models.ForeignKey(ArtmModel, null=True)
+	layer = models.IntegerField(null=True, blank=True)
+	
 	params = models.TextField(null=False, default = "{}")
 	last_refreshed = models.DateTimeField(null=False, default=datetime.now) 
 	timeout = models.IntegerField(null=False, default=3600)
 	
 	def __str__(self):
-		return "#" + str(self.id) + " (" + self.dataset.name + "," + self.type + (","+ str(self.model) if self.model else "") + ")"
+		return "#" + str(self.id) + " (" + self.dataset.name + "," + self.type \
+			+ (","+ str(self.model) if self.model else "") \
+			+ (",l"+ str(self.layer) if self.layer else "") \
+			+ ")"
 		
 	def get_module(self):
 		if self.type in AssessmentProblem.modules:
@@ -53,10 +58,20 @@ class AssessmentProblem(models.Model):
 	# Allows superviser or assessor alter some global parameters of assessment problem
 	def alter(self, request):
 		if request.POST["action"] == "change_model":
+			if len(AssessmentTask.objects.filter(problem=self)) > 0:
+				raise ValueError("Cannot change model or layer, because some assessment are already made.")
 			try:
 				self.model = ArtmModel.objects.get(id=request.POST["model_id"])
 			except:
 				self.model = None
+			try:
+				layer = int(request.POST["layer"])
+			except:
+				layer = 1
+			if self.model:
+				if layer < 0 or layer > self.model.layers_count:
+					raise ValueError("Layer doe not exist.")
+				self.layer = layer
 			self.save()
 			self.get_module().initialize_problem(self)
 		else:
@@ -65,7 +80,16 @@ class AssessmentProblem(models.Model):
 	
 	# Return number of completed and current task. Estimates how many tasks are to be done
 	def count_tasks(self):
-		return self.get_module().count_tasks(self)
+		try:
+			estimate = self.get_module().estimate_tasks(self)
+		except:
+			estimate = "Unknown"
+			
+		return {
+			"done" : len(AssessmentTask.objects.filter(problem=self, status=2)),
+			"current" : len(AssessmentTask.objects.filter(problem=self, status=1)),
+			"estimate" : estimate
+		}
 	
 	# Return results as object
 	def get_results(self):
@@ -140,20 +164,6 @@ class AssessmentTask(models.Model):
 		
 	def finalize(self, POST): 
 		self.problem.get_module().finalize_task(self, POST)
-
-	def load_answer(self):
-		path = os.path.join(self.problem.get_folder(), self.document.text_id)
-		try:
-			with open(path, "r") as f:
-				text = f.read()
-			self.answer = json.loads(text)
-		except:
-			self.answer =  {}
-		 
-	def save_answer(self): 
-		path = os.path.join(self.problem.get_folder(), self.document.text_id)
-		with open(path, "w") as f:
-			f.write(json.dumps(self.answer))
 		
 	def __str__(self):
 		if self.problem.type == "segmentation":

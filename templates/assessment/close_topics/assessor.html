@@ -28,7 +28,7 @@
 	
 	<form method='post'>
 		<input type="hidden" name="task_id" value="{{task.id}}" />
-		<input type="hidden" name="selected_topics" id="selected_topics" value="{{task.id}}" />
+		<input type="hidden" name="selected_topics" id="selected_topics" value="[]" />
 		<button class="btn btn-success">Done</button>
 		<input type="hidden" name="finished" />
 		{% csrf_token %}
@@ -53,7 +53,9 @@
 				val += i + ",";
 			}
 		} 
-		document.getElementById("selected_topics").value = "[" + val.substr(0, val.length - 1) + "]";
+		if (val.length > 0)	val = val.substr(0, val.length - 1);
+		val = "[" + val + "]";
+		document.getElementById("selected_topics").value = val;
 	}
 </script>
 {% endblock %}

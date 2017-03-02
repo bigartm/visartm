@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Datasets{% endblock %}
+
+{% block content %}
+	<h1>Models</h1>
+	<hr>
+	{% if models %}
+		<table class = "table table-bordered table-hover">
+			<thead>
+				<tr>
+					<td>id</td>
+					<td>Name</td>
+					<td>Dataset</td>
+					<td>Topics</td>
+				</tr>
+			</thead>
+			<tbody>
+				{% for model in models %}
+				<tr>
+					<td>{{model.id}}</td>
+					<td>
+						<a href="/model?model={{model.id}}">{{model}}</a>
+					</td>
+					<td>
+						<a href="/dataset?dataset={{model.dataset.text_id}}">{{model.dataset.name}}</a>
+					</td>
+					<td>{{model.topics_count}}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	{% else %}
+		<p>You haven't created any model.</p>
+	{% endif %}
+{% endblock %}
+
+
+{% block right %}
+{% endblock %}

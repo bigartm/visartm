@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | {{account}}{% endblock %}
+
+{% block content %}	
+	{% if assessment_problems %}
+		<h3>Assessment problems</h3>
+		{% for entry in assessment_problems %}
+			<h4>{{entry.problem}}</h4>
+			<ul>
+				{% if entry.supervise %}
+					<li><a href="/assessment/problem?problem_id={{entry.problem.id}}">General settings</a></li>
+					<li><a href="/assessment/problem?problem_id={{entry.problem.id}}&mode=settings">Specific settings</a></li>
+					<li><a href="/assessment/get_results?problem_id={{entry.problem.id}}">Get results</a></li>
+					<li><a href="/assessment/get_results?problem_id={{entry.problem.id}}&mode=file">Get results (as file)</a></li>
+				{% endif %}
+				
+				<li><a href="/assessment/instructions?problem_id={{entry.problem.id}}">Read the instructions</a></li>
+				{% if entry.tasks %}
+					<li>Current tasks</li>
+					<ul>
+					{% for task in entry.tasks %}
+						<li><a href="/assessment/task?task_id={{task.id}}">{{task}}</a></li>
+					{% endfor %}
+					</ul>
+				{% endif %}
+				<li><a href="/assessment/get_task?problem_id={{entry.problem.id}}">Get new task</a></li>
+			</ul>
+		{% endfor %} 
+		<hr>
+	{% endif %}
+	 
+  
+{% endblock %}
