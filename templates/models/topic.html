@@ -4,14 +4,17 @@
 
 {% block content %}
 	<h1> Topic {{topic.title}} </h1>
+
 	<ul class="nav nav-tabs">
-		{% if top_terms %}
-			<li><a href="/topic?id={{topic.id}}">{% if low_level %}Documents{% else %}Topics{% endif %}</a></li>
-			<li class="active"><a>Top terms</a></li>
-		{% else %}
-			<li class="active"><a>{% if low_level %}Documents{% else %}Topics{% endif %}</a></li>
-			<li><a href="/topic?id={{topic.id}}&mode=topterms">Top terms</a></li>
-		{% endif %} 
+		<li id="topics_link" 
+			{% if low_level %} style="pointer-events:none;" {% endif %}>
+			<a
+				{% if low_level %} style="color:#dddddd;" {% endif %} 
+				href="/topic?id={{topic.id}}&mode=topics">Topics
+			</a>
+		</li>	
+		<li id="documents_link"><a href="/topic?id={{topic.id}}&mode=documents">Documents</a></li>
+		<li id="topterms_link"><a href="/topic?id={{topic.id}}&mode=topterms">Top terms</a></li>
 	</ul>
 	
 	{% if top_terms %}
@@ -42,6 +45,8 @@
 
 		
 {% endblock %}
+
+
 
 {% block right %}
 <div> 
@@ -75,6 +80,8 @@
 
 {% block javascript %}
 <script type="text/javascript">	
+	 
+	document.getElementById("{{mode}}_link").className ="active";
 	
 	{% if documents %}
 		api = new ArtmApi();

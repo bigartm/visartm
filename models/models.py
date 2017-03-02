@@ -303,17 +303,21 @@ class ArtmModel(models.Model):
 							relation.save()
 			
 		
-	def extract_docs(self):
-		self.log("Extracting documents in topics...")
+	def extract_docs(self, layer=-1):
+		if layer == -1:
+			for i in range(1, self.layers_count + 1):
+				self.extract_docs(layer=i)
+			return
+			
+		self.log("Extracting documents in topics for layer %d..." % layer)
 		threshold_docs = self.threshold_docs / 100.0
 		topics_count = [int(x) for x in self.topics_count.split()]
 		total_topics_count = sum(topics_count)-1
-		theta_t = self.get_theta().transpose()
-		theta_t_low = theta_t[:, total_topics_count - topics_count[self.layers_count] : total_topics_count]
-		document_bags = [[] for i in range(topics_count[self.layers_count])]
+		theta_t = self.get_theta().transpose()[:, self.get_layer_range(layer)]
+		document_bags = [[] for i in range(topics_count[self.layers_count])]	
 		for doc_index_id in range(0, self.dataset.documents_count):
 			#doc_id = documents_index[doc_index_id].id 
-			distr = theta_t_low[doc_index_id]
+			distr = theta_t[doc_index_id]
 			best_topic_id = distr.argmax()
 			
 			document_bags[best_topic_id].append((distr[best_topic_id], doc_index_id))
@@ -331,7 +335,7 @@ class ArtmModel(models.Model):
 		
 		
 		self.log("Saving topics...") 
-		for topic in Topic.objects.filter(model=self, layer=self.layers_count).order_by("index_id"): 
+		for topic in Topic.objects.filter(model=self, layer=layer).order_by("index_id"): 
 			topic.documents = bytes()
 			document_bags[topic.index_id].sort(reverse = True)
 			for weight, doc_index_id in document_bags[topic.index_id]:
@@ -543,6 +547,13 @@ class ArtmModel(models.Model):
 			layer=self.layers_count
 		return Topic.objects.filter(model = self, layer = layer).order_by("index_id")
 	
+	def get_layer_range(self, layer):
+		topics_count = [int(x) for x in self.topics_count.split()]
+		shift = 0
+		for i in range (1, layer):
+			shift += topics_count[i]
+		return range(shift, shift + topics_count[layer])
+		
 	def get_topics_distances(self, metric="euclidean", layer=-1):
 		if layer == -1:
 			layer=self.layers_count
@@ -555,11 +566,9 @@ class ArtmModel(models.Model):
 		except:
 			topics_count = [int(x) for x in self.topics_count.split()]
 			ret = np.zeros((topics_count[layer], topics_count[layer]))
-			shift = 0
-			for i in range (1, layer):
-				shift += topics_count[i]
+			
 				
-			phi_t = self.get_phi().transpose()[shift : shift + topics_count[layer]]
+			phi_t = self.get_phi().transpose()[self.get_layer_range(layer)]
 			
 			sums = np.sum(phi_t, axis = 1)
 			if (np.max(sums) - np.min(sums)) / np.mean(sums) > 1e-3:
@@ -672,8 +681,12 @@ class ArtmModel(models.Model):
 		return np.load(os.path.join(self.get_folder(), "phi.npy"))
 	
 	def get_theta(self):
-		return np.load(os.path.join(self.get_folder(), "theta.npy"))
-	
+		try:
+			return self.theta
+		except:
+			self.theta = np.load(os.path.join(self.get_folder(), "theta.npy"))
+			return self.theta
+			
 	def get_psi(self, i):
 		return np.load(os.path.join(self.get_folder(), "psi" + str(i) + ".npy"))
 	

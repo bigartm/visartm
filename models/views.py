@@ -203,8 +203,8 @@ def delete_all_models(request):
 				"Are you sure that you want delete ALL models for dataset " + str(dataset) + " permanently?<br>" + 
 				"<a href = '/models/delete_all_models?dataset=" + dataset.text_id + "&sure=yes'>Yes</a><br>" +
 				"<a href = '/dataset?dataset=" + dataset.text_id + "'>No</a>")	
-							
-def	visual_topic(request):
+						
+def visual_topic(request):
 	topic = Topic.objects.filter(id = request.GET['id'])[0]
 	model = topic.model 
 	related_topics = TopicRelated.objects.filter(model = topic.model, topic1 = topic).order_by("weight")	
@@ -222,7 +222,15 @@ def	visual_topic(request):
 			ans += "%s %s %f<br>" % (term.text, mod_index[term.modality_id], phi[term.index_id, topic.matrix_id])
 		return HttpResponse(ans)
 	
-	if 'mode' in request.GET and request.GET['mode'] == 'topterms':
+	if 'mode' in request.GET:
+		mode = request.GET['mode']
+	else:
+		if (topic.layer == model.layers_count):
+			mode = 'documents'
+		else:
+			mode = 'topics'
+	
+	if mode == 'topterms':
 		context['modalities'] = Modality.objects.filter(dataset=model.dataset)
 		top_terms = TopTerm.objects.filter(topic=topic)
 		if 'modality' in request.GET and request.GET['modality'] != 'all':
@@ -230,13 +238,14 @@ def	visual_topic(request):
 			top_terms = top_terms.filter(term__modality=modality)
 		top_terms=top_terms.order_by("-weight")
 		context['top_terms'] = top_terms
-	else:
-		if topic.layer < model.layers_count:
-			context['topics'] = TopicInTopic.objects.filter(parent = topic) 
-		else:
-			context['documents'] = True
+	elif mode == 'topics':
+		context['topics'] = TopicInTopic.objects.filter(parent = topic) 
+	elif mode == 'documents':
+		context['documents'] = True
 			
 	context['low_level'] = (topic.layer == model.layers_count)
+	context['mode'] = mode
+	
 	
 	return render(request, 'models/topic.html', Context(context))
 	
