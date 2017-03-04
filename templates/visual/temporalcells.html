@@ -26,7 +26,14 @@
 		<option>row</option> 
 	</select>
 	<br>
-	
+	Labels placement: 
+	<select id = "select_placement" onchange="changeMode();">
+		<option>left</option>
+		<option>over</option>
+		<option>top</option>
+	</select>
+	<br>
+	<p id="lpc">FUCK</p>
 	<input type="checkbox" id = "cb_spectrum" onchange="changeMode();">Spectrum</input>
 	
 	<hr>
@@ -46,23 +53,62 @@
 <script src="/static/js/d3.v3.min.js"></script>  
 <script type="text/javascript">
 	
+	// data
 	{% autoescape off %}
 	{{data}}
 	{% endautoescape %}
 	
+	// parameters
+	var params = getUrlParameter("type").split('_');
+	var norm_mode = getUrlParameter("norm", "all");
+	var label_placement = getUrlParameter("placement", "left");
+	document.getElementById("select_group").value = params[1];
+	document.getElementById("select_norm").value = norm_mode;
+	document.getElementById("select_placement").value = label_placement;
+	if (norm_mode == "all") norm_mode = 0;
+	if (norm_mode == "row") norm_mode = 1;
+	if (norm_mode == "column") norm_mode = 2;
+	
+	document.getElementById("lpc").innerHTML = label_placement;
+	
+	var use_spectrum = getUrlParameter("spectrum", "false");
+	use_spectrum = (use_spectrum == 'true');
+	if (use_spectrum) document.getElementById("cb_spectrum").checked = "checked";
+	
+	
+	// api
 	var api = new ArtmApi(); 
 	var topics_count = topics.length; 
 	var dates_count = dates.length; 
 	
+	
+	// geometry
 	var topic_label_width = 150;
 	var date_label_width = 50;
 	var square_size = 18;
+	var textAdditionalHeight = 0;
+	var cellsMarginY = 0;
 	topic_labels_shift = 0;
+	 
+	
+	topicLablesTextAnchor = 'end';
+	
+	if (label_placement == 'over') {
+		topic_label_width = 0;
+		topic_labels_shift = 10;
+		topicLablesTextAnchor = 'begin';
+	} else if (label_placement == 'top') {
+		topic_label_width = 0;
+		topic_labels_shift = 10;
+		topicLablesTextAnchor = 'begin';
+		textAdditionalHeight = 15;
+		cellsMarginY = 3;
+	}
 	
 	two_layered = false;
 	if (typeof high_topics !== 'undefined' && high_topics.length > 0) {
 		two_layered = true;
-		topic_labels_shift = 200;
+		topic_labels_shift += 200;
 	} 
 	
 	/*
@@ -70,8 +116,10 @@
 		//topic_label_width  = 400;
 	}
 	*/
+	
+	var lineHeight = textAdditionalHeight + square_size + cellsMarginY;
 	var svgWidth = 0.73 * window.innerWidth;
-	var svgHeight = square_size * topics_count + date_label_width; 
+	var svgHeight = lineHeight * topics_count + date_label_width; 
 	
 	var topColor = getRgb(theme.temporalSquares_TopColor);
 	var bottomColor = getRgb(theme.temporalSquares_BottomColor);
@@ -103,18 +151,6 @@
 	var shift_x = 0;
 	
 	
-	var params = getUrlParameter("type").split('_');
-	var norm_mode = getUrlParameter("norm", "all");
-	document.getElementById("select_group").value = params[1];
-	document.getElementById("select_norm").value = norm_mode;
-	if (norm_mode == "all") norm_mode = 0;
-	if (norm_mode == "row") norm_mode = 1;
-	if (norm_mode == "column") norm_mode = 2;
-	
-	var use_spectrum = getUrlParameter("spectrum", "false");
-	use_spectrum = (use_spectrum == 'true');
-	if (use_spectrum) document.getElementById("cb_spectrum").checked = "checked";
-	
 	var tooltip = D3Tooltip();
 	
 	var drag = d3.behavior.drag()
@@ -136,9 +172,7 @@
 		.enter()
 		.append("rect")
 		.attr("x", get_cell_x)
-		.attr("y", function(d, i) {
-			return square_size * d["Y"] + 1;
-		})
+		.attr("y", get_cell_y)
 		.attr("width", square_size - 2)
 		.attr("height", square_size - 2)	
 		.attr("stroke-width", 1)
@@ -168,7 +202,7 @@
 		.attr("points", function(d,i) {
 			if (i % 10 != 0) return "";
 			x = get_label_x(d,i)+3;
-			y = square_size * topics_count + 7;
+			y = lineHeight * topics_count + 7;
 			return x + "," + y + " " + (x+5) + "," + (y-5) + " " + (x+10) + "," + y;
 		})
 	
@@ -185,7 +219,7 @@
 		.attr("text-anchor", "begin")
 		.attr("x", get_label_x) 
 		.attr("y", function(d, i) { 
-			return 22 + square_size * topics_count; 
+			return 22 + lineHeight * topics_count; 
 		});
 		
 		
@@ -243,7 +277,7 @@
 			return d["name"];
 		})
 		.attr("fill", theme.textColor)
-		.attr("text-anchor", "end")
+		.attr("text-anchor", topicLablesTextAnchor)
 		.style("cursor", "pointer")
 		.on("mouseover", function(d, i) {
 			tooltip.show(d["topwords"], d3.mouse(this));
@@ -261,6 +295,10 @@
 		return x;
 	}
 	
+	function get_cell_y(d, i) {
+		return lineHeight * d["Y"] + textAdditionalHeight + 1;
+	}
+	
 	function get_label_x(d, i){
 		x = topic_label_width + topic_labels_shift + square_size * d["X"] + shift_x;
 		if (x < topic_labels_shift + topic_label_width) x = -1000;
@@ -268,7 +306,7 @@
 	}
 	
 	function get_label_y(d){
-		return 13 + square_size * d["Y"];
+		return 13 + lineHeight * d["Y"];
 	} 
 	
 	function dragged(d) {
@@ -339,9 +377,10 @@
 	
 	
 	function changeMode() { 
-		loc =  "/visual/global?model={{model.id}}&type=temporalcells_" +
-				document.getElementById("select_group").value + "&norm=" + 
-				document.getElementById("select_norm").value;
+		loc =  "/visual/global?model={{model.id}}" + 
+				"&type=temporalcells_" + document.getElementById("select_group").value
+				+ "&norm=" + document.getElementById("select_norm").value
+				+ "&placement=" + document.getElementById("select_placement").value;
 		if (document.getElementById("cb_spectrum").checked) loc += "&spectrum=true";
 		window.location = loc;
 	}
