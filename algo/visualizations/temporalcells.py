@@ -59,14 +59,18 @@ def visual(model, params):
 			children = TopicInTopic.objects.filter(parent = topic)
 			positions = [relation.child.spectrum_index for relation in children]
 			avg = sum(positions)/float(len(positions))
-			high_topics_temp.append({"mass_center_y":avg, "name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2]), "positions": positions})
+			high_topics_temp.append({"topic":topic, "mass_center_y":avg, "name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2]), "positions": positions})
 		high_topics_temp.sort(key = lambda x: x["mass_center_y"])
 		
 		i = 0
 		K = len(topics_send) / float(len(high_topics_temp))
 		for el in high_topics_temp:		
 			pos_y = K*(i+0.5)
-			high_topics_send.append({"Y": pos_y, "name" : el["name"]})
+			high_topics_send.append({
+				"Y": pos_y, 
+				"name" : el["name"], 
+				"topwords": top_words_html(el["topic"].top_words(count=15)) 
+			})
 			for j in el["positions"]:
 				lines_send.append({"from_y": pos_y, "to_y": j})
 			i += 1

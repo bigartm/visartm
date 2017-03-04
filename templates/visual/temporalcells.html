@@ -32,8 +32,7 @@
 		<option>over</option>
 		<option>top</option>
 	</select>
-	<br>
-	<p id="lpc">FUCK</p>
+	<br> 
 	<input type="checkbox" id = "cb_spectrum" onchange="changeMode();">Spectrum</input>
 	
 	<hr>
@@ -67,9 +66,7 @@
 	document.getElementById("select_placement").value = label_placement;
 	if (norm_mode == "all") norm_mode = 0;
 	if (norm_mode == "row") norm_mode = 1;
-	if (norm_mode == "column") norm_mode = 2;
-	
-	document.getElementById("lpc").innerHTML = label_placement;
+	if (norm_mode == "column") norm_mode = 2; 
 	
 	var use_spectrum = getUrlParameter("spectrum", "false");
 	use_spectrum = (use_spectrum == 'true');
@@ -83,12 +80,13 @@
 	
 	
 	// geometry
+	var topicLabelWidth = 150;
 	var topic_label_width = 150;
 	var date_label_width = 50;
 	var square_size = 18;
 	var textAdditionalHeight = 0;
 	var cellsMarginY = 0;
-	topic_labels_shift = 0;
+	var topic_labels_shift = 0;
 	 
 	
 	topicLablesTextAnchor = 'end';
@@ -108,7 +106,7 @@
 	two_layered = false;
 	if (typeof high_topics !== 'undefined' && high_topics.length > 0) {
 		two_layered = true;
-		topic_labels_shift += 200;
+		topic_labels_shift += topicLabelWidth + 50;
 	} 
 	
 	/*
@@ -240,25 +238,33 @@
 			.data(high_topics) 	 
 			.enter()
 			.append('text')
-			.attr("x", topic_label_width)
+			.attr("x", topicLabelWidth)
 			.attr("y", get_label_y)
 			.text(function(d, i) {
 				return d["name"]
 			})
 			.attr("fill", theme.textColor)
-			.attr("text-anchor", "end");
+			.attr("text-anchor", "end")
+			.style("cursor", "pointer")
+			.on("mouseover", function(d, i) {
+				tooltip.show(d["topwords"], d3.mouse(this));
+			})
+			.on("mouseout", function(d, i) { 
+				tooltip.hide(); 
+			})
+			;
 			
 	var connection_lines = group_high_topic_labels.selectAll('line')
 			.data(lines) 	 
 			.enter()
 			.append('line')
-			.attr("x1", 3 + topic_label_width)
+			.attr("x1", 3 + topicLabelWidth)
 			.attr("y1", function(d) {
-				return 9 + square_size * d["from_y"];
+				return 9 + lineHeight * d["from_y"];
 			})
-			.attr("x2", topic_labels_shift)
+			.attr("x2", topic_labels_shift - 4)
 			.attr("y2",  function(d) {
-				return 9 + square_size * d["to_y"];
+				return 9 + lineHeight * d["to_y"];
 			})
 			.attr("stroke", theme.textColor)
 			.attr("stroke-width", 2);
