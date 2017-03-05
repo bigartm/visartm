@@ -4,6 +4,14 @@ from django.conf import settings
 
 register = template.Library()
 
+@register.simple_tag(takes_context=False)
+def meta_tags():
+	try:
+		return settings.META_TAGS
+	except:
+		return ""
+
+
 @register.simple_tag(takes_context=True)
 def color_theme(context):
 	try:

@@ -3,6 +3,10 @@
 {% block title %}VisARTM | Start page{% endblock %}
 
 {% block style %}
+	{% load extra_tags %}
+	{% autoescape off %}
+	{% meta_tags %}
+	{% endautoescape %}
 	<script language="JavaScript" src = "/static/slideshow/touch.js"></script>
 	<link rel="stylesheet" type="text/css" href="/static/slideshow/slideshow.css?version={% now 'U' %}">
 	<script src="/static/slideshow/slideshow.js?version={% now 'U' %}"></script>
