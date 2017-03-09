@@ -5,6 +5,11 @@
 {% block content %}
 	<h1>Account {{account.username}}</h1> 
 	<hr>
+	<p>First name: {{profile.first_name}}</p>
+	<p>Last name: {{profile.first_name}}</p>
+	<p>Assessor rating: {{profile.assessor_rating}}</p>
+	
+	<hr>
 	<h3>Permissions</h3> 
 	{% for permission in permissions %}
 		<p>{{permission.name}}: {% if permission.value %}Yes{% else %}No{% endif %}   </p>

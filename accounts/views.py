@@ -3,6 +3,8 @@ from django.template import RequestContext, Context, loader
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
+
+from accounts.models import Profile
 from models.models import ArtmModel
 from datasets.models import Dataset
 from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
@@ -61,7 +63,10 @@ def signup(request):
 
 def account_view(request, user_name):
 	account = User.objects.get(username = user_name)
-	context = {"account": account}
+	context = {
+		"account": account,
+		"profile": Profile.get_profile(account)
+	}
 	 
 	if account == request.user:	
 		context["public_datasets"] = Dataset.objects.filter(owner = account, is_public = True)
