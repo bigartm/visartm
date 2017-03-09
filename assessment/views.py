@@ -31,7 +31,7 @@ def problems_list(request):
 def problem(request):
 	if request.method == 'POST':
 		problem = AssessmentProblem.objects.get(id = request.POST["problem_id"]) 
-		if not ProblemAssessor.objects.filter(problem=problem, assessor=request.user):
+		if not problem.can_assess(request.user):
 			return HttpResponseForbidden("You are not authorized to assess this problem, so you can't make any changes to it.")
 		
 		problem.alter(request)
@@ -97,7 +97,7 @@ def problem_instruction(request):
 def get_task(request):
 	problem = AssessmentProblem.objects.get(id = request.GET["problem_id"])	
 		
-	if len(ProblemAssessor.objects.filter(problem=problem, assessor=request.user))!=0:
+	if problem.can_assess(request.user):
 		task = problem.create_task(request)
 		if not task:
 			return general_views.message(request, "Seems like everything is assessed!")
@@ -163,8 +163,7 @@ def get_results(request):
 @login_required
 def instructions(request):
 	problem = AssessmentProblem.objects.get(id = request.GET["problem_id"]) 
-	if not ProblemAssessor.objects.filter(problem=problem, assessor=request.user):
+	if not problem.can_assess(request.user):
 		return HttpResponseForbidden("You are not authorized to assess this problem.")
 	return render(request, os.path.join("assessment", problem.type, "instructions.html"), Context(problem.get_view_context()))
-	
 	

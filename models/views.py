@@ -160,7 +160,7 @@ def create_model(request):
 	model.creation_time = datetime.now()
 	model.status = 1
 	model.save()
-	model.prepare_log()
+	#model.prepare_log()
 	
 	if settings.THREADING:
 		t = Thread(target = ArtmModel.create_generic, args = (model, request.POST, ), daemon = True)

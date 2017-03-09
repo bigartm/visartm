@@ -11,5 +11,6 @@ urlpatterns = [
 	url(r'password_reset_confirm/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/', auth_views.password_reset_confirm, name='password_reset_confirm'),
 	url(r'password_reset_complete$', auth_views.password_reset_complete, name='password_reset_complete'),	
 	url(r'password_reset', auth_views.password_reset, name='password_reset'),	
-	url(r'^user/(?P<user_name>\w+)$', accounts_views.account_view)
+	url(r'^user/(?P<user_name>\w+)$', accounts_views.account_view, name='account'),
+	url(r'^group/(?P<group_id>\d+)$', accounts_views.group_view, name='group')
 ]

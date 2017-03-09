@@ -121,6 +121,9 @@ class AssessmentProblem(models.Model):
 		if not os.path.exists(path): 
 			os.makedirs(path) 
 		return path	 
+		
+	def can_assess(self, user):
+		return len(ProblemAssessor.objects.filter(problem=self, assessor=user))!=0
 			
 	
 from django.db.models.signals import pre_delete

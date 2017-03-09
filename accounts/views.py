@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from models.models import ArtmModel
 from datasets.models import Dataset
 from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
@@ -68,7 +68,7 @@ def account_view(request, user_name):
 		context["private_datasets"] = Dataset.objects.filter(owner = account, is_public = False)
 		context["models"] = ArtmModel.objects.filter(author = account)
 		
-		
+	context["groups"] =  account.groups.all()
 		
 	permissions = []
 	permissions.append({"name": "Create dataset", "codename":"add_dataset", "value": account.has_perm("add_dataset")})
@@ -77,6 +77,14 @@ def account_view(request, user_name):
 
 	return render(request, 'accounts/account.html', Context(context)) 
 	
+	
+def group_view(request, group_id):
+	group = Group.objects.get(id=group_id) 
+	context = {
+		'group': group,
+		'users': group.user_set.all()
+	}
+	return render(request, 'accounts/group.html', Context(context)) 
 
 def sendmail(request):
 	from django.core.mail import send_mail

@@ -11,6 +11,14 @@
 	{% endfor %}
 	
 	<hr>
+	<h3>Groups</h3> 
+
+	{% for group in groups %}
+		<a href="/accounts/group/{{group.id}}">{{group}}</a>
+	{% endfor %}
+
+	
+	<hr>
 	{% if models %}
 		<h3>Models</h3>
 		{% for model in models %}
