@@ -31,7 +31,14 @@
 				<button class="btn btn-right">↓</button>
 				{% csrf_token %}
 			</form>
-			{{topic}}
+			
+			<span  
+				data-toggle="tooltip" 
+				data-placement="right" 
+				title="{{topic.top_words_html}}"
+				data-html="true">
+				{{topic}}
+			</span>
 		</p>
 		
 	{% endfor %}
