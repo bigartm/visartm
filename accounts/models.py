@@ -13,4 +13,11 @@ class Profile(models.Model):
 		except:
 			profile = Profile()
 			profile.user = user
+			profile.save()
 			return profile
+	
+	def __str__(self):
+		return self.user.username
+			
+from django.contrib import admin
+admin.site.register(Profile)
