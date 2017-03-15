@@ -22,8 +22,11 @@
             <button class="slideshow-nav slideshow-nav--next js-slideshow-next"> </button>
         </nav>
         <div class="slideshow-container js-slideshow-container">
-            <div class="slideshow-slide js-slideshow-slide" label="We use BigARTM - state-of-the-art, powerful and effective topic modelling core" >
+            <div class="slideshow-slide js-slideshow-slide" label="">
                 <img class="slideshow-slide--image"  src="/static/slideshow/1.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide" label="We use BigARTM - state-of-the-art, powerful and effective topic modelling core" >
+                <img class="slideshow-slide--image"  src="/static/slideshow/2.jpeg"/>
             </div>
            <!-- <div class="slideshow-slide js-slideshow-slide" label="Preprocess, lemmatize and filter your documents in one click">
                 <img class="slideshow-slide--image"   src="/static/slideshow/2.jpeg"/>
@@ -56,11 +59,22 @@
 {% endblock %}
 
 {% block right %} 
-	{% if not user.is_anonymous %}
-		<p>Hi, {{user}}!</p>
-	{% endif %}
+	<h4>Welcome!</h4>
 	<p>This is interactive topic modelling service based on BigARTM.</p>
 	<p>It enables you build topics models for big document corpora and visualize them.</p> 
+
+	<hr>
+	<h4>Explore public datasets</h4>
+		
+	{% for dataset in datasets %}{% if forloop.counter > 1 %}, {% endif %}<a href = "/dataset?dataset={{dataset.text_id}}">{{dataset}}</a>{% endfor %}
+	{% if user.is_anonymous %}
+		<hr>
+		<h4>Join us!</h4>
+		<form method="get" action="/accounts/signup">
+			<input type="email" name="email" placeholder="your email"/>
+			<button type="submit">Join</button>
+		</form>
+	{% endif %}
 {% endblock %}
 
 {% block javascript %}

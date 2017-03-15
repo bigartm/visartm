@@ -14,23 +14,27 @@
 {% endblock %}
 
 {% block content %}
-	 
+	  
+	
+	<form method='post' style="display: none;" id="form_move">
+		<input type="hidden" name="task_id" value="{{task.id}}"  />
+		<input type="hidden" name="action"  id="action" />
+		<input type="hidden" name="topic_index_id" id="topic_index_id" />			
+		{% csrf_token %}
+	</form>
+	
 	{% for topic in topics %} 
-		<p>
+		 
 			<form method='post' style="display: inline-block;">
 				<input type="hidden" name="task_id" value="{{task.id}}" />
 				<input type="hidden" name="action" value="topic_up" />
 				<input type="hidden" name="topic_index_id" value="{{topic.index_id}}" />			
-				<button class="btn btn-left">↑</button>
+				<div class="btn-group" data-toggle="buttons">
+					<label class="btn btn-default" onclick="move({{topic.index_id}}, 'topic_up')"><small>↑</small></label>
+					<label class="btn btn-default" onclick="move({{topic.index_id}}, 'topic_down')"><small>↓</small></label>
+				</div>
 				{% csrf_token %}
-			</form>
-			<form method='post' style="display: inline-block;">
-				<input type="hidden" name="task_id" value="{{task.id}}" />
-				<input type="hidden" name="action" value="topic_down" />
-				<input type="hidden" name="topic_index_id" value="{{topic.index_id}}" />			
-				<button class="btn btn-right">↓</button>
-				{% csrf_token %}
-			</form>
+			</form> 
 			
 			<span  
 				data-toggle="tooltip" 
@@ -39,7 +43,7 @@
 				data-html="true">
 				{{topic}}
 			</span>
-		</p>
+		<br> 
 		
 	{% endfor %}
 	
@@ -59,17 +63,12 @@
 		$('[data-toggle="tooltip"]').tooltip(); 
 	});
 	
-	var topics = {};
-	function checkChanged(topic_id) {
-		if (!topics[topic_id]) topics[topic_id] = true;
-		else topics[topic_id] = false;
-		val = "";
-		for (var i in topics) {
-			if (topics[i]) {
-				val += i + ",";
-			}
-		} 
-		document.getElementById("selected_topics").value = "[" + val.substr(0, val.length - 1) + "]";
+	 
+	
+	function move(topic_index_id, action) {
+		document.getElementById('topic_index_id').value = topic_index_id;
+		document.getElementById('action').value = action;
+		document.getElementById('form_move').submit();
 	}
 </script>
 {% endblock %}

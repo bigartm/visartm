@@ -30,8 +30,8 @@
 	<div class="form-group row">
       <label for="dataset" class="col-sm-2 col-form-label">E-mail</label>
       <div class="col-sm-1">
-        <input type="email" name="email"/>
-      </div>
+        <input type="email" name="email" id="email"/>
+	 </div>
     </div> 
 	
 	
@@ -46,5 +46,11 @@
  
   
 </div> 
-
 {% endblock %}
+
+{% block javascript %}
+<script language="Javascript">
+	document.getElementById("email").value = getUrlParameter("email", "");
+</script>
+{% endblock %}
+

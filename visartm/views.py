@@ -5,9 +5,14 @@ from django.contrib.auth import authenticate, login, logout
 from datetime import datetime
 from django.conf import settings
 import os
+
+from datasets.models import Dataset
  
 def start_page(request):
-    return render(request, 'index.html', Context({'no_footer' : True}))
+    return render(request, 'index.html', Context({
+		'datasets' : Dataset.objects.filter(is_public=True),
+		'no_footer' : True
+	}))
 
 def settings_page(request):  
 	themes = [f.split('.')[0] for f in os.listdir(os.path.join(settings.BASE_DIR, "static", "themes")) if ".js" in f]
