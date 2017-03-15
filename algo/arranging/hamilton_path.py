@@ -5,7 +5,7 @@ import numpy as np
 from math import exp
 
 class HamiltonPath:
-	def __init__(self, adj):
+	def __init__(self, adj, caller=None):
 		self.A = adj
 		if adj.shape[0] != adj.shape[1]:
 			raise ValueError("Adjacency matrix should be square")
@@ -21,6 +21,11 @@ class HamiltonPath:
 		self.count_priority()
 		self.cut_branch = self.N
 		self.atomic_iterations = 10000
+		self.caller = caller
+		
+	def log(self, message):
+		if self.caller:
+			self.caller.log(message)
 	
 	def path_weight(self, path = None):
 		if path == None:
@@ -111,7 +116,7 @@ class HamiltonPath:
 		while (time.time() - start_time < run_time):
 			self.elapsed = time.time() - start_time
 			quality = self.path_weight()
-			#print(self.elapsed, quality)
+			self.log(str(self.elapsed) + " " + str(quality))
 			self.chart_time.append(self.elapsed)
 			self.chart_iterations.append(self.iter_counter)
 			self.chart_weight.append(quality)

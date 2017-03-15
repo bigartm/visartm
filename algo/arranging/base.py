@@ -1,13 +1,13 @@
 import numpy as np
 
-def get_arrangement_permutation(dist, mode):
+def get_arrangement_permutation(dist, mode, model=None):
 	if mode == "hamilton_fast":
 		from algo.arranging.hamilton_path import HamiltonPath 
-		hp = HamiltonPath(dist)
+		hp = HamiltonPath(dist, caller=model)
 		return hp.solve(fast=True)
 	if mode == "hamilton":
 		from algo.arranging.hamilton_path import HamiltonPath 
-		hp = HamiltonPath(dist)
+		hp = HamiltonPath(dist, caller=model)
 		return hp.solve()
 	elif mode == "tsne": 
 		from sklearn.manifold import TSNE

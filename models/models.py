@@ -645,7 +645,7 @@ class ArtmModel(models.Model):
 				idx = np.argsort(titles)
 			else:
 				from algo.arranging.base import get_arrangement_permutation
-				idx = get_arrangement_permutation(topic_distances[layer_id], mode)
+				idx = get_arrangement_permutation(topic_distances[layer_id], mode, model=self)
 			
 			i = 0
 			for topic in topics_index[layer_id]:
