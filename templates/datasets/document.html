@@ -49,6 +49,9 @@
 			</select>
 		</div>
 	{% endif %}
+	{% if custom_ptdw %}
+		<span style="color:red;">Using custom p(t|d,w) markup</span>
+	{% endif %}
 	<hr>
 	{% if model %}
 		<div>

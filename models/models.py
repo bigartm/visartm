@@ -656,7 +656,20 @@ class ArtmModel(models.Model):
 		self.status = 0
 		self.save()
 	
-
+	
+	def get_custom_ptdw(self, document):
+		ret = None
+		path = os.path.join(self.get_folder(), "ptdw", document.text_id)
+		if not os.path.exists(path):
+			return None
+		
+		try:
+			with open(path, "r", encoding="utf-8") as f:
+				ret = json.loads(f.read())
+		except:
+			self.log("Errror reading custom ptdw file %s" % path)
+			
+		return ret
 	 
 	def get_folder(self):
 		path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "models", self.text_id)

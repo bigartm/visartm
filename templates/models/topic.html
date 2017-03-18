@@ -54,7 +54,8 @@
 	Dataset: <a href="/dataset?dataset={{topic.model.dataset.text_id}}">{{topic.model.dataset}}</a><br>
 	Model: <a href="/model?model={{topic.model.id}}">{{topic.model}}</a><br>
 	Layer: {{topic.layer}}<br>
-	Documents: {{topic.documents_count}}	
+	Documents: {{topic.documents_count}}<br>
+	index_id: {{topic.index_id}}
 	<form class="" role="search" method="POST" action="/models/rename_topic">
 		Rename: <input type="text" name='new_title' class="" placeholder = "" value="{{topic.title}}"></input>
 		<input type="hidden" name='id' value="{{topic.id}}"> </input> 

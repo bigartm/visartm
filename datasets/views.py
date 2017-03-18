@@ -288,17 +288,34 @@ def visual_document(request):
 		phi = model.get_phi()
 		theta = model.get_theta()
 		theta_t = theta.transpose()
-		documents_count = dataset.documents_count
 		
-		hl_topics = [0 for i in range(0, topics_count[target_layer])]
-		topics = []
+		custom_ptdw = model.get_custom_ptdw(document)
+		if custom_ptdw:
+			context['custom_ptdw'] = True
 		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
-		shift = 0
-		for i in range(1, target_layer):
-			shift += topics_count[i]
+			
+	
+		hl_topics = [0 for i in range(0, topics_count[target_layer])]
 		topics_list = [] 
-		for topic_index_id in range(0, topics_count[target_layer]):
-			topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
+		
+		if custom_ptdw:
+			total_words_count = 0
+			word_counter=dict()
+			for _, topic_index_id in custom_ptdw.items():
+				total_words_count += 1
+				try:
+					word_counter[topic_index_id] += 1
+				except:
+					word_counter[topic_index_id] = 1
+			for topic_index_id, count in word_counter.items():
+				topics_list.append((count / total_words_count, topic_index_id))
+		else:
+			shift = 0
+			for i in range(1, target_layer):
+				shift += topics_count[i]
+			
+			for topic_index_id in range(0, topics_count[target_layer]):
+				topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
 		topics_list.sort(reverse = True) 
 		
 		topics = []
@@ -345,15 +362,22 @@ def visual_document(request):
 		# Word highlight
 		if highlight_terms:
 			if not model is None: 
-				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
-				theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]
+				if custom_ptdw:
+					all_terms = Term.objects.filter(dataset=document.dataset).order_by("index_id")
+				else:
+					phi_layer = phi[:, shift : shift + topics_count[target_layer]]
+					theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]
 			
 			entries = []
 			
 
 			for start_pos, length, term_index_id in wi:
-				if model is None:
-					entries.append((start_pos, length, term_index_id, 0)) 
+				class_id=0
+				if custom_ptdw:
+					try:
+						class_id = hl_topics[custom_ptdw[all_terms[term_index_id].text]]
+					except:
+						pass
 				else:
 					topic_id = np.argmax(phi_layer[term_index_id] * theta_t_layer)	
 					if phi_layer[term_index_id][topic_id] < 1e-9:
@@ -361,7 +385,7 @@ def visual_document(request):
 						class_id = -1
 					else:
 						class_id = hl_topics[topic_id]
-					entries.append((start_pos, length, term_index_id, class_id)) 
+				entries.append((start_pos, length, term_index_id, class_id)) 
 		
 			new_text = ""
 			cur_pos = 0
@@ -385,6 +409,7 @@ def visual_document(request):
 		
 	# Related documents 
 	if not model is None:
+		documents_count = dataset.documents_count
 		documents_index = Document.objects.filter(dataset = dataset).order_by("index_id")
 		dist = np.zeros(documents_count)
 		self_distr = theta_t[document.index_id]
