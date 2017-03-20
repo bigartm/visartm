@@ -657,19 +657,7 @@ class ArtmModel(models.Model):
 		self.save()
 	
 	
-	def get_custom_ptdw(self, document):
-		ret = None
-		path = os.path.join(self.get_folder(), "ptdw", document.text_id)
-		if not os.path.exists(path):
-			return None
-		
-		try:
-			with open(path, "r", encoding="utf-8") as f:
-				ret = json.loads(f.read())
-		except:
-			self.log("Errror reading custom ptdw file %s" % path)
-			
-		return ret
+
 	 
 	def get_folder(self):
 		path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "models", self.text_id)
@@ -699,6 +687,13 @@ class ArtmModel(models.Model):
 		except:
 			self.theta = np.load(os.path.join(self.get_folder(), "theta.npy"))
 			return self.theta
+			
+	def get_theta_t(self):
+		try:
+			return self.theta_t
+		except:
+			self.theta_t = self.get_theta().transpose()
+			return self.theta_t
 			
 	def get_psi(self, i):
 		return np.load(os.path.join(self.get_folder(), "psi" + str(i) + ".npy"))
@@ -747,6 +742,31 @@ class ArtmModel(models.Model):
 		return cells, dates
 	
 	
+	
+	# Returns list of related documents to the document with given index_id (sorted from most related)
+	def get_related_documents(self, document_index_id, count=20):
+		from algo.metrics import euclidean
+		documents_count = self.dataset.documents_count
+		documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
+		dist = np.zeros(documents_count)
+		theta_t = self.get_theta_t()
+		self_distr = theta_t[document_index_id]
+		for other_document_id in range(0, documents_count):
+			dist[other_document_id] = euclidean(self_distr, theta_t[other_document_id])
+		
+		idx = np.argsort(dist)[1 : count+1]		
+		return [documents_index[int(i)] for i in idx]
+
+	def segmentation_available(self, document):
+		return os.path.exists(os.path.join(self.get_folder(), "segmentation", document.text_id))
+		
+	def get_segmentation(self, document):
+		try:
+			with open(os.path.join(self.get_folder(), "segmentation", document.text_id)) as f:
+				return json.loads(f.read())["selections"]
+		except:
+			return None
+			
 def on_start():
 	for model in ArtmModel.objects.filter(status=1):
 		model.status = 2

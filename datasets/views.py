@@ -231,8 +231,28 @@ def visual_dataset(request):
 	
 
 	
+def document_all_topics(request):
+	document = Document.objects.get(id = request.GET['id'])
+	model = ArtmModel.objects.get(id = request.GET["model_id"])  
+	context = {}
+	
+	topics_count = [int(x) for x in model.topics_count.split()] 
+	target_layer = model.layers_count
+	theta = model.get_theta()
+	topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
+	shift = 0
+	for i in range(1, target_layer):
+		shift += topics_count[i]
+	topics_list = []
+	for topic_index_id in range(0, topics_count[target_layer]):
+		topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
+	topics_list.sort(reverse = True)
+	context['topics'] = [{"weight": 100*i[0], "topic": topics_index[i[1]]} for i in topics_list]
+	return render(request, 'datasets/document_all_topics.html', Context(context)) 
+	
+	
+	
 import numpy as np
-from algo.metrics import euclidean
 def visual_document(request): 
 	if 'id' in request.GET:
 		document = Document.objects.get(id = request.GET['id'])
@@ -260,22 +280,8 @@ def visual_document(request):
 		if key in request.COOKIES and not "mode" in request.GET:
 			return redirect("/document?id=" + str(document.id) + "&mode=" + mode + "&model_id=" + request.COOKIES[key])
 	
-	context["model"] = model
-	
-	if mode == 'all_topics':
-		topics_count = [int(x) for x in model.topics_count.split()] 
-		target_layer = model.layers_count
-		theta = model.get_theta()
-		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
-		shift = 0
-		for i in range(1, target_layer):
-			shift += topics_count[i]
-		topics_list = []
-		for topic_index_id in range(0, topics_count[target_layer]):
-			topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
-		topics_list.sort(reverse = True)
-		context['topics'] = [{"weight": 100*i[0], "topic": topics_index[i[1]]} for i in topics_list]
-		return render(request, 'datasets/document_all_topics.html', Context(context)) 
+	context["model"] = model 
+		
  	
 	
 	context['tags'] = document.fetch_tags()
@@ -289,33 +295,20 @@ def visual_document(request):
 		theta = model.get_theta()
 		theta_t = theta.transpose()
 		
-		custom_ptdw = model.get_custom_ptdw(document)
-		if custom_ptdw:
-			context['custom_ptdw'] = True
+ 
 		topics_index = Topic.objects.filter(model = model, layer = target_layer).order_by("index_id")
 			
 	
 		hl_topics = [0 for i in range(0, topics_count[target_layer])]
 		topics_list = [] 
 		
-		if custom_ptdw:
-			total_words_count = 0
-			word_counter=dict()
-			for _, topic_index_id in custom_ptdw.items():
-				total_words_count += 1
-				try:
-					word_counter[topic_index_id] += 1
-				except:
-					word_counter[topic_index_id] = 1
-			for topic_index_id, count in word_counter.items():
-				topics_list.append((count / total_words_count, topic_index_id))
-		else:
-			shift = 0
-			for i in range(1, target_layer):
-				shift += topics_count[i]
-			
-			for topic_index_id in range(0, topics_count[target_layer]):
-				topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
+	 
+		shift = 0
+		for i in range(1, target_layer):
+			shift += topics_count[i]
+		
+		for topic_index_id in range(0, topics_count[target_layer]):
+			topics_list.append((theta[shift + topic_index_id, document.index_id], topic_index_id))
 		topics_list.sort(reverse = True) 
 		
 		topics = []
@@ -339,7 +332,7 @@ def visual_document(request):
 				"i" : 0, 
 				"title": "Other", 
 				"weight": other_weight,  
-				"url": "/document?mode=all_topics&id=" + str(document.id) + "&model_id=" + str(model.id), 
+				"url": "/datasets/document_all_topics?id=" + str(document.id) + "&model_id=" + str(model.id), 
 			})
 		context['topics'] = topics
 	
@@ -362,31 +355,25 @@ def visual_document(request):
 		# Word highlight
 		if highlight_terms:
 			if not model is None: 
-				if custom_ptdw:
-					all_terms = Term.objects.filter(dataset=document.dataset).order_by("index_id")
-				else:
-					phi_layer = phi[:, shift : shift + topics_count[target_layer]]
-					theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]
-			
-			entries = []
-			
+				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
+				theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]
+		
+				entries = []
+				
 
-			for start_pos, length, term_index_id in wi:
-				class_id=0
-				if custom_ptdw:
-					try:
-						class_id = hl_topics[custom_ptdw[all_terms[term_index_id].text]]
-					except:
-						pass
-				else:
+				for start_pos, length, term_index_id in wi:
+					class_id=0
 					topic_id = np.argmax(phi_layer[term_index_id] * theta_t_layer)	
 					if phi_layer[term_index_id][topic_id] < 1e-9:
 						# If term wasn't included to model
 						class_id = -1
 					else:
 						class_id = hl_topics[topic_id]
-				entries.append((start_pos, length, term_index_id, class_id)) 
-		
+					entries.append((start_pos, length, term_index_id, class_id)) 
+			else:
+				entries = [(start_pos, length, term_index_id, 0) for start_pos, length, term_index_id in wi]
+			
+			
 			new_text = ""
 			cur_pos = 0
 			text_length = len(text)
@@ -409,22 +396,56 @@ def visual_document(request):
 		
 	# Related documents 
 	if not model is None:
-		documents_count = dataset.documents_count
-		documents_index = Document.objects.filter(dataset = dataset).order_by("index_id")
-		dist = np.zeros(documents_count)
-		self_distr = theta_t[document.index_id]
-		for other_document_id in range(0, documents_count):
-			dist[other_document_id] = euclidean(self_distr, theta_t[other_document_id])
-		
-		idx = np.argsort(dist)[1:21]		
-		context['related_documents'] = [documents_index[int(i)] for i in idx] 
+		context['related_documents'] = model.get_related_documents(document.index_id)
+		context['segmentation_available'] = model.segmentation_available(document)
 					 
 	response = render(request, 'datasets/document.html', Context(context))
 	if "model_id" in request.GET:
 		response.set_cookie("model_" + str(dataset.id), request.GET["model_id"])
 	return response 
 	
+def document_segments(request):
+	document = Document.objects.get(id = request.GET['id'])
+	model = ArtmModel.objects.get(id = request.GET['model_id'])
+	context = {"document" : document, "model" : model}
 	
+	
+	#First, build topic list
+	segments = model.get_segmentation(document)
+	if not segments:
+		return general_views.message(request, "Bad segments file.")
+	topics_index_id_set = set([x[2] for x in segments])
+	topics_index = model.get_topics()
+	class_index = {}
+	topics_list = []
+	
+	class_id = 0
+	for topic_index_id in topics_index_id_set:
+		class_id += 1
+		topic = topics_index[topic_index_id]
+		topics_list.append(topic)
+		class_index[topic_index_id] = class_id
+	
+	new_text = ""
+	cur_pos = 0
+	for start_index, end_index, topic_index_id in segments:
+		new_text += "%s<span class='tpc%d'>%s</span>" % (
+			document.text[cur_pos : start_index], 
+			class_index[topic_index_id], 
+			document.text[start_index :end_index]
+		)
+		cur_pos = end_index
+	new_text += document.text[cur_pos :]
+	
+	context["text"] = new_text.split("\n")
+	context["topics_count"] = len(topics_list)
+	context["topics"] = topics_list
+	
+	
+	
+	text_result = 0
+	
+	return render(request, 'datasets/document_segments.html', Context(context))
 	
 def visual_term(request):
 	if "id" in request.GET:
@@ -520,11 +541,14 @@ def global_search(request):
 		if len(search_query) < 3:
 			context['message'] = "Query is too short."
 		else:
-			documents = Document.objects.filter(title__icontains = search_query) 
-			if len(documents) !=0:
-				context["documents_title"] = documents
-				total_found += len(documents)
-				
+			documents_file_name = Document.objects.filter(text_id__icontains = search_query) 
+			context["documents_file_name"] = documents_file_name
+			total_found += len(documents_file_name)
+			
+			documents_title = Document.objects.filter(title__icontains = search_query) 
+			context["documents_title"] = documents_title
+			total_found += len(documents_title)
+			
 			terms = Term.objects.filter(text__icontains = search_query) 
 			if len(terms) != 0:
 				context["terms"] = terms

@@ -32,9 +32,9 @@ def visual(model, params):
 	for x in range(dates_count):
 		for y in range(topics_count):
 			size = len(cells[x][y])
-			max_size = max(max_size, size)
-			column_max_size[x] = max(column_max_size[x], size)
-			row_max_size[y] = max(row_max_size[y], size)
+			max_size = max(max_size, size, 1)
+			column_max_size[x] = max(column_max_size[x], size, 1)
+			row_max_size[y] = max(row_max_size[y], size, 1)
 			
 		
 	cells_send = []

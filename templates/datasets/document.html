@@ -48,10 +48,10 @@
 				{% endfor %}								
 			</select>
 		</div>
-	{% endif %}
-	{% if custom_ptdw %}
-		<span style="color:red;">Using custom p(t|d,w) markup</span>
-	{% endif %}
+	{% endif %} 
+	{% if segmentation_available %}
+		<a href = "/datasets/document_segments?id={{document.id}}&model_id={{model.id}}">View segmentation</a>
+	{% endif %} 
 	<hr>
 	{% if model %}
 		<div>
@@ -91,28 +91,7 @@
  
 <script type="text/javascript"> 
 
-	
-	var background_rgb = getRgb(theme.backgroundColor);
-	function initColor(i) {
-		color = theme.palette(i);
-		square = document.getElementById("square"+i);
-		if (square) square.style.color = color;
-		
-		rgb = getRgb(color);  
-		color = $c.rgb2hex( 
-			~~(0.2*rgb[0]+0.8*background_rgb[0]), 
-			~~(0.2*rgb[1]+0.8*background_rgb[1]),
-			~~(0.2*rgb[2]+0.8*background_rgb[2])
-		);
-		$(".tpc" + i).css("background-color", color);
-	}
-	
-	
-	initColor(-1);
-	initColor(0);
-	{% for topic in topics %}
-		initColor({{topic.i}});
-	{% endfor %}
+	initColors(50);
 	
 	var styleSheets = window.document.styleSheets;
 	

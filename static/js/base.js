@@ -3,6 +3,23 @@ function getRgb(color) {
 	else return $c.name2rgb(color).a;
 }
 
+function initColors(colorsCount) {
+	background_rgb = getRgb(theme.backgroundColor);
+	for (i=-1; i<=colorsCount; ++i) {	
+		color = theme.palette(i);
+		square = document.getElementById("square"+i);
+		if (square) square.style.color = color;
+		
+		rgb = getRgb(color);  
+		color = $c.rgb2hex( 
+			~~(0.2*rgb[0]+0.8*background_rgb[0]), 
+			~~(0.2*rgb[1]+0.8*background_rgb[1]),
+			~~(0.2*rgb[2]+0.8*background_rgb[2])
+		);
+		$(".tpc" + i).css("background-color", color);
+	}
+}
+
 function getUrlParameter(parameterName, defaultValue) {
     sURLVariables = decodeURIComponent(window.location.search.substring(1)).split('&');
 	var ret = undefined;

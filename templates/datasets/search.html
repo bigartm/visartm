@@ -20,6 +20,14 @@
 		{% endfor %}
 	{% endif %} 
 	
+	{% if documents_file_name %}
+		<hr>
+		<h3>Documents (by file name)</h3>
+		{% for document in documents_file_name %}
+			<a href="/document?id={{document.id}}">{{document.dataset.name}}/{{document}}</a><br>
+		{% endfor %}
+	{% endif %} 
+	
 	{% if documents %}
 		<hr>
 		<h3>Documents (by terms)</h3>
