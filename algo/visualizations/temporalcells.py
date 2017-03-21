@@ -26,15 +26,15 @@ def visual(model, params):
 	dates_send = [{"X": i, "name": dates[i]} for i in range(dates_count)]
 		
 	# Find maximal sizes for norming
-	max_size = 0
-	column_max_size = [0 for i in range(dates_count)]
-	row_max_size = [0 for i in range(topics_count)]	
+	max_size = 1
+	column_max_size = [1 for i in range(dates_count)]
+	row_max_size = [1 for i in range(topics_count)]	
 	for x in range(dates_count):
 		for y in range(topics_count):
 			size = len(cells[x][y])
-			max_size = max(max_size, size, 1)
-			column_max_size[x] = max(column_max_size[x], size, 1)
-			row_max_size[y] = max(row_max_size[y], size, 1)
+			max_size = max(max_size, size)
+			column_max_size[x] = max(column_max_size[x], size)
+			row_max_size[y] = max(row_max_size[y], size)
 			
 		
 	cells_send = []
