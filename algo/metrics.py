@@ -2,6 +2,8 @@ import numpy as np
 #from scipy.spatial.distance import euclidean
 from scipy.stats import entropy 			
 
+
+
 def euclidean(p, q):
 	return np.linalg.norm(p-q)
 			
@@ -72,4 +74,24 @@ def filter_tails(matrix, start, end):
 				row[j] = 0
 	return matrix
 '''
+
+metrics_list = ["euclidean", "cosine", "minkovsky", "cov", "hellinger", "jsd", "jaccard"]
+
+def get_metric_by_name(name):
+	if name == "euclidean": 
+		return euclidean 
+	elif name == "cosine": 
+		return cosine  
+	elif name == "minkovsky":
+		return minkovsky
+	elif name == "hellinger": 
+		return hellinger
+	elif name == "kld": 
+		return kld
+	elif name == "jsd": 
+		return jsd
+	elif name == "jaccard":  
+		return jaccard
+	else:
+		return name
 

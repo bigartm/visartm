@@ -568,36 +568,10 @@ class ArtmModel(models.Model):
 			ret = np.zeros((topics_count[layer], topics_count[layer]))
 			
 				
-			phi_t = self.get_phi().transpose()[self.get_layer_range(layer)]
-			
-			sums = np.sum(phi_t, axis = 1)
-			if (np.max(sums) - np.min(sums)) / np.mean(sums) > 1e-3:
-				self.log(str(sums))
-				self.log("max=" + str(np.max(sums)))
-				self.log("min=" + str(np.min(sums)))
-				self.log("avg=" + str(np.mean(sums)))
-				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized")
-			  
-			j = 0
-			for row in phi_t:
-				row /= sums[j]
-				j += 1 
+			phi_t = self.get_phi_t(layer)
 			
 			import algo.metrics as metrics
-			if metric == "euclidean": 
-				metric = metrics.euclidean 
-			elif metric == "cosine": 
-				metric = metrics.cosine  
-			elif metric == "minkovsky":
-				metric = metrics.minkovsky
-			elif metric == "hellinger": 
-				metric = metrics.hellinger
-			elif metric == "kld": 
-				metric = metrics.kld
-			elif metric == "jsd": 
-				metric = metrics.jsd
-			elif metric == "jaccard":  
-				metric = metrics.jaccard
+			metric = metrics.get_metric_by_name(metric)
 				
 			for i in range(topics_count[layer]):
 				for j in range(topics_count[layer]):
@@ -628,7 +602,7 @@ class ArtmModel(models.Model):
 		for layer_id in range (1, layers_count + 1): 
 			for i in range(0, topics_count[layer_id]):
 				idx = np.argsort(topic_distances[layer_id][i])
-				for j in idx[1 : 1 + min(30, topics_count[layer_id] - 1)]:
+				for j in idx[1 : 1 + min(10, topics_count[layer_id] - 1)]:
 					relation = TopicRelated()
 					relation.model = self
 					relation.topic1 = topics_index[layer_id][i]
@@ -687,6 +661,27 @@ class ArtmModel(models.Model):
 		except:
 			self.theta = np.load(os.path.join(self.get_folder(), "theta.npy"))
 			return self.theta
+			
+	def get_phi_t(self, layer):
+		if not hasattr(self, "phi_t"):
+			self.phi_t = dict()
+		if not layer in self.phi_t:
+			phi_t = self.get_phi().transpose()[self.get_layer_range(layer)]
+			
+			sums = np.sum(phi_t, axis = 1)
+			if (np.max(sums) - np.min(sums)) / np.mean(sums) > 1e-3:
+				self.log(str(sums))
+				self.log("max=" + str(np.max(sums)))
+				self.log("min=" + str(np.min(sums)))
+				self.log("avg=" + str(np.mean(sums)))
+				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized")
+			  
+			j = 0
+			for row in phi_t:
+				row /= sums[j]
+				j += 1 
+			self.phi_t[layer] = phi_t
+		return self.phi_t[layer]
 			
 	def get_theta_t(self):
 		try:
@@ -827,6 +822,7 @@ class Topic(models.Model):
 			if i % 3 == 0:
 				ret +="<br>"
 		return ret
+		 
 		
 class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

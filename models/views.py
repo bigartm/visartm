@@ -254,6 +254,29 @@ def visual_topic(request):
 	
 	return render(request, 'models/topic.html', Context(context))
 	
+	
+def related_topics(request):
+	import algo.metrics as metrics
+	topic = Topic.objects.get(id=request.GET["topic_id"])
+	model = topic.model
+	context = {"topic": topic, "metrics": metrics.metrics_list}
+	try:
+		metric = request.GET["metric"]
+	except:
+		metric = "euclidean"
+		
+	metric = metrics.get_metric_by_name(metric)
+	topics_index = Topic.objects.filter(model=model, layer=topic.layer).order_by("index_id")
+	
+	
+	phi_t = model.get_phi_t(topic.layer)
+	target_row =  phi_t[topic.index_id]
+	distances = [metric(target_row, row) for row in phi_t]
+	idx = np.argsort(distances)
+	context["topics"] = [{"distance":distances[int(i)], "topic": topics_index[int(i)]} for i in idx]
+	
+	return render(request, 'models/related_topics.html', Context(context))
+	
 @login_required
 def rename_topic(request):
 	topic = Topic.objects.get(id = request.POST['id'])
