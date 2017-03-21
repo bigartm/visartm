@@ -628,7 +628,7 @@ class ArtmModel(models.Model):
 		for layer_id in range (1, layers_count + 1): 
 			for i in range(0, topics_count[layer_id]):
 				idx = np.argsort(topic_distances[layer_id][i])
-				for j in idx[1 : 1 + min(5, topics_count[layer_id] - 1)]:
+				for j in idx[1 : 1 + min(30, topics_count[layer_id] - 1)]:
 					relation = TopicRelated()
 					relation.model = self
 					relation.topic1 = topics_index[layer_id][i]
