@@ -259,12 +259,12 @@ def related_topics(request):
 	import algo.metrics as metrics
 	topic = Topic.objects.get(id=request.GET["topic_id"])
 	model = topic.model
-	context = {"topic": topic, "metrics": metrics.metrics_list}
 	try:
 		metric = request.GET["metric"]
 	except:
 		metric = "euclidean"
-		
+	context = {"topic": topic, "metrics": metrics.metrics_list, "metric": metric}
+	
 	metric = metrics.get_metric_by_name(metric)
 	topics_index = Topic.objects.filter(model=model, layer=topic.layer).order_by("index_id")
 	

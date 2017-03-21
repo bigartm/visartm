@@ -84,6 +84,8 @@ def get_metric_by_name(name):
 		return cosine  
 	elif name == "minkovsky":
 		return minkovsky
+	elif name == "cov":
+		return minkovsky
 	elif name == "hellinger": 
 		return hellinger
 	elif name == "kld": 

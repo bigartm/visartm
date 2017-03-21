@@ -8,7 +8,7 @@
 	<hr>
 	
 	{% for topic in topics %}
-		<a href="/topic?id={{topic.topic.id}}">{{topic.topic}}</a> ({{topic.distance}}) <br>
+		<a href="/models/related_topics?topic_id={{topic.topic.id}}&metric={{metric}}">{{topic.topic}}</a> ({{topic.distance}}) <br>
 	{% endfor %}
 {% endblock %}
 
