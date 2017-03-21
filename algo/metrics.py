@@ -76,9 +76,12 @@ def filter_tails(matrix, start, end):
 '''
 
 metrics_list = ["euclidean", "cosine", "minkovsky", "cov", "hellinger", "jsd", "jaccard"]
+default_metric = "jaccard"
 
 def get_metric_by_name(name):
-	if name == "euclidean": 
+	if name == "default":
+		return get_metric_by_name(default_metric)
+	elif name == "euclidean": 
 		return euclidean 
 	elif name == "cosine": 
 		return cosine  

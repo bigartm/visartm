@@ -262,7 +262,7 @@ def related_topics(request):
 	try:
 		metric = request.GET["metric"]
 	except:
-		metric = "euclidean"
+		metric = metrics.default_metric
 	context = {"topic": topic, "metrics": metrics.metrics_list, "metric": metric}
 	
 	metric = metrics.get_metric_by_name(metric)

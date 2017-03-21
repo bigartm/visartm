@@ -28,9 +28,8 @@
 {% block javascript %}  
 
 <script src="/static/js/d3.v3.min.js"></script>  
-<script type="text/javascript"> 
-	var metric = getUrlParameter("metric", "euclidean"); 
-	document.getElementById("select_metric").value = metric;
+<script type="text/javascript">  
+	document.getElementById("select_metric").value = "{{metric}}";
 	
 	function changeMetric() { 
 		loc =  "/models/related_topics?topic_id={{topic.id}}&metric=" + document.getElementById("select_metric").value; 

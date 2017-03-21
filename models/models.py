@@ -554,7 +554,7 @@ class ArtmModel(models.Model):
 			shift += topics_count[i]
 		return range(shift, shift + topics_count[layer])
 		
-	def get_topics_distances(self, metric="euclidean", layer=-1):
+	def get_topics_distances(self, metric="default", layer=-1):
 		if layer == -1:
 			layer=self.layers_count
 		if layer == 0:
@@ -585,7 +585,7 @@ class ArtmModel(models.Model):
 	
 	# Only horizontal arranging
 	@transaction.atomic
-	def arrange_topics(self, mode = "alphabet", metric="euclidean"):
+	def arrange_topics(self, mode = "alphabet", metric="default"):
 		# Counting horizontal relations topic-topic
 		self.log("Counting horizontal relations topic-topic...")	
 		phi = self.get_phi()
