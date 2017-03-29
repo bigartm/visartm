@@ -414,7 +414,7 @@ def document_segments(request):
 	segments = model.get_segmentation(document)
 	if not segments:
 		return general_views.message(request, "Bad segments file.")
-	topics_index_id_set = set([x[2] for x in segments])
+	topics_index_id_set = set([int(x[2]) for x in segments])
 	topics_index = model.get_topics()
 	class_index = {}
 	topics_list = []
@@ -430,12 +430,12 @@ def document_segments(request):
 	cur_pos = 0
 	for start_index, end_index, topic_index_id in segments:
 		new_text += "%s<span class='tpc%d'>%s</span>" % (
-			document.text[cur_pos : start_index], 
-			class_index[topic_index_id], 
-			document.text[start_index :end_index]
+			document.text[int(cur_pos) : int(start_index)], 
+			class_index[int(topic_index_id)], 
+			document.text[int(start_index) : int(end_index)]
 		)
 		cur_pos = end_index
-	new_text += document.text[cur_pos :]
+	new_text += document.text[int(cur_pos) :]
 	
 	context["text"] = new_text.split("\n")
 	context["topics_count"] = len(topics_list)

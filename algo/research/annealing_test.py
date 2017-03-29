@@ -2,6 +2,7 @@
 import numpy as np 
 import json 
 from algo.arranging.hamilton_path import HamiltonPath
+from algo.arranging.base import get_arrangement_permutation
 
 try:
 	params = json.loads(research.problem.params)
@@ -16,10 +17,10 @@ topics = model.get_topics()
 research.report_html("<h1>Annealing test.</h1>")
 dist =	model.get_topics_distances(metric="euclidean")	
 N = dist.shape[0]	
-annealing_grid = [1, 5, 10, 25, 50]
+annealing_grid = [1] #[1, 5, 10, 25, 50]
 topics_grid = range(4, min(N, 23) + 1)
 
-algo_names = ["exact", "branch-2", "branch-3", "greedy"] + ["annealing-" + str(i) for i in annealing_grid]
+algo_names = ["exact", "branch-2", "branch-3", "greedy", "cpp"] + ["annealing-" + str(i) for i in annealing_grid]
 answers = dict()
 for algo_name in algo_names:
 	answers[algo_name] = dict()
@@ -84,7 +85,15 @@ for topics_count in topics_grid:
 		axes.set_ylabel("Quality")
 		axes.set_title("Annealing dynamics (%d topics)" % topics_count, fontsize=15)
 		research.report_picture() 
-	
+		
+	research.report_p()
+	research.report("CPP.")
+	hp = HamiltonPath(matrix)
+	hp.solve_cpp()	
+	research.report("Время " + str(hp.elapsed)) 
+	research.report("Качество " + str(hp.path_weight()))
+	answers["cpp"][topics_count] = {"time": hp.elapsed, "q": hp.path_weight()}	
+		 
 	research.report_html("<hr>")
 	
 

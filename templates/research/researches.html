@@ -62,5 +62,16 @@
 {% endblock %}
 
 {% block right %}
+	<form method="get" action="/research/create">
+		Dataset:
+		<select name="dataset_id">
+			{% for dataset in datasets %}
+				<option value={{dataset.id}}>{{dataset}}</option> 
+			{% endfor %}
+		</select>
+		<br>
+		<button type="submit">New research</button>
+	</form>
+	<hr>
 	<a href="/admin/research/research/">Administration</a>
 {% endblock %}

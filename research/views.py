@@ -15,6 +15,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 
 def researches(request):
 	context = {"researches": Research.objects.all().order_by("id")}
+	context["datasets"] = Dataset.objects.all()
 	return render(request, 'research/researches.html', Context(context)) 
 	
 @login_required

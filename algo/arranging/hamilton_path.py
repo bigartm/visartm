@@ -3,6 +3,7 @@ from random import randint, random
 import time
 import numpy as np
 from math import exp
+from django.conf import settings
 
 class HamiltonPath:
 	def __init__(self, adj, caller=None):
@@ -73,6 +74,22 @@ class HamiltonPath:
 		# print ("Time:  %fs " % (time.time() - start_time) )
 		return self.path
 		
+	def solve_cpp(self):
+		start_time = time.time()
+		from subprocess import Popen, PIPE
+		import os
+		path = os.path.join(settings.BASE_DIR, "algo", "arranging", "annealing.exe")
+		
+		args = [path]
+		for row in self.A:
+			args += [str(x) for x in row]
+		process = Popen(args, stdout=PIPE)
+		(output, err) = process.communicate()
+		self.path = [int(x) for x in output.split()]
+		self.elapsed = time.time() - start_time
+		print ("Quality %f, elapsed %fs" % (self.path_weight(), self.elapsed))
+		return self.path
+		
 	def solve_stupid_brute_force(self):
 		ans = self.path_weight()		
 		for i in permutations(range(self.N)):
@@ -104,6 +121,8 @@ class HamiltonPath:
 				go_ctr += 1
 				if (go_ctr == self.cut_branch):
 					break
+
+	
 	
 	def solve_annealing(self, run_time=1):
 		start_time = time.time()
@@ -140,6 +159,8 @@ class HamiltonPath:
 				else: 
 					self.path[i], self.path[j] = self.path[j], self.path[i]
 			#print (cur_weight)
+
+	
 	def count_priority(self):
 		self.priority = []		
 		for i in range(0, self.N):
