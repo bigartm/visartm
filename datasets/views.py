@@ -53,7 +53,7 @@ def dataset_delete(request):
 				"<a href = '/dataset?dataset=" + dataset.text_id + "'>No</a>")		
 
 @login_required
-@permission_required('add_dataset')
+@permission_required('datasets.add_dataset')
 def	dataset_create(request):	
 	if request.method == 'GET': 
 		existing_datasets = [dataset.text_id for dataset in Dataset.objects.all()]

@@ -123,7 +123,7 @@ def reset_visuals(request):
 	GlobalVisualization.objects.filter(model = model).delete()
 	return general_views.message(request, "Resetted. <a href ='/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
-@permission_required("add_artmmodel")
+@permission_required("models.add_artmmodel")
 @login_required
 def create_model(request):
 	if request.method == 'GET': 
