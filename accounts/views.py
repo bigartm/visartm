@@ -76,8 +76,8 @@ def account_view(request, user_name):
 	context["groups"] =  account.groups.all()
 		
 	permissions = []
-	permissions.append({"name": "Create dataset", "codename":"add_dataset", "value": account.has_perm("add_dataset")})
-	permissions.append({"name": "Create models and other", "codename":"add_artmmodel", "value": account.has_perm("add_artmmodel")})
+	permissions.append({"name": "Create dataset", "codename":"add_dataset", "value": account.has_perm("datasets.add_dataset")})
+	permissions.append({"name": "Create models and other", "codename":"add_artmmodel", "value": account.has_perm("models.add_artmmodel")})
 	context["permissions"] = permissions				   
 
 	return render(request, 'accounts/account.html', Context(context)) 

@@ -221,7 +221,7 @@
 		<a href = "/model?model={{model.id}}" onClick = "useModel({{model.id}});"> {{model}}</a>
 		<br>
 	{% endfor %}
-	{% if perms.models.can_add %}
+	{% if perms.models.add_artmmodel %}
 		<br>
 		<a href = "/models/create?dataset={{dataset.text_id}}">Create new model...</a>
 	{% endif %}

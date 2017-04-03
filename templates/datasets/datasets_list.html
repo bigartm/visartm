@@ -37,7 +37,7 @@
 
 
 {% block right %}
-	{% if perms.datasets.can_add_dataset %}
+	{% if perms.datasets.add_dataset %}
 		<a href = "/datasets/create">Create new dataset...</a>
 	{% endif %}
 {% endblock %}
