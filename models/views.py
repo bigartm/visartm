@@ -191,7 +191,7 @@ def create_model(request):
 def delete_model(request):
 	model = ArtmModel.objects.get(id=request.GET['model'])
 	if request.user != model.author:
-		return HttpResponseForbidden("You are not the author")
+		return HttpResponseForbidden("You are not the author! (<a href='/admin/models/artmmodel/%d/change/'>Delete as admin</a>)" % model.id)
 	dataset_name = model.dataset.text_id 
 	if request.user != model.author:
 		return HttpResponseForbidden("You are not the author of the model.")
