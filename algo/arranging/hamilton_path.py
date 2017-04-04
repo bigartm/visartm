@@ -2,8 +2,14 @@ from itertools import permutations
 from random import randint, random
 import time
 import numpy as np
+import os
 from math import exp
 from django.conf import settings
+
+import ctypes
+from ctypes import c_int, c_double, POINTER, CDLL
+
+
 
 class HamiltonPath:
 	def __init__(self, adj, caller=None):
@@ -23,6 +29,7 @@ class HamiltonPath:
 		self.cut_branch = self.N
 		self.atomic_iterations = 10000
 		self.caller = caller
+		
 		
 	def log(self, message):
 		if self.caller:
@@ -77,7 +84,6 @@ class HamiltonPath:
 	def solve_cpp(self):
 		start_time = time.time()
 		from subprocess import Popen, PIPE
-		import os
 		path = os.path.join(settings.BASE_DIR, "algo", "arranging", "annealing.exe")
 		
 		args = [path]
@@ -231,6 +237,28 @@ class HamiltonPath:
 			for j in range(0, self.N):
 				ret[i][j] = self.A[self.path[i]][self.path[j]]
 		return ret
+		
+
+	def arrange_extern(self):
+		c_path = os.path.join(settings.BASE_DIR, "algo", "clib")
+		source_path = os.path.join(c_path, "arrange.c")
+		lib_path = os.path.join(c_path, "arrange.so")
+		
+		if not os.path.exists(lib_path) or \
+			(os.path.getctime(source_path) > os.path.getctime(lib_path)):
+			if os.system("gcc -shared -o %s %s" % (lib_path, source_path)):
+				raise RuntimeError("Unable to build library arrange.c")
+			else:
+				self.log("Library arrange.c succesfully built")
+				 
+		arrange = CDLL(lib_path).arrange
+		arrange.restype = c_double
+		arrange.argtypes = [c_int, POINTER(c_double), POINTER(c_int)] 
+		
+		ans = (c_int*self.N)() 
+		arrange(self.N, self.A.ctypes.data_as(POINTER(c_double)), ans)
+		del arrange
+		self.path = np.array(ans)
 			
 if __name__ == '__main__':
 	N = 22

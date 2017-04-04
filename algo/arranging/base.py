@@ -28,6 +28,11 @@ def get_arrangement_permutation(dist, mode, model=None):
 		from algo.arranging.dendro_arranger import DendroArranger
 		da = DendroArranger(dist)
 		return da.arrange()
+	elif mode == "extern":
+		from algo.arranging.hamilton_path import HamiltonPath 
+		hp = HamiltonPath(dist, caller=model)
+		hp.arrange_extern()
+		return hp.path
 	else:
 		raise ValueError("Unknown mode: %s" % mode)
 
