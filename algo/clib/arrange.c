@@ -10,6 +10,6 @@ void* arrange(int n, double* x, int* answer)
         }
     }
     for(int i=0;i<n;++i) answer[i] = i;
-    answer[0] = 1;
-    answer[1] = 0;
+    answer[0] = 2;
+    answer[2] = 0;
 }
