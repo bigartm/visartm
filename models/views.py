@@ -12,6 +12,9 @@ import os
 from threading import Thread
 from datetime import datetime
 import numpy as np
+import json
+from models.bigartm_config import REGULARIZERS
+
 
 def models_list(request):
 	try:
@@ -72,6 +75,10 @@ def visual_model(request):
 	context = Context({'model': model, 'topics_layers' : topics_layers})
 	return render(request, 'models/model.html', context) 
 
+def model_log(request):
+	model = ArtmModel.objects.get(id = request.GET['model_id'])
+	return HttpResponse(model.read_log())
+	
 @login_required
 def reload_model(request):
 	try:
@@ -145,13 +152,17 @@ def create_model(request):
 						   'modalities': modalities,
 						   'scripts': scripts,
 						   'unreg': unreg})
-						   
+			
+		context['regularizers'] = REGULARIZERS
+			
 		if settings.DEBUG:
 			context['DEBUG'] = True
 						   
 		return render(request, 'models/create_model.html', context)
 	
 	#print(request.POST)
+
+	
 	dataset = Dataset.objects.get(text_id = request.POST['dataset'])
 	if not dataset.check_access(request.user):
 		return HttpResponceForbidden("You have not access to this dataset")

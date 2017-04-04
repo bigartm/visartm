@@ -221,7 +221,7 @@ def visual_dataset(request):
 		else:	
 			context['documents'] = True
 			
-	
+	context['mode'] = mode
 	context['models'] = ArtmModel.objects.filter(dataset = dataset)
 	try:
 		context['active_model'] = ArtmModel.objects.get(id=request.COOKIES["model_" + str(dataset.id)])

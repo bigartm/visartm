@@ -49,7 +49,11 @@ class ArtmModel(models.Model):
 				self.layers_count = 1
 				self.topics_count = "1 " + POST.getlist('num_topics')[0]
 				self.save()
-				artm_object = self.create_simple(iter_count = iter_count)
+				
+				regularizers = {}
+				if "regularizers" in POST:
+					regularizers = json.loads(POST["regularizers"])
+				artm_object = self.create_simple(iter_count = iter_count, regularizers=regularizers)
 				self.save_matrices(artm_object)
 			elif mode == "hier":
 				self.prepare_log("Creating hierarchical model (auto)")
@@ -103,7 +107,7 @@ class ArtmModel(models.Model):
 			self.status = 2
 			self.save()
 	
-	def create_simple(self, iter_count):
+	def create_simple(self, iter_count, regularizers = {}):
 		self.log("Creating simple model...")
 		layers_count = self.layers_count 
 		num_topics = [int(x) for x in self.topics_count.split()]
@@ -119,6 +123,20 @@ class ArtmModel(models.Model):
 							)
 		layers[0].initialize(dictionary=dictionary)
 		self.log("Layer 0 initialized.")
+		
+		
+		if (regularizers):
+			reg_code = ""
+			for name, params in regularizers.items():
+				params_init = []
+				for pname, value in params.items():
+					if len(value)>10:
+						raise RuntimeError("Too long value for parameter %s.%s" % (name, pname) )
+					params_init.append(pname + "=" + value)
+				reg_code += "layers[0].regularizers.add(artm.%s(%s))\n" % (name, ", ".join(params_init))
+			self.log("Regularizers to be applied:<br>" + reg_code.replace("\n","<br>"))
+			exec(reg_code)
+			
 		layers[0].fit_offline(batch_vectorizer = batch_vectorizer, num_collection_passes = iter_count)   
 		self.log("Layer 0 fitted.")
 		

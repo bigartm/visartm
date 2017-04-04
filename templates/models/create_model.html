@@ -62,6 +62,23 @@
 								<input type="number" name="iter_count" value="10" />
 							</div>
 						</div> 
+						
+						<div class="form-group row">
+							<input type="checkbox" id="regs_cb" onchange="regsChange();"> </input>
+							<label class="col-sm-2 col-form-label">Regularizers</label>
+						</div>
+						
+						<div id="regularizers" style="display:none;">
+							<h4>Regularizers (<a href="http://docs.bigartm.org/en/master/api_references/python_interface/regularizers.html">?</a>)</h4>
+							{% for r in regularizers %}
+								<input type="checkbox" id="{{r.name}}.check" onchange="regsChange();">{{r.name}}</input><br>
+								{% for p in r.params %}
+									&emsp;{{p.name}}=<input id="{{r.name}}.{{p.name}}" value="{{p.default}}" onchange="regsChange();"/><br>
+								{% endfor %}
+							{% endfor %}
+						</div>
+						
+						<input type="hidden" name="regularizers" id="reg_ans" value="{}"	/>
 					</div>
 					
 					<div id="bigartm-hier" class="tab-pane fade">
@@ -176,6 +193,30 @@
 <script type = "text/javascript">
 	function setMode(mode) {
 		document.getElementById("mode").value = mode;
+	}
+	
+	regsChange();
+	function regsChange() {  
+		if (document.getElementById("regs_cb").checked) {
+		 	document.getElementById("regularizers").style.display = 'inline'; 
+			regs = {};
+			{% for r in regularizers %}
+				if (document.getElementById("{{r.name}}.check").checked) {
+					params = {};
+					{% for p in r.params %}
+						params["{{p.name}}"] = document.getElementById("{{r.name}}.{{p.name}}").value;
+					{% endfor %}
+					regs["{{r.name}}"] = params;
+				}
+			{% endfor %}
+			
+			document.getElementById("reg_ans").value = JSON.stringify(regs);
+		} else {
+			 document.getElementById("regularizers").style.display = 'none'; 
+			 {% for r in regularizers %}
+				document.getElementById("{{r.name}}.check").checked = false; 
+			 {% endfor %}
+		}
 	}
 </script>
 {% endblock %}

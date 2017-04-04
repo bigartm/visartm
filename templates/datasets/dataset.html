@@ -4,50 +4,13 @@
 
 {% block content %}
 <h1>Dataset {{dataset.name}}</h1> 
-	<ul class="nav nav-tabs">
-	{% if documents %}
-		<li class="active"><a>Documents</a></li> 
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
-	{% elif terms %}
-		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
-		<li class="active"><a>Terms</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
-	{% elif modalities %}
-		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
-		<li class="active"><a>Modalities</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
-	{% elif stats %}
-		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
-		<li class="active"><a>Statistics</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
-	{% elif settings %}
-		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
-		<li class="active"><a>Settings</a></li> 
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
-	{% elif assessment %}
-		<li><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
-		<li><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
-		<li class="active"><a>Assessment</a></li> 
-	{% endif %}
+	<ul class="nav nav-tabs"> 
+		<li id="mode_docs"><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
+		<li id="mode_terms"><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
+		<li id="mode_modalities"><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
+		<li id="mode_stats"><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
+		<li id="mode_settings"><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
+		<li id="mode_assessment"><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
 	</ul> 
 	
 	<p></p>
@@ -242,6 +205,9 @@
 	}
 </style>
 <script type = "text/javascript">
+
+	document.getElementById("mode_{{mode}}").className = "active";
+	
 	function useModel(id) { 
 		document.cookie = "model_{{dataset.id}}=" + id;
 	}
