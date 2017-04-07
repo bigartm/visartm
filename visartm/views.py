@@ -19,8 +19,8 @@ def settings_page(request):
 	context = Context({'themes': themes})
 	return render(request, 'settings.html', context)  
 	
-def	help_page(request):
-	return render(request, 'help.html')
+def	docs_page(request, page="intro"):
+	return render(request, 'docs/%s.html' % page)
 	
 def message(request, message):
 	return render(request, 'message.html', Context({'message': message}))

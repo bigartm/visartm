@@ -23,7 +23,11 @@ urlpatterns = [
 	# general
 	url(r'^$', general_views.start_page, name='home'),
 	url(r'^settings', general_views.settings_page),
-	
+
+	# docs
+	url(r'^docs$', general_views.docs_page),
+	url(r'^docs/(?P<page>\w+)$', general_views.docs_page),
+
 	 
 	# Datasets special
     url(r'^dataset$', datasets_views.visual_dataset),

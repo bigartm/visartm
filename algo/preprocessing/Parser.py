@@ -130,8 +130,8 @@ class Parser:
         wordpos_file.close()    
         
         self.ctr += 1
-        if self.ctr % 100 == 0:
-            print(self.ctr)
+        #if self.ctr % 100 == 0:
+        #    print(self.ctr)
             
     def process(self):
         if self.hashtags:
