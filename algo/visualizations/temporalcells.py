@@ -49,7 +49,7 @@ def visual(model, params):
 					"topwords": top_words_html(topic.top_words(count=15)),
 					"name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2])} for topic in topics]
 	
-	# in case of hierarchical model we want show tree
+	# in case of hierarchical model we want to show tree
 	high_topics_send = []
 	lines_send = []
 	if model.layers_count > 1:
@@ -68,7 +68,7 @@ def visual(model, params):
 		i = 0
 		K = len(topics_send) / float(len(high_topics_temp))
 		for el in high_topics_temp:		
-			pos_y = K*(i+0.5)
+			pos_y = el["mass_center_y"] #K*(i+0.5)
 			high_topics_send.append({
 				"Y": pos_y, 
 				"name" : el["name"], 
