@@ -6,9 +6,13 @@ import os
 from math import exp
 from django.conf import settings
 
+import random
+from simanneal import Annealer
+
 import ctypes
 from ctypes import c_int, c_double, POINTER, CDLL
 
+ 
 
 
 class HamiltonPath:
@@ -25,7 +29,6 @@ class HamiltonPath:
 				if (self.A[i][j]!=self.A[j][i]):
 					raise ValueError("Adjacency matrix should be symmetric")
 		self.path = [i for i in range (0,self.N)]
-		self.count_priority()
 		self.cut_branch = self.N
 		self.atomic_iterations = 10000
 		self.caller = caller
@@ -40,61 +43,20 @@ class HamiltonPath:
 			path = self.path
 		return sum(self.A[path[i]][path[i+1]] for i in range (0, self.N-1))
 	
-	def test(self):
-		print ("Quality before = ", self.path_weight())
+	 
 		
+	def solve(self):
 		t = time.time()
-		self.solve_nn()
-		print ("NN: Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t))
+		steps = min(10000*self.N*self.N, 100000000)
+		if steps < 1000000:
+			steps = 1000000
+		self.solve_annealing_c(steps)
 		
-		t = time.time()
-		self.solve_branch(2)
-		print ("Branch(2): Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t))
-		 
-		t = time.time() 
-		self.solve_annealing(run_time=self.N/2)
-		print ("Annealing: Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t)) 
-#		t = time.time()
-#		self.cut_branch = 3
-#		self.solve_branch()
-#		print ("Branch(3): Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t))
-		
-#		t = time.time()
-#		self.cut_branch = self.N
-#		self.solve_branch()
-#		print ("Branch(full): Quality = %d. Time = %fs" % (self.path_weight(), time.time() - t))
-		
-		
-	def solve(self, fast=False):
-		# start_time =  time.time()
-		print ("Quality before = ", self.path_weight()) 
-		if self.N <= 10: 
-			self.solve_branch() 
-		elif self.N <= 13: 
-			self.solve_branch(3)
-		else:
-			if fast:
-				self.solve_annealing(run_time=10)
-			else:
-				self.solve_annealing(run_time=max(25, 0.25*self.N))
-		# print ("Quality after = ", self.path_weight())
-		# print ("Time:  %fs " % (time.time() - start_time) )
-		return self.path
-		
-	def solve_cpp(self):
-		start_time = time.time()
-		from subprocess import Popen, PIPE
-		path = os.path.join(settings.BASE_DIR, "algo", "arranging", "annealing.exe")
-		
-		args = [path]
-		for row in self.A:
-			args += [str(x) for x in row]
-		process = Popen(args, stdout=PIPE)
-		(output, err) = process.communicate()
-		self.path = [int(x) for x in output.split()]
-		self.elapsed = time.time() - start_time
-		print ("Quality %f, elapsed %fs" % (self.path_weight(), self.elapsed))
-		return self.path
+		run_time = time.time()-t
+		self.log("Time=%fs" % run_time)
+		self.log("Speed=%d steps per second" % int(steps/run_time))
+		self.log("Quality=%f" % self.path_weight())
+	 
 		
 	def solve_stupid_brute_force(self):
 		ans = self.path_weight()		
@@ -127,64 +89,9 @@ class HamiltonPath:
 				go_ctr += 1
 				if (go_ctr == self.cut_branch):
 					break
-
-	def ew2(self, i):
-		ans = 0
-		if i > 0:
-			ans += self.A[self.path[i-1], self.path[i]]
-		if i < self.N - 1:
-			ans += self.A[self.path[i], self.path[i + 1]]
-		return ans
-		 
-			
-		
-	def solve_annealing(self, run_time=1):
-		start_time = time.time()
-		cur_weight = self.path_weight()
-		self.chart_time = []
-		self.chart_iterations = []
-		self.chart_weight = []
-		self.iter_counter = 0
-		
-		while (time.time() - start_time < run_time):
-			self.elapsed = time.time() - start_time
-			quality = self.path_weight()
-			self.log(str(self.elapsed) + " " + str(quality) + " " + str(self.iter_counter))
-			self.chart_time.append(self.elapsed)
-			self.chart_iterations.append(self.iter_counter)
-			self.chart_weight.append(quality)
-			self.iter_counter += self.atomic_iterations
-			
-			if self.elapsed > run_time:
-				break
-			q = cur_weight * 0.05 * (1 - self.elapsed/run_time)
-			for c in range(self.atomic_iterations):
-				i = randint(0, self.N - 1)
-				j = randint(0, self.N - 1)
-				
-				new_weight = cur_weight - self.ew2(i) - self.ew2(j)
-				self.path[i], self.path[j] = self.path[j], self.path[i]
-				new_weight += self.ew2(i) + self.ew2(j)
-				'''
-				if (abs(new_weight - self.path_weight())>1e-10):
-					self.log(str(new_weight)+  " " +str(self.path_weight()))
-					self.log(str(abs(new_weight-self.path_weight())))
-					
-					raise RuntimeError("Not equal!")
-				'''
-				
-				if new_weight < cur_weight:
-					apply = True
-				else: 
-					apply = (random() < exp((cur_weight - new_weight)/q))
-					
-				if apply:
-					cur_weight = new_weight
-				else: 
-					self.path[i], self.path[j] = self.path[j], self.path[i]
-			#print (cur_weight)
-
-	
+   
+    
+   
 	def count_priority(self):
 		self.priority = []		
 		for i in range(0, self.N):
@@ -202,7 +109,10 @@ class HamiltonPath:
 			self.priority.append(p)
 			
 	def solve_branch(self, cut=1000000):
+		if (self.N>40):
+			raise ValueError("N is too big.")
 		start_time = time.time()
+		self.count_priority()
 		self.cut_branch = cut
 		self.best_weight = self.path_weight()
 		self.used = [0 for i in range(0,self.N)]
@@ -256,9 +166,13 @@ class HamiltonPath:
 				ret[i][j] = self.A[self.path[i]][self.path[j]]
 		return ret
 		
-
-	def arrange_extern(self):
-		c_path = os.path.join(settings.BASE_DIR, "algo", "clib")
+    
+	def solve_annealing_c(self, steps):
+		try:
+			c_path = os.path.join(settings.BASE_DIR, "algo", "clib")
+		except:
+			c_path = "D:\\visartm\\algo\\clib"
+			
 		source_path = os.path.join(c_path, "arrange.c")
 		lib_path = os.path.join(c_path, "arrange.so")
 		
@@ -269,18 +183,85 @@ class HamiltonPath:
 				raise RuntimeError("Unable to build library arrange.c")
 			else:
 				self.log("Library arrange.c succesfully built")
+				
+		arrange_lib = CDLL(lib_path)
+				   
 				 
-		arrange = CDLL(lib_path).arrange
-		arrange.restype = c_double
-		arrange.argtypes = [c_int, POINTER(c_double), POINTER(c_int)] 
+		arrange_lib.arrange.restype = c_double
+		arrange_lib.arrange.argtypes = [c_int, c_double, c_double, c_int, POINTER(c_double), POINTER(c_int)] 
+		
+		T0 = np.mean(self.A)
+		Tmin = 1e-5 * T0
+		Tmax = 1e5 * T0
+		
 		
 		ans = (c_int*self.N)() 
-		arrange(self.N, self.A.ctypes.data_as(POINTER(c_double)), ans)
-		del arrange
-		self.path = np.array(ans)
+		for i in range(self.N):
+			ans[i] = self.path[i]
 			
+		arrange_lib.arrange(self.N, Tmin, Tmax, steps, self.A.ctypes.data_as(POINTER(c_double)), ans)
+		del arrange_lib
+		self.path = list(np.array(ans))
+			
+        
+'''    
+	def ew2(self, i):
+		ans = 0
+		if i > 0:
+			ans += self.A[self.path[i-1], self.path[i]]
+		if i < self.N - 1:
+			ans += self.A[self.path[i], self.path[i + 1]]
+		return ans
+		 
+			
+
+	def solve_annealing(self, steps=50000, Tmax=25000, Tmin=2.5):
+		start_time = time.time()
+		cur_weight = self.path_weight()
+		self.chart_iterations = []
+		self.chart_weight = []
+		self.iter_counter = 0
+		
+		 
+		Tfactor = -np.log(Tmax/Tmin)
+		
+		acc = 0
+		imp = 0
+		
+		for step in range(steps):
+			if step % 10000==0:
+				self.elapsed = time.time() - start_time
+				quality = self.path_weight() 
+				self.chart_iterations.append(step)
+				self.chart_weight.append(quality) 
+			
+    				
+				T = Tmax * np.exp(Tfactor*step/steps)
+				#self.log("I=%d, T=%f, Q=%f, acc=%d, imp=%d" % (step, T, quality, acc, imp))
+				acc = 0
+				imp = 0
+			 
+			i = randint(0, self.N - 1)
+			j = randint(0, self.N - 1)
+			
+			dE = - self.ew2(i) - self.ew2(j)
+			self.path[i], self.path[j] = self.path[j], self.path[i]
+			dE += self.ew2(i) + self.ew2(j)
+			
+			T = Tmax * np.exp(Tfactor*step/steps)
+			if dE > 0.0 and np.exp(-dE / T) < random.random():
+				#Restore
+				self.path[i], self.path[j] = self.path[j], self.path[i]
+			else:
+            #Accept
+				if dE < 0.0:
+					imp += 1
+				acc += 1
+				cur_weight += dE
+'''
+   
 if __name__ == '__main__':
-	N = 22
+	N = 100
 	dist = np.zeros((N,N))
 	for i in range(0,N):
 		for j in range(i+1, N):

@@ -2,4 +2,4 @@
 
 Address on the Internet: [visartm.vdi.mipt.ru](http://visartm.vdi.mipt.ru)
 
-To install it locally, please refer to [manual](http://docs.bigartm.org/en/master/visartm/index.html)
+To install it locally, please refer to [manual](http://visartm.vdi.mipt.ru/docs/installation)
