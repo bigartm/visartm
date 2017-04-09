@@ -1,13 +1,10 @@
 from itertools import permutations
-from random import randint, random
+import random
 import time
 import numpy as np
 import os
 from math import exp
 from django.conf import settings
-
-import random
-from simanneal import Annealer
 
 import ctypes
 from ctypes import c_int, c_double, POINTER, CDLL
