@@ -45,6 +45,14 @@ def signup(request):
 	password_repeat = request.POST['password_repeat']
 	email = request.POST['email']
 	
+	
+	
+	captha_response = request.POST['captcha']
+	
+	if not (captha_response.lower() in  ["dolgoprudniy", "dolgoprudny"]):
+		return general_views.message(request, "You haven't passed Turing test.")
+	
+	
 	if password != password_repeat:
 		return general_views.message(request, "Your passwords don't match. <br><a href='/accounts/signup'>Try again</a>")
 	

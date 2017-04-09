@@ -36,7 +36,10 @@
 		index_id: {{document.index_id}}
 		<br>
 		text_id: {{document.text_id}}
-		
+		<br>
+		Terms count: {{document.terms_count}}
+		<br>
+		Unique terms count: {{document.terms_count}}
 	
 	{% if models %}
 		<div >
@@ -49,6 +52,17 @@
 			</select>
 		</div>
 	{% endif %} 
+	
+	<div >
+		Highlighting: 
+		<select id = "hl_mode" onchange="changeModel();">
+			<option value="none">None</option>
+			<option value="words">Words</option>
+			<option value="paragraphs">Paragraphs</option>			
+		</select>
+	</div>
+	
+	
 	{% if segmentation_available %}
 		<a href = "/datasets/document_segments?id={{document.id}}&model_id={{model.id}}">View segmentation</a>
 	{% endif %} 
@@ -92,7 +106,9 @@
 <script type="text/javascript"> 
 
 	initColors(50);
-	
+		
+	document.getElementById("hl_mode").value = 	getCookie("hl_mode", "words"); 
+		
 	var styleSheets = window.document.styleSheets;
 	
 	var pie = new d3pie("pieChart2", {
@@ -187,8 +203,11 @@
 	
 	function changeModel() {
 		selector = document.getElementById("model_selector");
+		setCookie("hl_mode", document.getElementById("hl_mode").value);
 		window.location = selector.selectedOptions[0].attributes["href"].value;
 	}
+	
+	
 	
 	/*
 	{% if document.dataset.tag_modality %}

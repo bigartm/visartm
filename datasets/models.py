@@ -395,8 +395,10 @@ class Document(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
 	bag_of_words = models.BinaryField(null = True)					# [4 bytes term.index_id][2 bytes count][1 byte modality.index_id]
 	terms_count = models.IntegerField(null = False, default = 0)
+	unique_terms_count = models.IntegerField(null = False, default = 0)
 	text = models.TextField(null=True)
 	word_index = models.BinaryField(null = True)					# [4 bytes position][1 byte length][4 bytes term.index_id]
+	
 		
 	class Meta:
 		unique_together = (("dataset", "index_id"))
@@ -471,6 +473,7 @@ class Document(models.Model):
 					count = 1
 				try:
 					term_index_id = self.dataset.terms_index[key].index_id
+					self.terms_count += count
 					bow.add_term(term_index_id, count)
 					if not text_found:
 						self.word_index += struct.pack('I', len(self.text)) + struct.pack('B', len(parsed_term[0])) + struct.pack('I', term_index_id)
@@ -479,6 +482,7 @@ class Document(models.Model):
 			if not text_found:
 				self.text += term + " "
 		self.bag_of_words = bow.to_bytes(self.dataset.terms_index)
+		self.unique_terms_count = len(self.bag_of_words) // 7
 	
 	def count_term(self, iid):
 		bow = self.bag_of_words

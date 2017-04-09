@@ -29,7 +29,7 @@ def visual_model(request):
 	model = ArtmModel.objects.get(id = request.GET['model'])
 		
 	if model.status != 0:
-		if model.status == 1:
+		if model.status == 1 or model.status == 11:
 			return general_views.wait(request, model.read_log(), model.creation_time)
 		if model.status == 2:
 			return general_views.message(request, 
@@ -109,7 +109,7 @@ def arrange_topics(request):
 	if model.status != 0:
 		return general_views.message(request, "Model is locked.")
 	model.creation_time = datetime.now()
-	model.status = 1
+	model.status = 11
 	model.save()
 	model.prepare_log()
 	

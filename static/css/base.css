@@ -72,9 +72,5 @@ div.d3tooltip {
 
 .code
 {
-    background-color: #c0c0ff;
-    border-top: 1px solid black;
-    border-bottom: 1px solid black;
-    float: left;
-    padding-left: 2px;
+    background-color: #eeeeee;  
 }

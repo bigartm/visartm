@@ -25,7 +25,7 @@ class ArtmModel(models.Model):
 	author = models.ForeignKey(User, null=True)
 	layers_count = models.IntegerField(default = 1) 
 	topics_count = models.TextField(null = False, default = "")
-	status = models.IntegerField(null = False, default = 0)  # 1-running, 2-error, 3-OK
+	status = models.IntegerField(null = False, default = 0)  #0-ready,  1-running, 2-error, 3-empty, 11-running, but not critical
 	error_message = models.TextField(null=True, blank=True) 
 	threshold_hier = models.IntegerField(null = False, default = 100) 
 	threshold_docs = models.IntegerField(null = False, default = 100) 
@@ -785,8 +785,12 @@ def on_start():
 		model.status = 2
 		model.error_message = "Model processing was interrupted."
 		model.save()
-
-
+		
+	for model in ArtmModel.objects.filter(status=11):
+		model.status = 0
+		model.save() 
+		
+		
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
 @receiver(pre_delete, sender=ArtmModel, dispatch_uid='artmmodel_delete_signal')

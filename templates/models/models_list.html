@@ -13,6 +13,7 @@
 					<td>Name</td>
 					<td>Dataset</td>
 					<td>Topics</td>
+					<td>Status</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -26,6 +27,19 @@
 						<a href="/dataset?dataset={{model.dataset.text_id}}">{{model.dataset.name}}</a>
 					</td>
 					<td>{{model.topics_count}}</td>
+					<td>
+						{% if model.status == 0 %}
+							<span style="color:green;">Ready</span>
+						{% elif model.status == 1 %}
+							Running
+						{% elif model.status == 2 %}
+							<span style="color:red;">Error</span>
+						{% elif model.status == 3 %}
+							Empty
+						{% elif model.status == 11 %}
+							Rearranging 
+						{% endif %}
+					</td>
 				</tr>
 				{% endfor %}
 			</tbody>

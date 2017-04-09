@@ -23,7 +23,7 @@ class Research(models.Model):
 	
 	def run(self):	
 		with open(self.get_report_file(), "w", encoding="utf-8") as f:
-			f.write("<html>\n<head></head>\n<body>")
+			f.write("<html>\n<head><meta charset='utf-8'></head>\n<body>")
 			f.write("<h1>Research report</h1>\n")
 			f.write("<p>Research id: %d<br>\n" % self.id)
 			f.write("Dataset: %s<br>\n" % str(self.dataset))

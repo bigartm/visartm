@@ -128,8 +128,16 @@ class HamiltonPath:
 				if (go_ctr == self.cut_branch):
 					break
 
-	
-	
+	def ew2(self, i):
+		ans = 0
+		if i > 0:
+			ans += self.A[self.path[i-1], self.path[i]]
+		if i < self.N - 1:
+			ans += self.A[self.path[i], self.path[i + 1]]
+		return ans
+		 
+			
+		
 	def solve_annealing(self, run_time=1):
 		start_time = time.time()
 		cur_weight = self.path_weight()
@@ -141,7 +149,7 @@ class HamiltonPath:
 		while (time.time() - start_time < run_time):
 			self.elapsed = time.time() - start_time
 			quality = self.path_weight()
-			self.log(str(self.elapsed) + " " + str(quality))
+			self.log(str(self.elapsed) + " " + str(quality) + " " + str(self.iter_counter))
 			self.chart_time.append(self.elapsed)
 			self.chart_iterations.append(self.iter_counter)
 			self.chart_weight.append(quality)
@@ -153,8 +161,18 @@ class HamiltonPath:
 			for c in range(self.atomic_iterations):
 				i = randint(0, self.N - 1)
 				j = randint(0, self.N - 1)
+				
+				new_weight = cur_weight - self.ew2(i) - self.ew2(j)
 				self.path[i], self.path[j] = self.path[j], self.path[i]
-				new_weight = self.path_weight()
+				new_weight += self.ew2(i) + self.ew2(j)
+				'''
+				if (abs(new_weight - self.path_weight())>1e-10):
+					self.log(str(new_weight)+  " " +str(self.path_weight()))
+					self.log(str(abs(new_weight-self.path_weight())))
+					
+					raise RuntimeError("Not equal!")
+				'''
+				
 				if new_weight < cur_weight:
 					apply = True
 				else: 

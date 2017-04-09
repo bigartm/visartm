@@ -348,12 +348,31 @@ def visual_document(request):
 		text = document.get_text()
 		
 		wi = document.get_word_index()
-		highlight_terms = True
-		if ("highlight_terms" in request.COOKIES and request.COOKIES["highlight_terms"] == "false") or not wi:
-			highlight_terms = False
+		hl_mode = "words"
+		if "hl_mode" in request.COOKIES:
+			hl_mode = request.COOKIES["hl_mode"]
 		 
 		# Word highlight
-		if highlight_terms:
+		if hl_mode == "none":
+			new_text = ""
+			cur_pos = 0
+			text_length = len(text)
+			for (start_pos, length, term_index_id) in wi:
+				if (cur_pos < start_pos):
+					new_text += text[cur_pos : start_pos]
+					cur_pos = start_pos
+				new_text += "<a href = '/term?ds=%d&iid=%d' class = 'nolink'>" % (dataset.id, term_index_id)
+				new_text += text[cur_pos : cur_pos + length]
+				new_text += "</a>"
+				cur_pos += length
+			
+			if (cur_pos < text_length):
+				new_text += text[cur_pos : text_length]
+				cur_pos = text_length
+			text = new_text
+		
+		
+		elif hl_mode == "words":
 			if not model is None: 
 				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
 				theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]
@@ -390,6 +409,24 @@ def visual_document(request):
 				new_text += text[cur_pos : text_length]
 				cur_pos = text_length
 			text = new_text
+		elif hl_mode == "paragraphs":
+			if not model is None:
+				phi_layer = phi[:, shift : shift + topics_count[target_layer]]
+				theta_t_layer = theta_t[document.index_id, shift : shift + topics_count[target_layer]]
+				lines = text.split('\n')
+				text = ""
+				start_pos = 0
+				for line in lines:
+					ptdw = np.zeros(topics_count[target_layer])
+					end_pos = start_pos + len(line) + 1
+					term_ids = [x[2] for x in wi if (x[0]>=start_pos and x[0]+x[1]<=end_pos)]
+					for term_index_id in term_ids:
+						ptdw += phi_layer[term_index_id] * theta_t_layer
+					
+					class_id = hl_topics[np.argmax(ptdw)]
+					start_pos = end_pos
+					text += "<span class='tpc%d'>%s</span>\n" % (class_id, line)
+				
 				
 		context['lines'] = text.split('\n') 
 			

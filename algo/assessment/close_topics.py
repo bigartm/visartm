@@ -1,7 +1,9 @@
 from models.models import ArtmModel, Topic 
 import json
+import numpy as np
 
-ASSESS_RATIO = 3
+#Number of assessment for each topic
+ASSESS_RATIO = 5
 
 def initialize_problem(problem):
 	if problem.model:
@@ -112,7 +114,14 @@ def finalize_task(task, POST):
 	
 	
 def get_problem_results(problem):
-	return json.loads(problem.params)["matrix"]
+	params = json.loads(problem.params)
+	ret = np.array(params["matrix"])
+	N = ret.shape[0]
+	for i in range(N):
+		for j in range(N):
+			ret[i][j] *= (1/params["topics"][str(i)])
+	
+	return 0.5*(ret + ret.transpose())
 	#from assessment.models import AssessmentTask
 	#ans = []
 	#for task in AssessmentTask.objects.filter(problem=problem):

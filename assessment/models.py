@@ -19,6 +19,8 @@ class AssessmentProblem(models.Model):
 	model = models.ForeignKey(ArtmModel, null=True)
 	layer = models.IntegerField(null=True, blank=True)
 	
+	description = models.TextField(null=False, default = "", blank=True)
+	
 	params = models.TextField(null=False, default = "{}")
 	last_refreshed = models.DateTimeField(null=False, default=datetime.now) 
 	timeout = models.IntegerField(null=False, default=3600)
