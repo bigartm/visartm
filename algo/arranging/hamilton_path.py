@@ -176,7 +176,7 @@ class HamiltonPath:
 		if not os.path.exists(lib_path) or \
 			(os.path.getctime(source_path) > os.path.getctime(lib_path)):
 
-			if os.system("gcc -shared -o %s %s" % (lib_path, source_path)):
+			if os.system("gcc -shared -fPIC -o %s %s" % (lib_path, source_path)):
 				raise RuntimeError("Unable to build library arrange.c")
 			else:
 				self.log("Library arrange.c succesfully built")
