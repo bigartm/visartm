@@ -35,10 +35,10 @@ for metric in metrics.metrics_list:
 	answers.append([
 			metric, 
 			"No arranging", 
-			arr.path_weight(dist, identical),
-			arr.average_neigbour_rank(dist, identical),
-			arr.obtuse_angle_conserving(dist, identical),
-			arr.user_score(ass, identical)
+			"%.03f" % arr.path_weight(dist, identical),
+			"%.02f" % arr.average_neigbour_rank(dist, identical),
+			"%.02f" % arr.obtuse_angle_conserving(dist, identical),
+			"%.02f" % arr.user_score(ass, identical)
 		])
 	
 	for mode in modes:
@@ -46,10 +46,10 @@ for metric in metrics.metrics_list:
 		answers.append([
 			metric, 
 			mode, 
-			arr.path_weight(dist, perm),
-			arr.average_neigbour_rank(dist, perm),
-			arr.obtuse_angle_conserving(dist, perm),
-			arr.user_score(ass, perm)
+			"%.03f" % arr.path_weight(dist, perm),
+			"%.02f" % arr.average_neigbour_rank(dist, perm),
+			"%.02f" % arr.obtuse_angle_conserving(dist, perm),
+			"%.02f" % arr.user_score(ass, perm)
 		])
 
 	
