@@ -12,8 +12,8 @@ def generate_matrix(N):
     X = np.zeros((N,3))
     for i in range(N):
         X[path[i]][0] = 10*i
-        X[path[i]][1] = np.random.normal(scale=1)
-        X[path[i]][2] = np.random.normal(scale=1)
+        X[path[i]][1] = np.random.normal(scale=5)
+        X[path[i]][2] = np.random.normal(scale=5)
          
     
     dist = np.zeros((N, N))

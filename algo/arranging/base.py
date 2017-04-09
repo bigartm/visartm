@@ -1,10 +1,12 @@
 import numpy as np
 from django.conf import settings
 
-def get_arrangement_permutation(dist, mode, model=None):
+def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm=None):
 	if mode == "hamilton":
 		from algo.arranging.hamilton_path import HamiltonPath 
 		hp = HamiltonPath(dist, caller=model)
+		if clusters:
+			hp.set_clusters(clusters, init_perm)
 		hp.solve()
 		perm = hp.path
 	elif mode == "tsne": 

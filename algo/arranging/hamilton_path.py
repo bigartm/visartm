@@ -29,6 +29,7 @@ class HamiltonPath:
 		self.cut_branch = self.N
 		self.atomic_iterations = 10000
 		self.caller = caller
+		self.clusters = [self.N]
 		
 		
 	def log(self, message):
@@ -40,7 +41,26 @@ class HamiltonPath:
 			path = self.path
 		return sum(self.A[path[i]][path[i+1]] for i in range (0, self.N-1))
 	
-	 
+	
+	# Set restriction on possible permutations.
+	# Allowed only those permutations, which have same clusters as _path_
+	# Cluster is substring of permutation, length of clusters given in _clusters_
+	def set_clusters(self, clusters, path):
+		self.log("Custom path: " + str(path))
+		self.log("Custom clusters:" + str(clusters))
+		
+		if len(path) != self.N:
+			raise ValueError("Invalid initial path")
+		
+		if np.sum(clusters) != self.N:
+			raise ValueError("Invalid clusters lengthes")
+		
+		
+		self.path = path
+		self.clusters = clusters
+		
+		
+		
 		
 	def solve(self):
 		t = time.time()
@@ -185,19 +205,22 @@ class HamiltonPath:
 				   
 				 
 		arrange_lib.arrange.restype = c_double
-		arrange_lib.arrange.argtypes = [c_int, c_double, c_double, c_int, POINTER(c_double), POINTER(c_int)] 
+		arrange_lib.arrange.argtypes = [c_int, c_double, c_double, c_int,\
+                    POINTER(c_double), POINTER(c_int), c_int, POINTER(c_int)] 
 		
 		T0 = np.mean(self.A)
 		Tmin = 1e-5 * T0
 		Tmax = 1e5 * T0
-		
-		
+		 
+        
 		ans = (c_int*self.N)() 
 		for i in range(self.N):
 			ans[i] = self.path[i]
 			
-		arrange_lib.arrange(self.N, Tmin, Tmax, steps, self.A.ctypes.data_as(POINTER(c_double)), ans)
-		del arrange_lib
+		arrange_lib.arrange(self.N, Tmin, Tmax, steps,\
+            self.A.ctypes.data_as(POINTER(c_double)), ans,\
+			len(self.clusters), np.array(self.clusters).ctypes.data_as(POINTER(c_int)))
+		#del arrange_lib
 		self.path = list(np.array(ans))
 			
         
@@ -262,10 +285,10 @@ if __name__ == '__main__':
 	dist = np.zeros((N,N))
 	for i in range(0,N):
 		for j in range(i+1, N):
-			dist[i][j]=dist[j][i] = randint(0,100)
+			dist[i][j]=dist[j][i] = random.randint(0,100)
 	 
 	hp = HamiltonPath(dist) 
-	hp.test()
+	#hp.test()
 	#hp.solve()
 	
 			

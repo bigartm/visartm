@@ -56,10 +56,13 @@ def visual(model, params):
 		high_topics = Topic.objects.filter(model = model, layer = model.layers_count - 1)
 		high_topics_temp = []
 		for topic in high_topics:
-			children = TopicInTopic.objects.filter(parent = topic)
-			positions = [relation.child.spectrum_index for relation in children]
-			avg = sum(positions)/float(len(positions))
-			high_topics_temp.append({"topic":topic, "mass_center_y":avg, "name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2]), "positions": positions})
+			try:
+				children = TopicInTopic.objects.filter(parent = topic)
+				positions = [relation.child.spectrum_index for relation in children]
+				avg = sum(positions)/float(len(positions))
+				high_topics_temp.append({"topic":topic, "mass_center_y":avg, "name": ' '.join(re.findall(r"[\w']+", topic.title)[0:2]), "positions": positions})
+			except:
+				pass
 		high_topics_temp.sort(key = lambda x: x["mass_center_y"])
 		
 		i = 0

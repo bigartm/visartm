@@ -308,6 +308,7 @@ class ArtmModel(models.Model):
 				relation.parent_id = self.topics_index[top_layer][best_top_topic_id]
 				relation.child_id = self.topics_index[bottom_layer][bottom_topic_id]
 				relation.weight = psi[bottom_topic_id][best_top_topic_id]
+				relation.is_main = True
 				relation.save()
 				
 				if threshold_hier <= 0.5:
@@ -318,6 +319,7 @@ class ArtmModel(models.Model):
 							relation.parent_id = self.topics_index[top_layer][top_topic_id]
 							relation.child_id = self.topics_index[bottom_layer][bottom_topic_id]
 							relation.weight = psi[bottom_topic_id][top_topic_id]
+							relation.is_main = False
 							relation.save()
 			
 		
@@ -628,16 +630,31 @@ class ArtmModel(models.Model):
 					relation.weight = topic_distances[layer_id][i][j]
 					relation.save()
 		
+		topic_hier_relations = TopicInTopic.objects.filter(model=self)
 		
 		# Building topics spectrum
 		for layer_id in range (1, layers_count + 1):
+			
+			if layer_id > 1:
+				clusters = []
+				init_perm = []
+				for i in idx:
+					parent_topic = Topic.objects.get(model=self, layer=layer_id-1, index_id=i)
+					relations = topic_hier_relations.filter(parent=parent_topic, is_main=True)
+					topics = [relation.child.index_id for relation in relations]
+					clusters.append(len(topics))
+					init_perm += topics
+			else:
+				init_perm = None
+				clusters = None
+				
 			self.log("Building topics spectrum for layer %d, mode=%s..." % (layer_id, mode))
 			if mode == "alphabet":
 				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
 				idx = np.argsort(titles)
 			else:
 				from algo.arranging.base import get_arrangement_permutation
-				idx = get_arrangement_permutation(topic_distances[layer_id], mode, model=self)
+				idx = get_arrangement_permutation(topic_distances[layer_id], mode, model=self, clusters=clusters, init_perm=init_perm)
 			
 			i = 0
 			for topic in topics_index[layer_id]:
@@ -859,6 +876,7 @@ class TopicInTopic(models.Model):
 	parent = models.ForeignKey(Topic, null = False, related_name = 'parent')
 	child = models.ForeignKey(Topic, null = False, related_name = 'child')
 	weight = models.FloatField(default=0)
+	is_main =  models.BooleanField(default=True)
 	
 class TopTerm(models.Model):
 	topic = models.ForeignKey(Topic)
