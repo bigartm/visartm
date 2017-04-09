@@ -25,8 +25,9 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 		perm = da.arrange()
 	else:
 		raise ValueError("Unknown mode: %s" % mode)
-		
-	model.log("Quality=%f" % path_weight(dist, perm))
+	
+	if model:
+		model.log("Quality=%f" % path_weight(dist, perm))
 	return perm
 
 def path_weight(dist, perm):
@@ -35,6 +36,22 @@ def path_weight(dist, perm):
 	for i in range(N-1):
 		ans += dist[perm[i]][perm[i+1]]
 	return ans		
+		
+
+def rank(dist, x, y):
+	idx = np.argsort(dist[x])
+	for i in range(len(idx)):
+		if idx[i]==y:
+			return i
+	
+def average_neigbour_rank(dist, perm):
+	N = dist.shape[0]
+	ranks = []
+	for i in range(N-1):
+		x = perm[i]
+		y = perm[i+1]
+		ranks.append(rank(dist,x,y))
+	return np.mean(ranks)
 		
 def obtuse_angle_conserving(dist, perm):
 	N = dist.shape[0]

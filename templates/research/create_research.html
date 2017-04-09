@@ -14,14 +14,19 @@
 		</div> 
 		<div class="form-group row">
 			<label class="col-sm-2 col-form-label">Model</label>
-			<div class="col-sm-3">
-				<select class="form-control" name="model_id">
-					<option value="-1">None</option>
-					{% for model in models %}
-						<option value="{{model.id}}">{{model}}</option>
-					{% endfor %}							
-				</select>
-			</div>
+			{% if model %}
+				<div class="col-sm-2">{{model}}</div>
+				<input type="hidden" name="model_id" value="{{model.id}}" />
+			{% else %}
+				<div class="col-sm-3">
+					<select class="form-control" name="model_id">
+						<option value="-1">None</option>
+						{% for model in models %}
+							<option value="{{model.id}}">{{model}}</option>
+						{% endfor %}							
+					</select>
+				</div>
+			{% endif %}
 		</div>
 		<div class="form-group row">
 			<label class="col-sm-2 col-form-label">Assesment problem</label>
@@ -53,6 +58,6 @@
 
 {% block javascript %}
 <script type = "text/javascript">
- 
+	
 </script>
 {% endblock %}

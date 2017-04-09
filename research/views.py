@@ -47,11 +47,16 @@ def create_research(request):
 		return redirect("/research/" + str(research.id) + "/")
 		
 	dataset = Dataset.objects.get(id=request.GET["dataset_id"])
+	try:
+		model = ArtmModel.objects.get(id=request.GET["model_id"])
+	except:
+		model = None
+	
 	models = ArtmModel.objects.filter(dataset=dataset)
 	problems = AssessmentProblem.objects.filter(dataset=dataset)
 	script_names = os.listdir(os.path.join(settings.BASE_DIR, "algo", "research"))
 		
-	context = Context({"dataset":dataset, "models":models, "problems":problems, "script_names":script_names})
+	context = Context({"dataset":dataset, "model":model, "models":models, "problems":problems, "script_names":script_names})
 	return render(request, "research/create_research.html", context) 
 	
 def rerun_research(request):
