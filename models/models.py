@@ -27,6 +27,7 @@ class ArtmModel(models.Model):
 	topics_count = models.TextField(null = False, default = "")
 	status = models.IntegerField(null = False, default = 0)  #0-ready,  1-running, 2-error, 3-empty, 11-running, but not critical
 	error_message = models.TextField(null=True, blank=True) 
+	arrangement = models.TextField(default="none", null=False) 
 	threshold_hier = models.IntegerField(null = False, default = 100) 
 	threshold_docs = models.IntegerField(null = False, default = 100) 
 	
@@ -615,7 +616,6 @@ class ArtmModel(models.Model):
 		topics_index = [[topic for topic in Topic.objects.filter(model = self, layer = i).order_by("index_id")]  for i in range(layers_count + 1)]
 		
 		
-		
 		TopicRelated.objects.filter(model = self).delete()
 		topic_distances = [self.get_topics_distances(metric=metric, layer=i) for i in range(layers_count + 1)]
 		
@@ -662,7 +662,9 @@ class ArtmModel(models.Model):
 				topic.spectrum_index = i
 				topic.save()
 				i += 1
+				
 		self.status = 0
+		self.arrangement = mode + ", metric=" + metric
 		self.save()
 	
 	

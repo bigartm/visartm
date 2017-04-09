@@ -39,7 +39,7 @@ class HamiltonPath:
 	def path_weight(self, path = None):
 		if path == None:
 			path = self.path
-		return sum(self.A[path[i]][path[i+1]] for i in range (0, self.N-1))
+		return sum(self.A[path[i]][path[i+1]] for i in range (len(path)-1))
 	
 	
 	# Set restriction on possible permutations.
