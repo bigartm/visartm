@@ -9,13 +9,14 @@ double X[MAXN+2][MAXN+2];
 
 int N;
 
-
+/*
 double energy(int N) {
     double ans = 0;
-    for(int i=1;i<N;++i) ans += X[perm[i]][perm[i+1]];
+    int i;
+    for (i=1;i<N;++i) ans += X[perm[i]][perm[i+1]];
     return ans;
 }
-
+*/
 
 void* arrange(int N, double Tmin, double Tmax, int steps, double* dist, int* answer) {
     int i, j, step;
@@ -25,7 +26,8 @@ void* arrange(int N, double Tmin, double Tmax, int steps, double* dist, int* ans
     perm[0] = 0;
     perm[N+1] = 0;
 
-    double E = energy(N);
+    double E = 0;
+    for (i=1;i<N;++i) E += X[perm[i]][perm[i+1]];
     double Emin = E;
     double Tfactor = -log(Tmax/Tmin) / steps;
     double T = Tmax;
