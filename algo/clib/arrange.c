@@ -19,7 +19,7 @@ double energy(int N) {
 
 void* arrange(int N, double Tmin, double Tmax, int steps, double* dist, int* answer) {
     int i, j, step;
-    freopen("D:\\visartm\\algo\\clib\\log.txt", "w", stdout);
+    //freopen("D:\\visartm\\algo\\clib\\log.txt", "w", stdout);
 
     for (i = 1; i <= N; ++i) perm[i] = answer[i-1] + 1;
     perm[0] = 0;
@@ -72,7 +72,7 @@ void* arrange(int N, double Tmin, double Tmax, int steps, double* dist, int* ans
         }
     }
 
-    fflush(stdout);
+    //fflush(stdout);
 }
 
 int main() {
