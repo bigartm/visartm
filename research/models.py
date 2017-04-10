@@ -71,6 +71,9 @@ class Research(models.Model):
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write(text + "<br>\n")
 	
+	def log(self, text):
+		self.report("[LOG] %s" % text)
+	
 	def report_p(self, text=""):
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<p>" + text + "</p>\n")

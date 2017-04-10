@@ -7,7 +7,7 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 		hp = HamiltonPath(dist, caller=model)
 		if clusters:
 			hp.set_clusters(clusters, init_perm)
-		hp.solve()
+		hp.solve_annealing()
 		perm = hp.path
 	elif mode == "tsne": 
 		from sklearn.manifold import TSNE

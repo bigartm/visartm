@@ -30,6 +30,7 @@ class HamiltonPath:
 		self.atomic_iterations = 10000
 		self.caller = caller
 		self.clusters = [self.N]
+		self.DEBUG = False		# If True, will be used python implementation of annealing, which is 100 times slower, but yields graphs
 		
 		
 	def log(self, message):
@@ -59,20 +60,7 @@ class HamiltonPath:
 		self.path = path
 		self.clusters = clusters
 		
-		
-		
-		
-	def solve(self):
-		t = time.time()
-		steps = min(10000*self.N*self.N, 100000000)
-		if steps < 1000000:
-			steps = 1000000
-		self.solve_annealing_c(steps)
-		
-		run_time = time.time()-t
-		self.log("Time=%fs" % run_time)
-		self.log("Speed=%d steps per second" % int(steps/run_time))
-		self.log("Quality=%f" % self.path_weight())
+		 
 	 
 		
 	def solve_stupid_brute_force(self):
@@ -184,7 +172,7 @@ class HamiltonPath:
 		return ret
 		
     
-	def solve_annealing_c(self, steps):
+	def solve_annealing_c(self, steps, Tmin, Tmax):
 		try:
 			c_path = os.path.join(settings.BASE_DIR, "algo", "clib")
 		except:
@@ -208,23 +196,27 @@ class HamiltonPath:
 		arrange_lib.arrange.argtypes = [c_int, c_double, c_double, c_int,\
                     POINTER(c_double), POINTER(c_int), c_int, POINTER(c_int)] 
 		
-		T0 = np.mean(self.A)
-		Tmin = 1e-5 * T0
-		Tmax = 1e5 * T0
-		 
+		
         
 		ans = (c_int*self.N)() 
 		for i in range(self.N):
 			ans[i] = self.path[i]
 			
+		
+			
+		# Extern function call
 		arrange_lib.arrange(self.N, Tmin, Tmax, steps,\
             self.A.ctypes.data_as(POINTER(c_double)), ans,\
 			len(self.clusters), np.array(self.clusters).ctypes.data_as(POINTER(c_int)))
 		#del arrange_lib
 		self.path = list(np.array(ans))
+		
+		
+			
+			
 			
         
-'''    
+     
 	def ew2(self, i):
 		ans = 0
 		if i > 0:
@@ -234,51 +226,68 @@ class HamiltonPath:
 		return ans
 		 
 			
-
-	def solve_annealing(self, steps=50000, Tmax=25000, Tmin=2.5):
+	
+	def solve_annealing(self, steps="auto"):
+		T0 = np.mean(self.A)
+		Tmin = 1e-5 * T0
+		Tmax = 1e5 * T0
+		
+		if steps == "auto":
+			steps = min(10000*self.N*self.N, 100000000)
+			if steps < 1000000:
+				steps = 1000000
+		
 		start_time = time.time()
-		cur_weight = self.path_weight()
-		self.chart_iterations = []
-		self.chart_weight = []
-		self.iter_counter = 0
 		
-		 
-		Tfactor = -np.log(Tmax/Tmin)
-		
-		acc = 0
-		imp = 0
-		
-		for step in range(steps):
-			if step % 10000==0:
-				self.elapsed = time.time() - start_time
-				quality = self.path_weight() 
-				self.chart_iterations.append(step)
-				self.chart_weight.append(quality) 
+		if not self.DEBUG:
+			self.solve_annealing_c(steps, Tmin, Tmax)
+		else:
+			cur_weight = self.path_weight()
+			self.chart_iterations = []
+			self.chart_weight = []
+			self.iter_counter = 0
 			
-    				
-				T = Tmax * np.exp(Tfactor*step/steps)
-				#self.log("I=%d, T=%f, Q=%f, acc=%d, imp=%d" % (step, T, quality, acc, imp))
-				acc = 0
-				imp = 0
 			 
-			i = randint(0, self.N - 1)
-			j = randint(0, self.N - 1)
+			Tfactor = -np.log(Tmax/Tmin)
 			
-			dE = - self.ew2(i) - self.ew2(j)
-			self.path[i], self.path[j] = self.path[j], self.path[i]
-			dE += self.ew2(i) + self.ew2(j)
+			acc = 0
+			imp = 0
 			
-			T = Tmax * np.exp(Tfactor*step/steps)
-			if dE > 0.0 and np.exp(-dE / T) < random.random():
-				#Restore
+			for step in range(steps):
+				if step % 10000==0:
+					self.elapsed = time.time() - start_time
+					quality = self.path_weight() 
+					self.chart_iterations.append(step)
+					self.chart_weight.append(quality) 
+				
+						
+					T = Tmax * np.exp(Tfactor*step/steps)
+					#self.log("I=%d, T=%f, Q=%f, acc=%d, imp=%d" % (step, T, quality, acc, imp))
+					acc = 0
+					imp = 0
+				 
+				i = randint(0, self.N - 1)
+				j = randint(0, self.N - 1)
+				
+				dE = - self.ew2(i) - self.ew2(j)
 				self.path[i], self.path[j] = self.path[j], self.path[i]
-			else:
-            #Accept
-				if dE < 0.0:
-					imp += 1
-				acc += 1
-				cur_weight += dE
-'''
+				dE += self.ew2(i) + self.ew2(j)
+				
+				T = Tmax * np.exp(Tfactor*step/steps)
+				if dE > 0.0 and np.exp(-dE / T) < random.random():
+					#Restore
+					self.path[i], self.path[j] = self.path[j], self.path[i]
+				else:
+				#Accept
+					if dE < 0.0:
+						imp += 1
+					acc += 1
+					cur_weight += dE
+				
+		run_time = time.time()-start_time
+		self.log("Time=%fs" % run_time)
+		self.log("Speed=%d steps per second" % int(steps/(run_time+1e-10)))
+		return self.path
    
 if __name__ == '__main__':
 	N = 100
