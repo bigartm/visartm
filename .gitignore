@@ -21,7 +21,7 @@
 /visartm.sqlite
 
 /algo/lkh/*
-
+!/algo/lkh/readme.txt
 
 *.FEDIMSER.*
 *.batch

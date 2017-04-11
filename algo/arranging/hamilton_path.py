@@ -182,10 +182,15 @@ class HamiltonPath:
 		except:
 			lkh_path = "D:\\visartm\\algo\\lkh"
 		
+		try:
+			temp_folder = self.caller.get_folder()
+		except:
+			temp_folder = lkh_path
+		
 		exe_path = os.path.join(lkh_path, "lkh.exe")
-		tsp_path = os.path.join(lkh_path, "task.tsp")
-		par_path = os.path.join(lkh_path, "task.par")
-		out_path = os.path.join(lkh_path, "task.out")
+		tsp_path = os.path.join(temp_folder, "hamilton.tsp")
+		par_path = os.path.join(temp_folder, "hamilton.par")
+		out_path = os.path.join(temp_folder, "hamilton.out")
 		
 		if not os.path.exists(exe_path):
 			self.log("LKH algorithm isn't installed.")
