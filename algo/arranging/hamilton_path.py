@@ -174,7 +174,7 @@ class HamiltonPath:
 	def solve(self):	
 		if self.solve_lkh():
 			return self.path
-		return self.solve_annealing
+		return self.solve_annealing()
 		
 	def solve_lkh(self):
 		try:
