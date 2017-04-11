@@ -31,7 +31,13 @@ for metric in metrics_list:
 	research.report("Dendro %f" % dendro_quality)
 	
 	hp = HamiltonPath(dist, caller=research)
-	steps_range = np.linspace(3,9,30)
+	hp.solve_lkh()
+	lkh_quality = path_weight(dist, hp.path)
+	research.report("LKH %f" % lkh_quality)
+	
+		
+	hp = HamiltonPath(dist, caller=research)
+	steps_range = np.linspace(3,8,30)
 	quality_chart = []
 	for steps in steps_range:
 		hp.solve_annealing(steps=int(10**steps))
@@ -43,6 +49,7 @@ for metric in metrics_list:
 	axes.set_ylabel("Quality", fontsize=20)
 	axes.plot(steps_range, quality_chart, label="Annealing")
 	axes.plot([steps_range[0], steps_range[-1]], [dendro_quality, dendro_quality], label="Dendrogram")
+	axes.plot([steps_range[0], steps_range[-1]], [lkh_quality, lkh_quality], label="LKH")
 	lgd = axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 	research.report_picture(bbox_extra_artists=(lgd,), width=800)
 		

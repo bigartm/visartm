@@ -7,7 +7,9 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 		hp = HamiltonPath(dist, caller=model)
 		if clusters:
 			hp.set_clusters(clusters, init_perm)
-		hp.solve_annealing()
+			hp.solve_annealing()
+		else:
+			hp.solve()
 		perm = hp.path
 	elif mode == "tsne": 
 		from sklearn.manifold import TSNE
@@ -51,7 +53,7 @@ def average_neigbour_rank(dist, perm):
 		x = perm[i]
 		y = perm[i+1]
 		ranks.append(rank(dist,x,y))
-	return np.mean(ranks)
+	return np.mean(ranks) - 1.5
 		
 def obtuse_angle_conserving(dist, perm):
 	N = dist.shape[0]

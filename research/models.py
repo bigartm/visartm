@@ -28,7 +28,7 @@ class Research(models.Model):
 			f.write("<p>Research id: %d<br>\n" % self.id)
 			f.write("Dataset: %s<br>\n" % str(self.dataset))
 			if self.model:
-				f.write("Model: %s<br>\n" % str(self.model))
+				f.write("Model: %s (id=%d)<br>\n" % (str(self.model), self.model.id))
 			if self.problem:
 				f.write("Assesment problem: %s<br>\n" % str(self.problem))
 			f.write("Script: %s<br>\n" % self.script_name)

@@ -76,7 +76,7 @@ def profiler(N=50):
 def final_test():  
      dist, best_q = generate_matrix(50)
      hp = HamiltonPath(dist, caller=DefaultLogger())
-     hp.solve()
+     hp.solve_annealing()
      print(best_q)
      print(hp.path_weight())
     
@@ -135,5 +135,5 @@ def steps_optimizer():
     
 #steps_optimizer()
 final_test()
-profiler()
+#profiler()
 #N_profiler()

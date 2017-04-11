@@ -37,11 +37,11 @@ class HamiltonPath:
 		if self.caller:
 			self.caller.log(message)
 	
-	def path_weight(self, path = None):
-		if path == None:
-			path = self.path
-		return sum(self.A[path[i]][path[i+1]] for i in range (len(path)-1))
-	
+	def path_weight(self):
+		ans = 0
+		for i in range(self.N-1):
+			ans += self.A[self.path[i]][self.path[i+1]]
+		return ans
 	
 	# Set restriction on possible permutations.
 	# Allowed only those permutations, which have same clusters as _path_
@@ -171,7 +171,70 @@ class HamiltonPath:
 				ret[i][j] = self.A[self.path[i]][self.path[j]]
 		return ret
 		
-    
+	def solve(self):	
+		if self.solve_lkh():
+			return self.path
+		return self.solve_annealing
+		
+	def solve_lkh(self):
+		try:
+			lkh_path = os.path.join(settings.BASE_DIR, "algo", "lkh")
+		except:
+			lkh_path = "D:\\visartm\\algo\\lkh"
+		
+		exe_path = os.path.join(lkh_path, "lkh.exe")
+		tsp_path = os.path.join(lkh_path, "task.tsp")
+		par_path = os.path.join(lkh_path, "task.par")
+		out_path = os.path.join(lkh_path, "task.out")
+		
+		if not os.path.exists(exe_path):
+			self.log("LKH algorithm isn't installed.")
+			return False
+		
+		with open(tsp_path, "w") as f:
+			f.write("TYPE : TSP\n")
+			f.write("DIMENSION : %d\n" % (self.N+1))
+			f.write("EDGE_WEIGHT_TYPE : EXPLICIT\n")
+			f.write("EDGE_WEIGHT_FORMAT : FULL_MATRIX\n")
+			f.write("EDGE_WEIGHT_SECTION\n")
+			for i in range(self.N):
+				for j in range(self.N):
+					f.write("%d " % int(100000*self.A[i][j]))
+				f.write("0\n")
+			for j in range(self.N+1):
+				f.write("0 ")
+			f.write("\nEOF")	
+		
+		with open(par_path, "w") as f:
+			f.write("PROBLEM_FILE = %s\n" % tsp_path)
+			f.write("OUTPUT_TOUR_FILE = %s\n" % out_path)
+			f.write("PRECISION = 1\n")
+			f.write("TRACE_LEVEL = 0\n")
+			
+			
+		self.log("Invoking LKH...")
+		start_time = time.time()
+			
+		os.system("%s %s < %s" % (exe_path, par_path, par_path))
+		self.log("LKH done.  Running time %f" % (time.time() - start_time))
+		
+		
+		fake_path = []
+		line_ctr = -1
+		for line in open(out_path, "r"):
+			if line_ctr >=0 and line_ctr <= self.N:
+				fake_path.append(int(line)-1)
+				line_ctr += 1
+			if "TOUR_SECTION" in line:
+				line_ctr = 0
+		
+		sep = 0
+		for i in range(self.N+1):
+			if fake_path[i] == self.N:
+				sep = i
+		self.path = fake_path[sep+1:] + fake_path[0:sep]
+		return self.path
+			
 	def solve_annealing_c(self, steps, Tmin, Tmax):
 		try:
 			c_path = os.path.join(settings.BASE_DIR, "algo", "clib")
@@ -192,8 +255,8 @@ class HamiltonPath:
 		arrange_lib = CDLL(lib_path)
 				   
 				 
-		arrange_lib.arrange.restype = c_double
-		arrange_lib.arrange.argtypes = [c_int, c_double, c_double, c_int,\
+		arrange_lib.simanneal.restype = c_double
+		arrange_lib.simanneal.argtypes = [c_int, c_double, c_double, c_int,\
                     POINTER(c_double), POINTER(c_int), c_int, POINTER(c_int)] 
 		
 		
@@ -205,7 +268,7 @@ class HamiltonPath:
 		
 			
 		# Extern function call
-		arrange_lib.arrange(self.N, Tmin, Tmax, steps,\
+		arrange_lib.simanneal(self.N, Tmin, Tmax, steps,\
             self.A.ctypes.data_as(POINTER(c_double)), ans,\
 			len(self.clusters), np.array(self.clusters).ctypes.data_as(POINTER(c_int)))
 		#del arrange_lib

@@ -20,6 +20,9 @@
 /visartm/settings.py
 /visartm.sqlite
 
+/algo/lkh/*
+
+
 *.FEDIMSER.*
 *.batch
 start.bat

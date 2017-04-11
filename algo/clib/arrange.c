@@ -25,7 +25,7 @@ double energy(int N) {
 // clusters_num - number of clusters
 // clusters_size - lengthes of clusters
 
-void arrange(int N, double Tmin, double Tmax, int steps,
+void simanneal(int N, double Tmin, double Tmax, int steps,
               double* dist, int* answer,
               int clusters_num, int* clusters_size) {
     if (N <= 2) return;
@@ -106,6 +106,10 @@ void arrange(int N, double Tmin, double Tmax, int steps,
     //fflush(stdout);
 }
 
+void lkh(int N) {
+
+}
+
 int main() {
     double dist[4];
     int clusters[1];
@@ -114,6 +118,6 @@ int main() {
     ans[0]=0;
     ans[1]=1;
 
-    arrange(2,1,100,4,dist,ans,1,clusters);
+    simanneal(2,1,100,4,dist,ans,1,clusters);
     return 0;
 }

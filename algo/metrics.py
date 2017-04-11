@@ -13,8 +13,7 @@ def cosine(p, q):
 def minkovsky(p, q):
 	return np.sum(np.abs(p-q))
 
-def cov(p, q):
-	return np.dot(p,q)	
+ 
 			
 def hellinger(p,q):
 	_SQRT2 = np.sqrt(2)
@@ -75,7 +74,7 @@ def filter_tails(matrix, start, end):
 	return matrix
 '''
 
-metrics_list = ["euclidean", "cosine", "minkovsky", "cov", "hellinger", "jsd", "jaccard"]
+metrics_list = ["euclidean", "cosine", "minkovsky", "hellinger", "jsd", "jaccard"]
 default_metric = "jaccard"
 
 def get_metric_by_name(name):
@@ -88,7 +87,7 @@ def get_metric_by_name(name):
 	elif name == "minkovsky":
 		return minkovsky
 	elif name == "cov":
-		return minkovsky
+		return cov
 	elif name == "hellinger": 
 		return hellinger
 	elif name == "kld": 
