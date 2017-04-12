@@ -21,8 +21,10 @@ Default username in PostgreSQL is "postgres".</li>
 
 <li>Make sure you have installed git.</li>
 
-<li>Clone VisARTM with console command
-	git clone https://github.com/bigartm/visartm.git
+<li>Get VisARTM from repository.
+<pre class="code">
+git clone https://github.com/bigartm/visartm.git
+</pre>
 </li>
 	
 <li>
@@ -48,17 +50,15 @@ DATABASES = {
 		'PORT': '5432',
 		}
 	}
-</pre>
-</li>
+</pre> 
 
-<li>
 Modify values as follows. NAME is name of database. USER is name of user of database. 
-PASSWORD is his password. If you use local PostgreSQL, you will not need change ENGINE, 
-otherwise it's up to you. You are running database server locally, so don't modify HOST value.
+PASSWORD is his password. If you use PostgreSQL, you don't need to change ENGINE. 
+If you are running database server locally, you don't need to modify HOST value.
 </li>
 
 <li>
-Now you need django to create tables. For that, go to folder named visartm and run:
+Now you need django to create tables. For that, go to folder <b>visartm</b> and run:
 <pre class="code">
 python manage.py makemigrations
 python manage.py migrate
@@ -83,4 +83,30 @@ python manage.py runserver
 Open web browser (Google Chrome is recommended) and navigate to http://127.0.0.1:8000
 </li>
 </ol>
+
+Now you can use VisARTM. But additional actions are required to enable advanced options (topic spectrum building and some visualizations).
+
+<ol>
+<li>
+Install gcc.
+</li>
+
+<li>
+Install SciPy and scikit-learn.
+<pre class="code">
+pip install scipy
+pip install scikit-learn
+</pre>
+If you use Anaconda, you have those already installed.<br>
+WARNING! SciPy installation fails under virtualenv.
+</li>
+
+<li>
+Install Lin-Kernighan-Helsgaun algorithm for Travelling Salesman Problem. You can find instructions, how to do that in 
+<b>/algo/lkh/readme.txt</b>.<br>
+WARNING! LKH code is distributed for research use. Don't use it, if you use VisARTM for any commercial purposes.
+Author of VisARTM doesn't distribute LKH algorithm, hence he isn't responsible for any kind of inappropriate usage of LKH algorithm.
+</li>
+
+
 {% endblock %}
