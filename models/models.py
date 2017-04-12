@@ -30,6 +30,8 @@ class ArtmModel(models.Model):
 	arrangement = models.TextField(default="none", null=False) 
 	threshold_hier = models.IntegerField(null = False, default = 100) 
 	threshold_docs = models.IntegerField(null = False, default = 100) 
+	max_parents_hier = models.IntegerField(null = False, default = 1) 
+	
 	
 	
 	def __str__(self):
@@ -312,8 +314,9 @@ class ArtmModel(models.Model):
 				relation.is_main = True
 				relation.save()
 				
-				if threshold_hier <= 0.5:
-					for top_topic_id in range(topics_count[top_layer]):
+				if threshold_hier <= 0.5 and self.max_parents_hier > 1:
+					pot_parents = np.argsort(psi[bottom_topic_id])[-self.max_parents_hier:]
+					for top_topic_id in np.argsort(psi[bottom_topic_id])[-self.max_parents_hier:]:
 						if psi[bottom_topic_id][top_topic_id] > threshold_hier and top_topic_id != best_top_topic_id:
 							relation = TopicInTopic()
 							relation.model = self
@@ -606,76 +609,147 @@ class ArtmModel(models.Model):
 	
 	# Only horizontal arranging
 	@transaction.atomic
-	def arrange_topics(self, mode = "alphabet", metric="default"):
+	def arrange_topics(self, mode = "alphabet", metric="default", beta=0.8):
 		# Counting horizontal relations topic-topic
-		self.log("Counting horizontal relations topic-topic...")	
-		phi = self.get_phi()
-		phi_t = phi.transpose()
-		layers_count = self.layers_count
-		topics_count = [int(x) for x in self.topics_count.split()]
-		topics_index = [[topic for topic in Topic.objects.filter(model = self, layer = i).order_by("index_id")]  for i in range(layers_count + 1)]
+		self.log("Counting horizontal relations topic-topic...")	 
+		self.topics_index = [[topic for topic in Topic.objects.filter(model = self, layer = i).order_by("index_id")] 
+			for i in range(self.layers_count + 1)]
 		
 		
 		TopicRelated.objects.filter(model = self).delete()
-		topic_distances = [self.get_topics_distances(metric=metric, layer=i) for i in range(layers_count + 1)]
+		self.topic_distances = [self.get_topics_distances(metric=metric, layer=i) for i in range(self.layers_count + 1)]
 		
-		for layer_id in range (1, layers_count + 1): 
-			for i in range(0, topics_count[layer_id]):
-				idx = np.argsort(topic_distances[layer_id][i])
-				for j in idx[1 : 1 + min(10, topics_count[layer_id] - 1)]:
+		for layer_id in range (1, self.layers_count + 1): 
+			layer_size = self.get_layer_size(layer_id)
+			for i in range(layer_size):
+				idx = np.argsort(self.topic_distances[layer_id][i])
+				for j in idx[1 : 1 + min(10, layer_size - 1)]:
 					relation = TopicRelated()
 					relation.model = self
-					relation.topic1 = topics_index[layer_id][i]
-					relation.topic2 = topics_index[layer_id][j]
-					relation.weight = topic_distances[layer_id][i][j]
+					relation.topic1 = self.topics_index[layer_id][i]
+					relation.topic2 = self.topics_index[layer_id][j]
+					relation.weight = self.topic_distances[layer_id][i][j]
 					relation.save()
 		
 		topic_hier_relations = TopicInTopic.objects.filter(model=self)
 		
-		cluster_mode = True
+		cluster_mode = False
 		
-		# Building topics spectrum
-		for layer_id in range (1, layers_count + 1):
-			if cluster_mode:
-				if layer_id > 1:
-					clusters = []
-					init_perm = []
-					for i in idx:
-						parent_topic = Topic.objects.get(model=self, layer=layer_id-1, index_id=i)
-						relations = topic_hier_relations.filter(parent=parent_topic, is_main=True)
-						topics = [relation.child.index_id for relation in relations]
-						clusters.append(len(topics))
-						init_perm += topics
-				else:
-					init_perm = None
-					clusters = None
-			
-			
-			self.log("Building topics spectrum for layer %d, mode=%s..." % (layer_id, mode))
-			if mode == "alphabet":
-				titles = [topics_index[layer_id][topic_id].title for topic_id in range(0, topics_count[layer_id])]
-				idx = np.argsort(titles)
-			else:
-				from algo.arranging.base import get_arrangement_permutation
+		if mode == "hierarchical":
+			self.arrange_topics_hierarchical(beta=beta)
+		else:
+			# Building topics spectrum
+			for layer_id in range (1, self.layers_count + 1):
+				layer_size = self.get_layer_size(layer_id)
 				if cluster_mode:
-					idx = get_arrangement_permutation(topic_distances[layer_id], mode, model=self, clusters=clusters, init_perm=init_perm)
+					if layer_id > 1:
+						clusters = []
+						init_perm = []
+						for i in idx:
+							parent_topic = Topic.objects.get(model=self, layer=layer_id-1, index_id=i)
+							relations = topic_hier_relations.filter(parent=parent_topic, is_main=True)
+							topics = [relation.child.index_id for relation in relations]
+							clusters.append(len(topics))
+							init_perm += topics
+					else:
+						init_perm = None
+						clusters = None
+				
+				
+				self.log("Building topics spectrum for layer %d, mode=%s..." % (layer_id, mode))
+				if mode == "alphabet":
+					titles = [self.topics_index[layer_id][topic_id].title for topic_id in range(0, layer_size)]
+					idx = np.argsort(titles)
 				else:
-					idx = get_arrangement_permutation(topic_distances[layer_id], mode, model=self)
-			
-			i = 0
-			for topic in topics_index[layer_id]:
-				topic = topics_index[layer_id][idx[i]]
-				topic.spectrum_index = i
-				topic.save()
-				i += 1
+					from algo.arranging.base import get_arrangement_permutation
+					if cluster_mode:
+						idx = get_arrangement_permutation(self.topic_distances[layer_id], mode, model=self, clusters=clusters, init_perm=init_perm)
+					else:
+						idx = get_arrangement_permutation(self.topic_distances[layer_id], mode, model=self)
+				
+				for i in range(self.get_layer_size(layer_id)):
+					topic = self.topics_index[layer_id][idx[i]]
+					topic.spectrum_index = i
+					topic.save() 
 				
 		self.status = 0
 		self.arrangement = mode + ", metric=" + metric
 		self.save()
-	
-	
-
+		
+		self.log("Resetting visualizations...")
+		self.reset_visuals()
 	 
+	
+	def arrange_topics_hierarchical(self, beta=0.8):
+		if self.layers_count == 1:
+			raise ValueError("Model is flat!")
+		
+		
+		# Arrange lower level, minimizing NDS
+		lower_layer = self.layers_count
+		dist = self.topic_distances[lower_layer]
+		
+		# Correcting matrix
+		
+		high_topics = Topic.objects.filter(model=self, layer=lower_layer-1)
+		pairs = set()
+		for topic in high_topics:
+			close_topics = [t.child.index_id for t in TopicInTopic.objects.filter(parent=topic)]
+			for i in close_topics:
+				for j in close_topics:
+					pairs.add((i,j))
+		
+		for i,j in pairs:
+			dist[i][j] *= beta
+					
+		# Arranging lower level
+		from algo.arranging.base import get_arrangement_permutation
+		idx = get_arrangement_permutation(dist, mode="hamilton", model=self)
+		
+		for i in range(self.get_layer_size(lower_layer)):
+			topic = self.topics_index[lower_layer][idx[i]]
+			topic.spectrum_index = i
+			topic.save() 
+			
+		# Arranging higher layers, using mass center principle
+		for layer_id in range(self.layers_count-1, 0, -1):
+			pos = []
+			for topic in self.topics_index[layer_id]:
+				pos.append(np.mean([rel.child.spectrum_index for rel in TopicInTopic.objects.filter(parent=topic)]))
+			idx = np.argsort(pos)
+			
+			for i in range(self.get_layer_size(layer_id)):
+				topic = self.topics_index[layer_id][idx[i]]
+				topic.spectrum_index = i
+				topic.save() 
+			
+	#layer must be lower level of opair of interest
+	def spectrum_crosses_count(self, layer = -1):
+		if layer == -1:
+			layer = self.layers_count
+		
+		links = []
+		ans = 0
+		
+		for topic in self.get_topics(layer=layer-1):
+			links += [(topic.spectrum_index, rel.child.spectrum_index) for rel in TopicInTopic.objects.filter(parent=topic)]
+		
+		for link1 in links:
+			for link2 in links:
+				if link2[0] > link1[0] and link2[1] < link1[1]:
+					ans += 1
+		return ans
+		
+	def neighbor_distance_sum(self, metric="default", layer = -1):
+		if layer == -1:
+			layer = self.layers_count
+			
+		perm = [t.index_id for t in Topic.objects.filter(model=self, layer=layer).order_by('spectrum_index')]
+		dist = self.get_topics_distances(layer=layer, metric=metric)
+		
+		return sum([dist[perm[i]][perm[i+1]] for i in range(len(perm)-1) ])
+		
+		
 	def get_folder(self):
 		path = os.path.join(settings.DATA_DIR, "datasets", self.dataset.text_id, "models", self.text_id)
 		if not os.path.exists(path): 
@@ -739,8 +813,11 @@ class ArtmModel(models.Model):
 	def lower_topics_count(self):
 		return int(self.topics_count.split()[-1])
 	
+	def get_layer_size(self, layer):
+		return int(self.topics_count.split()[layer])
 	
 	# Groups documents into matrix Dates-Topics, elements are absolute ids of documents
+	# (Always by lower level)
 	# Topics are ordered in order of spectrum_index
 	# Return tuple - matrix, dates
 	def group_matrix(self, group_by="day", named_groups=False):
@@ -804,6 +881,10 @@ class ArtmModel(models.Model):
 				return json.loads(f.read())["selections"]
 		except:
 			return None
+			
+	def reset_visuals(self):
+		from visual.models import GlobalVisualization
+		GlobalVisualization.objects.filter(model = self).delete()
 			
 def on_start():
 	for model in ArtmModel.objects.filter(status=1):

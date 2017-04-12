@@ -13,14 +13,14 @@
     </div>  
 	
 	<div class="form-group row">
-		<label 
+		<!--<label 
 			class="col-sm-2 col-form-label"
 			data-toggle="tooltip" 
 			data-placement="bottom" 
 			title="Cut in BOW"
 			data-html="true">
 			Cut in BOW
-		</label>
+		</label>-->
 		<div class="col-sm-2">
 			<select class="form-control" id="cut_bow" onchange="settingUpdate('cut_bow', 'value');">
 				<option>0</option>
@@ -64,7 +64,7 @@
 		$('[data-toggle="tooltip"]').tooltip(); 
 	});
 
-	document.getElementById("highlight_terms").checked = !(getCookie("highlight_terms") == "false");
+	//document.getElementById("highlight_terms").checked = !(getCookie("highlight_terms") == "false");
 	//document.getElementById("temporal_spectrum").checked = !(getCookie("temporal_spectrum") == "false");
 	document.getElementById("color_theme").value = getCookie("color_theme", "default");
 	document.getElementById("cut_bow").value = getCookie("cut_bow", "1");

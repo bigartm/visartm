@@ -34,12 +34,14 @@
 	 </div>
     </div> 
 	
-	<div class="form-group row">
-      <label for="dataset" class="col-sm-2 col-form-label">Where is the author of this site currently living?</label>
-      <div class="col-sm-1">
-        <input type="text" name="captcha"  placeholder="Yes, it's captcha"/>
-	 </div>
-    </div> 
+	{% if captcha %}
+		<div class="form-group row">
+		  <label for="dataset" class="col-sm-2 col-form-label">What does A in ARTM mean?</label>
+		  <div class="col-sm-1">
+			<input type="text" name="captcha"  placeholder="Yes, it's captcha"/>
+		 </div>
+		</div> 
+	{% endif %}
 	
     <div class="form-group row">
       <div class="offset-sm-2 col-sm-10">

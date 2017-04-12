@@ -42,6 +42,13 @@
 			</div>
 		</div> 
 		
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Maximal number of parents in hierarchy</label>
+			<div class="col-sm-1">
+				<input type="number" name="max_parents_hier" min = "1" max="100" value="{{model.max_parents_hier}}" />
+			</div>
+		</div> 
+		
 		<input type="hidden" name="model_id" value="{{model.id}}" />
 		<input type="hidden" name="action" value="parameters" />
 		

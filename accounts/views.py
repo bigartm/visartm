@@ -11,6 +11,7 @@ from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
 from research.models import Research
 from django.conf import settings
 import visartm.views as general_views
+from django.conf import settings
 
 def login_view(request):
 	if request.method == 'GET':
@@ -38,19 +39,22 @@ def logout_view(request):
 	
 def signup(request):
 	if request.method == 'GET':
-		return render(request, 'accounts/signup.html')
+		context = {"captcha": not settings.DEBUG}
+		return render(request, 'accounts/signup.html', Context(context))
 		
 	username = request.POST['username']
 	password = request.POST['password']
 	password_repeat = request.POST['password_repeat']
 	email = request.POST['email']
 	
-	
-	
 	captha_response = request.POST['captcha']
 	
-	if not (captha_response.lower() in  ["dolgoprudniy", "dolgoprudny"]):
-		return general_views.message(request, "You haven't passed Turing test.")
+	if not settings.DEBUG:
+		if not captha_response.lower() == 'additive':
+			return general_views.message(request, "You haven't passed Turing test.")
+	
+	if len(username)<3:
+		return general_views.message(request, "Username must be at least 3 character long.")
 	
 	
 	if password != password_repeat:

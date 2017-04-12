@@ -55,7 +55,8 @@ def create_research(request):
 	models = ArtmModel.objects.filter(dataset=dataset)
 	problems = AssessmentProblem.objects.filter(dataset=dataset)
 	script_names = os.listdir(os.path.join(settings.BASE_DIR, "algo", "research"))
-		
+	script_names = [s for s in script_names if not s[0] == "_"]
+	
 	context = Context({"dataset":dataset, "model":model, "models":models, "problems":problems, "script_names":script_names})
 	return render(request, "research/create_research.html", context) 
 	

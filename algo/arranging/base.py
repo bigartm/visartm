@@ -29,10 +29,13 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 		raise ValueError("Unknown mode: %s" % mode)
 	
 	if model:
-		model.log("Quality=%f" % path_weight(dist, perm))
+		model.NDS = neigbor_distances_sum(dist, perm)
+		model.log("NDS=%f" % model.NDS)
+		model.log("CANR=%f" % corrected_average_neigbour_rank(dist, perm))
+		 
 	return perm
 
-def path_weight(dist, perm):
+def neigbor_distances_sum(dist, perm):
 	N = dist.shape[0]
 	ans = 0
 	for i in range(N-1):
@@ -41,21 +44,37 @@ def path_weight(dist, perm):
 		
 
 def rank(dist, x, y):
-	idx = np.argsort(dist[x])
+	idx = np.argsort(dist[y])
 	for i in range(len(idx)):
-		if idx[i]==y:
+		if idx[i]==x:
 			return i
-	
+
+def corrected_average_neigbour_rank(dist, perm):
+	return average_neigbour_rank(dist, perm) - 1.5
+			
 def average_neigbour_rank(dist, perm):
 	N = dist.shape[0]
 	ranks = []
-	for i in range(N-1):
-		x = perm[i]
-		y = perm[i+1]
-		ranks.append(rank(dist,x,y))
-	return np.mean(ranks) - 1.5
+	ranks.append(rank(dist, perm[1], perm[0]))
+	for i in range(1,N-1): 
+		ranks.append(rank(dist,perm[i-1],perm[i]))
+		ranks.append(rank(dist,perm[i+1],perm[i]))
+	
+	ranks.append(rank(dist, perm[N-2], perm[N-1]))
+	return np.mean(ranks)
 		
 def obtuse_angle_conserving(dist, perm):
+	N = dist.shape[0]
+	ctr = 0
+	for i in range(N):
+		for j in range(i+1, N):
+			for k in range(j+1, N):
+				if dist[perm[i]][perm[k]]**2 > dist[perm[i]][perm[j]]**2 + dist[perm[j]][perm[k]]**2:
+					ctr += 1
+					
+	return (6.0 * ctr) / (N * (N-1) * (N-2))
+		
+def triple_order_conserving(dist, perm):
 	N = dist.shape[0]
 	ctr = 0
 	for i in range(N):

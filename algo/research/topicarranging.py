@@ -26,7 +26,7 @@ research.report_table([[str(topic.index_id), topic.title] for topic in topics])
 modes = ["hamilton", "tsne", "mds", "dendro"] 
 identical = [i for i in range(N)] 
  
-answers = [["metric", "mode", "PW", "ANR", "OAC", "US"]]
+answers = [["metric", "mode", "PW", "ANR", "OAC", "TOC"]]
 for metric in metrics.metrics_list:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<h2>Метрика %s</h2>" % metric)
@@ -35,10 +35,11 @@ for metric in metrics.metrics_list:
 	answers.append([
 			metric, 
 			"No arranging", 
-			"%.03f" % arr.path_weight(dist, identical),
+			"%.03f" % arr.neigbor_distances_sum(dist, identical),
 			"%.02f" % arr.average_neigbour_rank(dist, identical),
 			"%.02f" % arr.obtuse_angle_conserving(dist, identical),
-			"%.02f" % arr.user_score(ass, identical)
+			"%.02f" % arr.triple_order_conserving(dist, identical),
+			#"%.02f" % arr.user_score(ass, identical)
 		])
 	
 	for mode in modes:
@@ -46,10 +47,11 @@ for metric in metrics.metrics_list:
 		answers.append([
 			metric, 
 			mode, 
-			"%.03f" % arr.path_weight(dist, perm),
+			"%.03f" % arr.neigbor_distances_sum(dist, perm),
 			"%.02f" % arr.average_neigbour_rank(dist, perm),
 			"%.02f" % arr.obtuse_angle_conserving(dist, perm),
-			"%.02f" % arr.user_score(ass, perm)
+			"%.02f" % arr.triple_order_conserving(dist, perm),
+			#"%.02f" % arr.user_score(ass, perm)
 		])
 
 	

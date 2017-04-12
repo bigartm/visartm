@@ -3,7 +3,6 @@ from datasets.models import Dataset, Modality, Term
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from models.models import ArtmModel, Topic, TopicRelated, TopicInTopic, TopTerm
-from visual.models import GlobalVisualization
 from django.contrib.auth.decorators import login_required, permission_required
 import visartm.views as general_views
 import traceback
@@ -127,7 +126,7 @@ def reset_visuals(request):
 	model = ArtmModel.objects.get(id=request.GET['model'])
 	if request.user != model.author:
 		return HttpResponseForbidden("You are not the author")
-	GlobalVisualization.objects.filter(model = model).delete()
+	model.reset_visuals()
 	return general_views.message(request, "Resetted. <a href ='/model?model=" + str(model.id) + "'> <br>Return to model</a>.") 
 
 @permission_required("models.add_artmmodel")
@@ -307,16 +306,21 @@ def model_settings(request):
 		if action == 'parameters':
 			new_threshold_docs = int(request.POST['threshold_docs'])
 			new_threshold_hier = int(request.POST['threshold_hier'])
+			new_max_parents_hier = int(request.POST['max_parents_hier'])
+			
 			
 			if new_threshold_docs != model.threshold_docs:
 				model.threshold_docs = new_threshold_docs
 				model.save()
 				model.extract_docs()
 				
-			if new_threshold_hier != model.threshold_hier:
+			if new_threshold_hier != model.threshold_hier or new_max_parents_hier != model.max_parents_hier:
 				model.threshold_hier = new_threshold_hier
+				model.max_parents_hier = new_max_parents_hier
 				model.save()
 				model.build_hier() 
+				
+			model.reset_visuals()
 		elif action == 'matrices':
 			model.log("Archive uploaded.")
 			archive = request.FILES['archive'] 

@@ -79,11 +79,15 @@ class Research(models.Model):
 			f.write("<p>" + text + "</p>\n")
 	
 	def gca(self, figsize=None):
+		self.figure = self.get_figure(figsize=figsize)
+		return self.figure.gca()
+		
+	def get_figure(self, figsize=None):
 		import matplotlib as mpl
 		mpl.use("Agg")
 		import matplotlib.pyplot as plt 
 		self.figure = plt.figure(figsize=figsize)
-		return self.figure.gca()
+		return self.figure
 	
 	def show_matrix(self, m):
 		self.gca().imshow(m, interpolation = "nearest")
@@ -97,7 +101,8 @@ class Research(models.Model):
 		self.figure.clf()
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
 			f.write("<div align='%s'><img src='pic/%s' width='%d' heigth='%d' /></div>\n" % (align, file_name, width, height))	
-
+		del self.figure
+		
 	def report_table(self, table, format="%s"):
 		with open(self.get_report_file(), "a", encoding="utf-8") as f: 
 			f.write('<table border="1" cellpadding="0" cellspacing="0">\n')

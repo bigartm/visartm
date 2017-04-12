@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load extra_tags %}
+
+{% block title %}{{dataset}} | Temporal cells {% endblock %}
+
+
+{% block content %}
+<div   style="margin-left:-25px;" id = "picture_container" width="100%" height="100%" >
+	<svg id="picture"></svg>
+</div>
+{% endblock %}
+
+{% block right %}  
+	SCC: {{model.spectrum_crosses_count}}
+	<br>
+	NDS: {{model.neighbor_distance_sum}}
+{% endblock %}
+
+{% block javascript %}  
+
+<script src="/static/js/d3.v3.min.js"></script>  
+<script type="text/javascript">
+	 // data
+	{% autoescape off %}
+	{{data}}
+	{% endautoescape %}
+	
+	var svg_width = 0.7*window.innerWidth;
+	var svg_height = window.innerHeight-100;
+	document.getElementById('picture').setAttribute("width", svg_width);
+	document.getElementById('picture').setAttribute("height", svg_height);
+	 
+	var fontSize = 15;
+	var letterWidth = 5;	
+	 
+	var topicLabelWidth = 300;
+	var marginX = 20;
+	
+	var svg = d3.select("#picture")
+				.append("svg");
+	var groupTopicLabels = svg.append("g");
+	var groupLinks = svg.append("g");
+	
+	
+	var topic_labels = groupTopicLabels.selectAll('text')
+		.data(topics) 	 
+		.enter()
+		.append('text')
+		.attr("x", function(d, i) {
+			return (topicLabelWidth + marginX) * d["x"];
+		})
+		.attr("y", function(d, i) {
+			return svg_height * d["y"] + 0.3* fontSize;
+		})
+		.text(function(d, i) {
+			return d["title"];
+		})
+		.attr("font-size", fontSize)
+		.attr("fill", theme.textColor)
+		.attr("text-anchor", "begin")
+		;
+		
+	var links = groupLinks.selectAll("line")
+		.data(links) 	 
+		.enter()
+		.append('line')
+		.attr("x1", function(d) {
+			return (topicLabelWidth + marginX) * d["x1"] + d["text_width"]*0.55*fontSize;
+		})
+		.attr("y1", function(d) {
+			return svg_height * d["y1"] ;
+		})
+		.attr("x2", function(d) {
+			return (topicLabelWidth + marginX) * (d["x1"] + 1);
+		})
+		.attr("y2",  function(d) {
+			return svg_height * d["y2"];
+		})
+		.attr("stroke", theme.textColor)
+		.attr("stroke-width", 2);
+		
+</script>
+{% endblock %}
