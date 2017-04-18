@@ -89,10 +89,7 @@ def create_problem(request):
 	
 	
 	
-@login_required
-def problem_instruction(request):
-	pass
-
+ 
 @login_required
 def get_task(request):
 	problem = AssessmentProblem.objects.get(id = request.GET["problem_id"])	

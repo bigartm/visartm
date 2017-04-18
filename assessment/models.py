@@ -40,8 +40,9 @@ class AssessmentProblem(models.Model):
 
 	# Get superviser/instructions view. Returns view context as dict.
 	def get_view_context(self):
-		return self.get_module().get_problem_context(self)
-		
+		context = self.get_module().get_problem_context(self)
+		context["problem"] = self
+		return context
 	
 	# Create Task instance, initialize it and save it	
 	def create_task(self, request):
