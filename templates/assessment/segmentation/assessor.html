@@ -49,14 +49,18 @@
 				
 
 				<div>
-					<form method="POST">
-						<button type="submit" class="btn btn-success">Завершить</button>
+					<form id="finishForm" method="POST">
+						<button type="submit" class="btn btn-success">Следующий</button>
 						<input type="hidden" name="task_id" value="{{task.id}}" />
 						<input type="hidden" name="finished" />
+						<input id="continue" type="hidden" name="continue" value="true" />
 						{% csrf_token %}
 					</form>
 				</div>
-				 
+				
+				
+				<a onclick="finish();">Завершить оценивание</a>  
+				<br>
 				<a href="/assessment/get_task?problem_id={{task.problem.id}}">Пропустить</a>  
 				 
 					
@@ -244,6 +248,12 @@
 		document.getElementById("action").value = "topic_not_use";
 		document.getElementById("topic_id").value = topic_id;
 		document.getElementById("formMain").submit();
+	}
+	
+	function finish()  {
+		finishForm = document.getElementById("finishForm");
+		document.getElementById("continue").value = "false";
+		finishForm.submit();
 	}
 	
 </script>

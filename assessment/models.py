@@ -167,7 +167,8 @@ class AssessmentTask(models.Model):
 		self.problem.get_module().alter_task(self, POST)
 			
 		
-	def finalize(self, POST): 
+	def finalize(self, POST):
+		#print(str(POST))
 		self.problem.get_module().finalize_task(self, POST)
 		
 	def __str__(self):

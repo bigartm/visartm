@@ -114,7 +114,11 @@ def task(request):
 			task.completion_time = datetime.now()
 			task.status = 2
 			task.save()
-			return general_views.message(request, "Thank you! Assess one more task?<br>" + \
+			
+			if "continue" in request.POST and request.POST["continue"] == "true":
+				return redirect("/assessment/get_task?problem_id=%d" % task.problem.id)
+			else:
+				return general_views.message(request, "Thank you! Assess one more task?<br>" + \
 								"<a href='/assessment/get_task?problem_id=" + str(task.problem.id) + "'>Yes</a>.<br>"     + \
 								"<a href='/dataset?dataset=" + task.problem.dataset.text_id + "'>No</a>.<br>")
 		else:

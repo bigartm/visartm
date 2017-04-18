@@ -11,7 +11,7 @@ import pickle
 import os
 
 def unpack_pickle(input_file, out_folder):
-    with open("hartm.mdl", "rb") as f:
+    with open(input_file, "rb") as f:
         model = pickle.load(f)
         
         theta = model["theta"]
@@ -34,10 +34,11 @@ def unpack_pickle(input_file, out_folder):
             phis.append(phi)
             W, _ = phi.shape
         
-        pd.concat(phis, axis=1).to_pickle("phi")
+        pd.concat(phis, axis=1).to_pickle(os.path.join(out_folder, "phi"))
         
         print("Words: %d. Documents: %d. Topics: %d" % (W, D, T))
         print(docs_index)
         
 if __name__ == "__main__":
-    unpack_pickle(os.path.join(os.getcwd(), "hartm.mdl"), os.getcwd())
+    model_folder = "D:\\visartm\\data\\datasets\\pn_habr\\models\\model_38"
+    unpack_pickle(os.path.join(model_folder, "hartm.mdl"), model_folder)

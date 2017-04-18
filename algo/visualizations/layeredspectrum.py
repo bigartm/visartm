@@ -16,8 +16,9 @@ def visual(model, params):
 	
 	
 	return "topics=" + json.dumps(topics) + ";\n" + \
-		   "links=" + json.dumps(links) + ";\n" 
-
+		   "links=" + json.dumps(links) + ";\n" + \
+		   "lines_count=%d;\n" % model.get_layer_size(model.layers_count)
+		   
 def get_links(topic, links, topics_count):
 	l = topic.layer
 	text_width = len(topic.title)

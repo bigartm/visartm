@@ -207,7 +207,10 @@ class ArtmModel(models.Model):
 					try:
 						term_matrix_id = terms_index[term_text]
 					except:
-						self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
+						try:
+							self.log("WARNING! Word " + term_text + " don't belong to dataset dictionary.")
+						except:
+							self.log("WARNING! Word (coludn't show) don't belong to dataset dictionary.")
 						continue
 					for j in range(topics_count):
 						phi[term_matrix_id][j] = row[1][j]
@@ -786,7 +789,7 @@ class ArtmModel(models.Model):
 			phi_t = self.get_phi().transpose()[self.get_layer_range(layer)]
 			
 			sums = np.sum(phi_t, axis = 1)
-			if (np.max(sums) - np.min(sums)) / np.mean(sums) > 1e-3:
+			if (np.max(sums) - np.min(sums)) / np.mean(sums) > 1e-1:
 				self.log(str(sums))
 				self.log("max=" + str(np.max(sums)))
 				self.log("min=" + str(np.min(sums)))
