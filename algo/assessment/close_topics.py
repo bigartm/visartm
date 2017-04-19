@@ -121,7 +121,7 @@ def get_problem_results(problem):
 		for j in range(N):
 			ret[i][j] *= (1/params["topics"][str(i)])
 	
-	return 0.5*(ret + ret.transpose())
+	return (0.5*(ret + ret.transpose())).tolist()
 	#from assessment.models import AssessmentTask
 	#ans = []
 	#for task in AssessmentTask.objects.filter(problem=problem):

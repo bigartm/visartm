@@ -295,6 +295,7 @@ def get_problem_results(problem):
 	params = json.loads(problem.params) 
 	results = dict()
 	term_index = Term.objects.filter(dataset=problem.dataset).order_by("index_id")
+	term_index = [t.text for t in term_index]
 	result_topics = []
 	
 	for topic in Segmentation_Topic.objects.filter(problem=problem):
@@ -304,12 +305,16 @@ def get_problem_results(problem):
 	results["documents"] = []
 	for task in AssessmentTask.objects.filter(problem=problem):
 		if task.status == 2:
-			task.load_answer()
+			load_answer(task)
 			terms_assessions = task.answer["terms_assessions"]
 			word_index = task.document.get_word_index()
+			#print("Building words")
+			words = [term_index[w[2]] for w in word_index]
 			terms = ""
-			for i in range(len(word_index)):
-				terms += term_index[word_index[i][2]].text + ":" + str(terms_assessions[i]) + " "
+			#print("L:: %d" % len(word_index))
+			for i in range(len(words)):
+				terms += ("%s:%d " % (words[i], terms_assessions[i]))
+				
 			results["documents"].append({
 				"title" : task.document.title,
 				"terms" : terms, 
@@ -326,13 +331,13 @@ def estimate_tasks(problem):
 		
 def load_answer(task):
 	path = os.path.join(task.problem.get_folder(), task.document.text_id)
-	try:
+	try: 
 		with open(path, "r") as f:
 			text = f.read()
 		task.answer = json.loads(text)
 	except:
-		task.answer =  {}
-	 
+		task.answer =  {} 
+	
 def save_answer(task): 
 	path = os.path.join(task.problem.get_folder(), task.document.text_id)
 	with open(path, "w") as f:
