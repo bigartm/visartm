@@ -258,7 +258,7 @@ def initialize_task(task):
 		if segment:
 			topic_id = candidate.get_best_topic()
 			if not topic_id in task.answer["topics_in"]:
-				task.save_answer()
+				save_answer(task)
 				task.alter({"action": "topic_use", "topic_id": str(topic_id)})
 			end_pos = word_index[cur_term + length - 1][0] + word_index[cur_term + length - 1][1] 
 			task.answer["selections"].append([word_index[cur_term][0], end_pos, topic_id])
