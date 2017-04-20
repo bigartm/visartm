@@ -45,8 +45,7 @@ class GlobalVisualization(models.Model):
 			self.finish_time = datetime.now()
 			self.save()
 			
-from django.contrib import admin
-admin.site.register(GlobalVisualization)
+
 
 class Polygon(models.Model):
 	vis = models.ForeignKey(GlobalVisualization, null=False)
@@ -150,6 +149,12 @@ class Polygon(models.Model):
 			ret["docId"] = self.document.id
 		
 		return ret
+		
+		
+		
+from django.contrib import admin
+admin.site.register(GlobalVisualization)
+admin.site.register(Polygon)
 		
 		
 		
