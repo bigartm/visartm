@@ -6,7 +6,7 @@ import os
 
 from datasets.models import Dataset
 from models.models import ArtmModel
-from visual.models import GlobalVisualization
+from visual.models import GlobalVisualization, Polygon
 import visartm.views as general_views
 
 def visual_global(request):
@@ -66,3 +66,12 @@ def example(request, vis_name):
 		return redirect("/visual/global?type=%s&model=%d" % (vis_name, models[0].id))
 	else:
 		return general_views.message(request, "No appropriate model to illustrate this visualization.")
+	
+
+from django.contrib.admin.views.decorators import staff_member_required
+	
+@staff_member_required
+def clear(request):
+	GlobalVisualization.objects.all().delete()
+	Polygon.objects.all().delete()
+	return general_views.message(request, "Cleared.")
