@@ -45,8 +45,11 @@ class GlobalVisualization(models.Model):
 			self.finish_time = datetime.now()
 			self.save()
 			
+from django.contrib import admin
+admin.site.register(GlobalVisualization)
+
 class Polygon(models.Model):
-	vis = models.ForeignKey(GlobalVisualization, null=False)
+	vis = models.ForeignKey(GlobalVisualization, null=True, blank=True)
 	points = models.TextField(null = True)
 	rect_width = models.IntegerField(null=False, default = 0)
 	rect_height = models.IntegerField(null=False, default = 0)
