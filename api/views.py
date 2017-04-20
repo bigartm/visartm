@@ -92,17 +92,17 @@ def get_documents(request):
 	 
 @allow
 def get_polygon_children(request):
-	polygon = Polygon.objects.filter(id = request.GET['id'])[0]
+	polygon = Polygon.objects.get(id=request.GET['id'])
 	polygon.place_children()
 	result = []
-	for child in Polygon.objects.filter(parent = polygon):
+	for child in Polygon.objects.filter(parent=polygon):
 		result.append(child.to_json_object())
 	return HttpResponse(json.dumps(result), content_type='application/json')  
 
 @allow
 def set_parameter(request):
 	if request.GET['entity'] == 'Modality':
-		target = Modality.objects.filter(id = request.GET['id'])[0]
+		target = Modality.objects.get(id=request.GET['id'])
 		if request.GET['param'] == 'is_word':
 			target.is_word = change_boolean(target.is_word, request.GET['value'])
 		elif request.GET['param'] == 'is_tag':

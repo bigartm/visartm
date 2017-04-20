@@ -24,7 +24,7 @@ class GlobalVisualization(models.Model):
 		visual_module = importlib.import_module("algo.visualizations." + params[0])
 		
 		# spec.loader.exec_module(visual_module)
-		result = visual_module.visual(self.model, params)
+		result = visual_module.visual(self, params)
 	
 		data_file_name = os.path.join(self.model.get_visual_folder(), self.name + ".txt")
 		with open(data_file_name, "w", encoding = 'utf-8') as f:
@@ -46,7 +46,7 @@ class GlobalVisualization(models.Model):
 			self.save()
 			
 class Polygon(models.Model):
-	#visualizaton = models.ForeignKey(GlobalVisualization, null = True)
+	vis = models.ForeignKey(GlobalVisualization, null=False)
 	points = models.TextField(null = True)
 	rect_width = models.IntegerField(null=False, default = 0)
 	rect_height = models.IntegerField(null=False, default = 0)
@@ -57,7 +57,7 @@ class Polygon(models.Model):
 	topic = models.ForeignKey(Topic, null = True) 
 	document = models.ForeignKey(Document, null = True) 
 	children_placed = models.BooleanField(null = False, default = False) 
-	
+ 
 	@transaction.atomic
 	def place_children(self):
 		if self.children_placed:
@@ -66,18 +66,23 @@ class Polygon(models.Model):
 		Polygon.objects.filter(parent = self).delete		
 		polygons = []	 
 			 
-		for relation in TopicInTopic.objects.filter(parent = self.topic):
-			polygon = Polygon()
-			polygon.parent = self
-			polygon.topic = relation.child
-			polygons.append(polygon)
-			
-		for document in self.topic.get_documents():
-			polygon = Polygon()
-			polygon.parent = self
-			polygon.document = document 
-			polygons.append(polygon)
-		
+		if self.topic.layer == self.vis.model.layers_count:
+			for document in self.topic.get_documents():
+				polygon = Polygon() 
+				self.vis.model.log("Adding polygon for document")
+				polygon.vis = self.vis
+				polygon.parent = self
+				polygon.document = document 
+				polygons.append(polygon)
+		else:
+			for relation in TopicInTopic.objects.filter(parent=self.topic):
+				self.vis.model.log("Adding polygon for topic")
+				polygon = Polygon()
+				polygon.vis = self.vis
+				polygon.parent = self
+				polygon.topic = relation.child
+				polygons.append(polygon)
+			 
 		if len(polygons) >= 1:
 			self.partition(polygons)			
 			for polygon in polygons: 

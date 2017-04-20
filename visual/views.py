@@ -59,3 +59,10 @@ def visual_global(request):
 						'no_footer': True})				   
 	return render(request, "visual/" + visual_name.split('_')[0] + ".html", context)
  
+ 
+def example(request, vis_name):
+	models = ArtmModel.objects.filter(dataset__is_public=True, dataset__time_provided=True, layers_count__gte=2)
+	if len(models) > 0:
+		return redirect("/visual/global?type=%s&model=%d" % (vis_name, models[0].id))
+	else:
+		return general_views.message(request, "No appropriate model to illustrate this visualization.")

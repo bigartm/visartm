@@ -1,10 +1,9 @@
 from models.models import Topic, TopicInTopic
 import json
 
-def visual(model, params):
-	print("CIRCLES CALLED")
-	root_topic = Topic.objects.filter(model = model, layer = 0)[0]
-	return json.dumps({"children": build_circles(model, root_topic)})	
+def visual(vis, params): 
+	root_topic = Topic.objects.get(model=vis.model, layer=0)
+	return json.dumps({"children": build_circles(vis.model, root_topic)})	
 	
 def build_circles(model, topic):
 	answer = []

@@ -16,8 +16,9 @@ def top_words_html(tw):
 			ret += " "
 	return ret
 
-def visual(model, params): 		
-	group_by = params[1]		# year,month,week,day 
+def visual(vis, params): 	
+	model = vis.model
+	group_by = params[1] 		# year,month,week,day 
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")
 	
 	cells, dates = model.group_matrix(group_by=group_by, named_groups=True)

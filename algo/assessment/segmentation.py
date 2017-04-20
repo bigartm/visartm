@@ -328,7 +328,7 @@ def estimate_tasks(problem):
 	current = len(AssessmentTask.objects.filter(problem=problem, status=1))
 	return problem.dataset.documents_count - ret["done"] - ret["current"]
 		
-		
+# Loads answer data for task (from file at certain location) and stores	it to task.answer
 def load_answer(task):
 	path = os.path.join(task.problem.get_folder(), task.document.text_id)
 	try: 

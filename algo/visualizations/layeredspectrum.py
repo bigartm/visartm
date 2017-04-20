@@ -1,7 +1,8 @@
 from models.models import Topic, TopicInTopic 
 import json
 
-def visual(model, params):
+def visual(vis, params):
+	model = vis.model
 	topics_count = [int(x) for x in model.topics_count.split()]
 	topics = [{
 		"id": topic.id, 

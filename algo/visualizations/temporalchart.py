@@ -1,7 +1,8 @@
 from models.models import Topic, TopicInTopic
 import json
 
-def visual(model, params): 		
+def visual(vis, params): 
+	model = vis.model		
 	group_by = params[1]		# year,month,week,day
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")	
 	topics = [topic.title for topic in topics]

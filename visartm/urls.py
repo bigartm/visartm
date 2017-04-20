@@ -2,8 +2,7 @@ from django.conf.urls import url, include
 from django.contrib import admin
  
 import visartm.views as general_views
-import datasets.views as datasets_views
-import visual.views as visual_views
+import datasets.views as datasets_views 
 import models.views as models_views
 
 
@@ -18,6 +17,7 @@ urlpatterns = [
 	url(r'^assessment/', include('assessment.urls')), 
 	url(r'^research/', include('research.urls')),
 	url(r'^tools/', include('tools.urls')),
+	url(r'^visual/', include('visual.urls')),
 	
 	
 	# general
@@ -35,9 +35,7 @@ urlpatterns = [
 	url(r'^modality$', datasets_views.visual_modality),	
 	url(r'^search$', datasets_views.global_search),	
 	url(r'^document$', datasets_views.visual_document), 
-	
-	# Visualization
-	url(r'^visual/global$', visual_views.visual_global),  
+	 
 	
 	# Models and topics
 	url(r'^topic$', models_views.visual_topic),

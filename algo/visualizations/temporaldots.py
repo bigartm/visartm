@@ -2,7 +2,8 @@ from datasets.models import Document
 from models.models import Topic
 import json 
 
-def visual(model, params): 		 
+def visual(vis, params): 	
+	model = vis.model	 
 	documents = Document.objects.filter(dataset = model.dataset)
 	topics = Topic.objects.filter(model = model, layer = model.layers_count).order_by("spectrum_index")
 	min_time = documents[0].time

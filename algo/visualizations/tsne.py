@@ -5,7 +5,8 @@ import json
 import os
 from sklearn.manifold import TSNE
 
-def visual(model, params):
+def visual(vis, params):
+	model = vis.model
 	print ("Buildig t-SNE visualization for model " + str(model.id) + "...") 
 	tsne_matrix_path = os.path.join(model.get_visual_folder(), "tsne_matrix.npy")
 	

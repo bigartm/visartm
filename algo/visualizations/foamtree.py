@@ -1,13 +1,13 @@
 from models.models import Topic, TopicInTopic
 import json
 		
-def visual(model, params):
-	root_topic = Topic.objects.filter(model = model, layer = 0)[0]
+def visual(vis, params):
+	root_topic = Topic.objects.get(model=vis.model, layer=0)
 	if len(params) > 1 and params[1] == "light":
-		groups = build_foamtree_light(model, root_topic)
+		groups = build_foamtree_light(vis.model, root_topic)
 	else:
-		groups = build_foamtree(model, root_topic)
-	return json.dumps({"groups": groups, "label": model.dataset.name})
+		groups = build_foamtree(vis.model, root_topic)
+	return json.dumps({"groups": groups, "label": vis.model.dataset.name})
 	
 def build_foamtree(model, topic):	
 	answer = []
