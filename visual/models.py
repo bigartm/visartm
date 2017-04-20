@@ -48,7 +48,7 @@ class GlobalVisualization(models.Model):
 
 
 class Polygon(models.Model):
-	vis = models.ForeignKey(GlobalVisualization, null=False)
+	#vis = models.ForeignKey(GlobalVisualization, null=False)
 	points = models.TextField(null = True)
 	rect_width = models.IntegerField(null=False, default = 0)
 	rect_height = models.IntegerField(null=False, default = 0)
