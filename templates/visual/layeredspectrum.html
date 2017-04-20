@@ -43,7 +43,7 @@
 	var groupTopicLabels = svg.append("g");
 	var groupLinks = svg.append("g");
 	
-	
+ 
 	var topic_labels = groupTopicLabels.selectAll('text')
 		.data(topics) 	 
 		.enter()
@@ -60,30 +60,33 @@
 		.attr("font-size", fontSize)
 		.attr("fill", theme.textColor)
 		.attr("text-anchor", "begin")
-		;
-		
-	var links = groupLinks.selectAll("line")
+		; 
+	var link_lines = groupLinks.selectAll("line")
 		.data(links) 	 
 		.enter()
-		.append('line')
+		.append('line') 
 		.attr("x1", function(d) {
-			return getLabelX(d["x1"]) + d["text_width"]*0.55*fontSize;
+			return  getLabelX(d["x1"]) + d["text_width"]*0.55*fontSize;
 		})
 		.attr("y1", function(d) {
-			return svg_height * d["y1"] ;
+			return  svg_height * d["y1"] ;
 		})
 		.attr("x2", function(d) {
-			return getLabelX(d["x1"]+1);
+			return  getLabelX(d["x1"]+1);
 		})
 		.attr("y2",  function(d) {
-			return svg_height * d["y2"];-	
+			return  svg_height * d["y2"];
+		})
+		.attr("stroke", "black")
 		.attr("stroke-width", 2);
-		
+	 
 	function getLabelX(x) {
 		if (x==0) return 0;
 		if (x==1) return 100;
 		if (x==2) return 550;
 		if (x==3) return 1000;
 	}
+	
+	
 </script>
 {% endblock %}

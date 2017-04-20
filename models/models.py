@@ -281,11 +281,34 @@ class ArtmModel(models.Model):
 				for i in range(topics_count):
 					theta[i][doc_matrix_id] = column[i]
 						 
-						 
+		
+		self.log("Checking matrix theta...")		
+		ones = np.sum(theta, axis=0)
+		if (np.max(ones) > 1 + 1e3 or np.min(ones) < 1 - 1e3):
+			self.log(str(ones))
+			raise ValueError("Fuck! Not stochastic!")
+		
 		self.log("Saving matrix theta...")		
 		np.save(os.path.join(self.get_folder(), "theta.npy"), theta)	
 		self.log("Matrix theta saved...")	
-
+		
+		self.log("Counting topics probabilities using matrix theta")
+		pt = np.sum(theta, axis=1) / self.dataset.documents_count
+		np.save(os.path.join(self.get_folder(), "pt.npy"), pt)	
+		
+		
+	# Get probabilities of topics on certain layer
+	def get_pt(self, layer=1):
+		if layer == 0:
+			return np.array([1])
+		path = os.path.join(self.get_folder(), "pt.npy")
+		if not os.path.exists(path):
+			self.gather_theta()
+		pt = np.load(path)
+		ret = pt[self.get_layer_range(layer)]
+		self.log("p(t): " + str(ret))
+		return ret
+		
 	@transaction.atomic
 	def build_hier(self):
 		self.log("Building topics hierarchy")
@@ -301,6 +324,8 @@ class ArtmModel(models.Model):
 			relation.parent_id = self.topics_index[0][0]
 			relation.child_id = topic_id
 			relation.save()		
+		
+		pt = [self.get_pt(layer=layer) for layer in range(self.layers_count+1)]
 			
 			
 		for bottom_layer in range (2, self.layers_count + 1):
@@ -308,24 +333,25 @@ class ArtmModel(models.Model):
 			psi = self.get_psi(top_layer)
 			self.log("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
 			for bottom_topic_id in range(topics_count[bottom_layer]):
-				best_top_topic_id = np.argmax(psi[bottom_topic_id])
+				p = (psi[bottom_topic_id] * pt[top_layer])/pt[bottom_layer][bottom_topic_id] # Conditional probabilities(parent_topic | child_topic)
+				best_top_topic_id = np.argmax(p)
 				relation = TopicInTopic()
 				relation.model = self
 				relation.parent_id = self.topics_index[top_layer][best_top_topic_id]
 				relation.child_id = self.topics_index[bottom_layer][bottom_topic_id]
-				relation.weight = psi[bottom_topic_id][best_top_topic_id]
+				relation.weight = p[best_top_topic_id]
 				relation.is_main = True
 				relation.save()
 				
 				if threshold_hier <= 0.5 and self.max_parents_hier > 1:
-					pot_parents = np.argsort(psi[bottom_topic_id])[-self.max_parents_hier:]
-					for top_topic_id in np.argsort(psi[bottom_topic_id])[-self.max_parents_hier:]:
-						if psi[bottom_topic_id][top_topic_id] > threshold_hier and top_topic_id != best_top_topic_id:
+					pot_parents = np.argsort(p)[-self.max_parents_hier:]
+					for top_topic_id in np.argsort(p)[-self.max_parents_hier:]:
+						if p[top_topic_id] > threshold_hier and top_topic_id != best_top_topic_id:
 							relation = TopicInTopic()
 							relation.model = self
 							relation.parent_id = self.topics_index[top_layer][top_topic_id]
 							relation.child_id = self.topics_index[bottom_layer][bottom_topic_id]
-							relation.weight = psi[bottom_topic_id][top_topic_id]
+							relation.weight = p[top_topic_id]
 							relation.is_main = False
 							relation.save()
 			

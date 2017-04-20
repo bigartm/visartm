@@ -70,15 +70,13 @@ class Polygon(models.Model):
 			 
 		if self.topic.layer == self.vis.model.layers_count:
 			for document in self.topic.get_documents():
-				polygon = Polygon() 
-				self.vis.model.log("Adding polygon for document")
+				polygon = Polygon()  
 				polygon.vis = self.vis
 				polygon.parent = self
 				polygon.document = document 
 				polygons.append(polygon)
 		else:
-			for relation in TopicInTopic.objects.filter(parent=self.topic):
-				self.vis.model.log("Adding polygon for topic")
+			for relation in TopicInTopic.objects.filter(parent=self.topic): 
 				polygon = Polygon()
 				polygon.vis = self.vis
 				polygon.parent = self

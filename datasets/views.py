@@ -578,15 +578,18 @@ def global_search(request):
 		if len(search_query) < 3:
 			context['message'] = "Query is too short."
 		else:
-			documents_file_name = Document.objects.filter(text_id__icontains = search_query) 
+			docs_safe = Document.objects_safe(request)
+			terms_safe = Term.objects_safe(request)
+			
+			documents_file_name = docs_safe.filter(text_id__icontains=search_query) 
 			context["documents_file_name"] = documents_file_name
 			total_found += len(documents_file_name)
 			
-			documents_title = Document.objects.filter(title__icontains = search_query) 
+			documents_title = docs_safe.filter(title__icontains = search_query) 
 			context["documents_title"] = documents_title
 			total_found += len(documents_title)
 			
-			terms = Term.objects.filter(text__icontains = search_query) 
+			terms = terms_safe.filter(text__icontains = search_query) 
 			if len(terms) != 0:
 				context["terms"] = terms
 				total_found += len(terms)
@@ -599,11 +602,11 @@ def global_search(request):
 			parsed = search_query.split()
 			if len(parsed) > 1:
 				query_length = len(parsed)
-				terms_try = Term.objects.filter(text=parsed[0])
+				terms_try = terms_safe.filter(text=parsed[0])
 				documents = []
 				for term in terms_try:
 					try:
-						other_terms = [Term.objects.get(dataset=term.dataset, text=parsed[i]).index_id for i in range(1, query_length)]
+						other_terms = [terms_safe.get(dataset=term.dataset, text=parsed[i]).index_id for i in range(1, query_length)]
 					except:
 						continue
 					conc = [term.index_id] + other_terms	

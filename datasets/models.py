@@ -300,6 +300,13 @@ class Dataset(models.Model):
 	#	return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "tgi.npy"))
 	
 	
+	def objects_safe(request):
+		if request.user.is_anonymous():
+			return Dataset.objects.filter(is_public=True)
+		else:
+			return Dataset.objects.filter(is_public=True) |\
+				Document.objects.filter(is_public=False, dataset__owner=request.user)
+		
 	
 	'''
 	def check_can_load(self):
@@ -483,6 +490,13 @@ class Document(models.Model):
 				self.text += term + " "
 		self.bag_of_words = bow.to_bytes(self.dataset.terms_index)
 		self.unique_terms_count = len(self.bag_of_words) // 7
+	
+	def objects_safe(request):
+		if request.user.is_anonymous():
+			return Document.objects.filter(dataset__is_public=True)
+		else:
+			return Document.objects.filter(dataset__is_public=True) | \
+				Document.objects.filter(dataset__is_public=False, dataset__owner=request.user)
 	
 	def count_term(self, iid):
 		bow = self.bag_of_words
@@ -688,6 +702,12 @@ class Term(models.Model):
 		for i in range (len(self.documents) // 6):
 			doc_iid = struct.unpack('I', self.documents[6*i: 6*i+4])[0]
 			yield Document.objects.get(dataset_id=self.dataset_id, index_id=doc_iid) 
+	
+	def objects_safe(request):
+		if request.user.is_anonymous():
+			return Term.objects.filter(dataset__is_public=True)
+		return Term.objects.filter(dataset__is_public=True) | \
+			Term.objects.filter(dataset__is_public=False, dataset__owner=request.user)
 	
 from django.contrib import admin
 admin.site.register(Dataset)
