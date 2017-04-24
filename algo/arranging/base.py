@@ -108,9 +108,7 @@ def AD(dist, perm):
 	
 	
 	
-	
-	
-def user_score(assessment, perm):	
+def user_penalty(assessment_C, perm):	
 	N = len(perm)
 	rev = [i for i in range(N)]
 	for i in range(N):
@@ -119,5 +117,18 @@ def user_score(assessment, perm):
 	ans = 0
 	for i in range(N):
 		for j in range(i+1, N):
-			ans += assessment[i][j] * abs(rev[i] - rev[j])
-	return ans
+			ans += assessment_C[i][j] * (abs(rev[i] - rev[j]) -1)
+	return ans	
+	
+	
+	
+def user_metric_correlation(assessment_C, dist):
+	N = dist.shape[0]
+	C = []
+	D = []
+	for i in range(N):
+		for j in range(i+1, N):
+			C.append(assessment_C[i][j])
+			D.append(dist[i][j])
+	
+	return np.corrcoef(np.array(C), np.array(D))

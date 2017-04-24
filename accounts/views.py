@@ -47,9 +47,14 @@ def signup(request):
 	password_repeat = request.POST['password_repeat']
 	email = request.POST['email']
 	
-	captha_response = request.POST['captcha']
+	
 	
 	if not settings.DEBUG:
+		if 'captcha' in request.POST:
+			captha_response = request.POST['captcha']
+		else:
+			captha_response = ""
+			
 		if not captha_response.lower() == 'additive':
 			return general_views.message(request, "You haven't passed Turing test.")
 	
