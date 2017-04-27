@@ -250,7 +250,7 @@ class HamiltonPath:
 		lib_path = os.path.join(c_path, "arrange.so")
 		
 		if not os.path.exists(lib_path) or \
-			(os.path.getctime(source_path) > os.path.getctime(lib_path)):
+			(os.path.getmtime(source_path) > os.path.getmtime(lib_path)):
 
 			if os.system("gcc -shared -fPIC -o %s %s" % (lib_path, source_path)):
 				raise RuntimeError("Unable to build library arrange.c")
