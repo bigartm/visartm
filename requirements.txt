@@ -10,6 +10,7 @@ packaging==16.8
 pandas==0.19.2
 protobuf==3.2.0
 psycopg2==2.6.2
+PuLP==1.6.5
 pymorphy2==0.8
 pymorphy2-dicts==2.4.393442.3710985
 pyparsing==2.1.10
