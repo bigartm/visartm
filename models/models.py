@@ -709,7 +709,7 @@ class ArtmModel(models.Model):
 		self.reset_visuals()
 	 
 	
-	def arrange_topics_hierarchical(self, beta=0.8):
+	def arrange_topics_hierarchical(self, beta=0.8, cross_min_mode="baricenter"):
 		if self.layers_count == 1:
 			raise ValueError("Model is flat!")
 		
@@ -741,11 +741,19 @@ class ArtmModel(models.Model):
 			topic.save() 
 			
 		# Arranging higher layers, using mass center principle
+		from algo.arraging.crossmin import CrossMinimizer 
 		for layer_id in range(self.layers_count-1, 0, -1):
-			pos = []
-			for topic in self.topics_index[layer_id]:
-				pos.append(np.mean([rel.child.spectrum_index for rel in TopicInTopic.objects.filter(parent=topic)]))
-			idx = np.argsort(pos)
+			N1 = self.get_layer_size(layer_id)
+			N2 = self.get_layer_size(layer_id+1)
+			
+			A = np.zeros((N1, N2))
+			for i in range(N1):
+				topic = self.topics_index[i]
+				for rel in TopicInTopic.objects.filter(parent=topic):
+					A[i][rel.child.spectrum_index] = 1
+			
+			cm = CrossMinimizer(A)
+			idx = A.solve(mode=cross_min_mode)
 			
 			for i in range(self.get_layer_size(layer_id)):
 				topic = self.topics_index[layer_id][idx[i]]
