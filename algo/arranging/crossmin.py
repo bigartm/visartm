@@ -28,13 +28,25 @@ class CrossMinimizer:
 				else:
 					self.C[x][y] = sum([self.A[x][j] * A_sum[y][j-1] for j in range(1,self.N2)])
 		
-	def solve(self, mode="split"):
+	def solve(self, mode="tryall", model=None):
+		if mode == "tryall":
+			best = self.N1*self.N1*self.N2*self.N2
+			for new_mode in ["baricenter", "median", "split10", "binopt"]:
+				perm = self.solve(mode=new_mode, model=model)
+				cc = self.cross_count(perm)
+				model.log("%s %d" % (new_mode, cc))
+				if cc < best:
+					best = cc
+					ans = perm
+			return ans
 		if mode == "baricenter":
 			return self.solve_baricenter()
 		elif mode == "median":
 			return self.solve_median()
 		elif mode == "split":
 			return self.solve_split()
+		elif mode == "split10":
+			return self.solve_split10()
 		elif mode == "binopt":
 			return self.solve_binopt()
 		else:
@@ -46,7 +58,17 @@ class CrossMinimizer:
 	def solve_median(self):
 		return np.argsort([np.median([j for j in range(self.N2) if self.A[i][j]==1]) for i in range(self.N1)])
 		
-
+		
+	def solve_split10(self):
+		best = self.N1*self.N1*self.N2*self.N2
+		for i in range(10):
+			perm = self.solve_split()
+			cc = self.cross_count(perm) 
+			if cc < best:
+				best = cc
+				ans = perm
+		return ans
+			
 	def solve_split_rec(self, i, j):
 		if i>=j:
 			return
@@ -111,7 +133,7 @@ class CrossMinimizer:
 					b[ct_cnt+1] = 0
 					ct_cnt+=2
 					 
-		from binopt import minimize_binary_lp
+		from algo.arranging.binopt import minimize_binary_lp
 		ans = minimize_binary_lp(A, b, c)
 		print("ans", ans)
 		X = np.zeros((self.N1, self.N1))

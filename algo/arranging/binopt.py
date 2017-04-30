@@ -1,9 +1,17 @@
 import numpy as np
 import time
+import os
 
-# minimizes c*x, where x is in {0,1}^N;
-# under constraints Ax <= b
-# returns optimal x
+
+def monom(idx, value):
+    if (value>0):
+        return "+ %d x_%d " % (value, idx)
+    elif (value<0):
+        return "- %d x_%d " % (-value, idx)
+    else:
+        return ""
+
+
 def minimize_binary_lp(A,b,c): 
     import pulp
     M, N = A.shape
@@ -13,7 +21,7 @@ def minimize_binary_lp(A,b,c):
     if (c.shape != (N,)):
         raise ValueError("Bad c shape")
     
-    print("Problem creation...")
+    
     # Create problem
     prob = pulp.LpProblem("Problem", pulp.LpMinimize)     
     
@@ -22,17 +30,14 @@ def minimize_binary_lp(A,b,c):
     x = pulp.LpVariable.dicts("x",names,0,1,pulp.LpInteger)
     
     # Objective function
-    prob += sum([c[i]*x[str(i)] for i in range(N)]),""
+    prob += pulp.lpSum([c[i]*x[str(i)] for i in range(N)]),""
     
     # Constraints
     for i in range(M):
-        prob += sum([A[i][j]*x[names[j]] for j in range(N)]) <= b[i], ""
+        prob.constraints["C%d" % i] = pulp.LpAffineExpression([(x[str(j)], A[i][j]) for j in range(N)]) <= b[i]
     
     # Solution
-    #prob.writeLP("lp.lp")
-    #start_time = time.time() 
     prob.solve()
-    #print("Time: %fs" % (time.time()-start_time))
     return np.array([pulp.value(x[names[i]]) for i in range(N)])
 
 if __name__ == "__main__":
