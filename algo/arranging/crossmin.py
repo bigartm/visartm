@@ -135,7 +135,7 @@ class CrossMinimizer:
 					 
 		from algo.arranging.binopt import minimize_binary_lp
 		ans = minimize_binary_lp(A, b, c)
-		print("ans", ans)
+		#print("ans", ans)
 		X = np.zeros((self.N1, self.N1))
 		for i in range(self.N1):
 			for j in range(i+1, self.N1):
