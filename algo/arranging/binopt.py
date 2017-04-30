@@ -1,17 +1,8 @@
 import numpy as np
-import time
-import os
 
-
-def monom(idx, value):
-    if (value>0):
-        return "+ %d x_%d " % (value, idx)
-    elif (value<0):
-        return "- %d x_%d " % (-value, idx)
-    else:
-        return ""
-
-
+# minimizes c*x, where x is in {0,1}^N;
+# under constraints Ax <= b
+# returns optimal x
 def minimize_binary_lp(A,b,c): 
     import pulp
     M, N = A.shape
