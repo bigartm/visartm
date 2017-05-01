@@ -552,7 +552,8 @@ def download_vw(request):
 	
 	vw_path = os.path.join(dataset.get_folder(), "vw.txt")
 	content = open(vw_path, 'r', encoding='utf-8').read()
-	response = StreamingHttpResponse(content) 
+	#response = StreamingHttpResponse(content) 
+	response = HttpResponse(content, content_type='text/plain')
 	response['Content-Disposition'] = 'attachment; filename=%s.vw.txt' % dataset.text_id 
 	return response
 	
