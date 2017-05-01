@@ -132,8 +132,14 @@ class CrossMinimizer:
 					A[ct_cnt+1][ctr[i][k]] = 1
 					b[ct_cnt+1] = 0
 					ct_cnt+=2
-					 
-		from algo.arranging.binopt import minimize_binary_lp
+					
+					
+					
+		try:			 
+			from algo.arranging.binopt import minimize_binary_lp
+		except:
+			from binopt import minimize_binary_lp
+			
 		ans = minimize_binary_lp(A, b, c)
 		#print("ans", ans)
 		X = np.zeros((self.N1, self.N1))

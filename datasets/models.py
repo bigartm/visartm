@@ -653,6 +653,7 @@ class Document(models.Model):
 				conc += pref + sentence[fi: li] + suf + "<br>"
 		
 		return conc[:-4]
+		return conc[:-4]
 	
 	def __str__(self):
 		return self.title

@@ -25,7 +25,7 @@ def minimize_binary_lp(A,b,c):
     
     # Constraints
     for i in range(M):
-        prob.constraints["C%d" % i] = pulp.LpAffineExpression([(x[str(j)], A[i][j]) for j in range(N)]) <= b[i]
+        prob.constraints["C%d" % i] = pulp.LpAffineExpression([(x[str(j)], A[i][j]) for j in range(N) if A[i][j]!=0]) <= b[i]
     
     # Solution
     prob.solve()

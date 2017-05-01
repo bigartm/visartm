@@ -1,5 +1,7 @@
 class UciReader:
-	def __init__(self, docword_file, vocab_file):
+	def __init__(self, docword_file, vocab_file, logger=None):
+		self.logger = logger
+		self.log("Start UciReader...")
 		self.vocab = dict()
 		with open(vocab_file, "r", encoding = "utf-8") as f:
 			i = 1
@@ -12,7 +14,8 @@ class UciReader:
 					self.vocab[i] = (line, "@default_class")
 				i+=1
 		self.docword_file = docword_file
-	
+		self.log("UCI read OK")
+		
 	def write_doc(self):
 		self.out.write("%06d.txt " % self.cur_doc_id)
 		for modality, string in self.bow.items():
@@ -35,6 +38,8 @@ class UciReader:
 				if doc_id != self.cur_doc_id:
 					self.write_doc()
 					self.cur_doc_id = doc_id
+					if self.cur_doc_id % 1000 == 0:
+						self.log(str(self.cur_doc_id))
 				word, modality = self.vocab[int(parsed[1])]
 				count = parsed[2]
 				write = word
@@ -47,13 +52,16 @@ class UciReader:
 					self.bow[modality] += write + ' '
 				except:
 					self.bow[modality] = write + ' '
-				#if self.cur_doc_id == 100:
-				#	break
+			
 		self.write_doc()
 		self.out.close()
+	
+	def log(self, s):
+		if self.logger:
+			self.logger.log(s)
 
-def uci2vw(docword_file_name, vocab_file_name, vw_file_name):
-	uci = UciReader(docword_file_name, vocab_file_name)
+def uci2vw(docword_file_name, vocab_file_name, vw_file_name, logger=None):
+	uci = UciReader(docword_file_name, vocab_file_name, logger=logger)
 	uci.save_vw(vw_file_name)		
 		
 import os

@@ -541,12 +541,29 @@ def visual_modality(request):
 	context["terms"] = Term.objects.filter(modality = modality).order_by("-token_tf")[:100]
 	return render(request, 'datasets/modality.html', Context(context)) 
 	
+
+def download_vw(request):
+	dataset = Dataset.objects.get(id = request.GET['dataset_id'])
+	
+	if not dataset.check_access(request.user):
+		return HttpResponseForbidden()
+	
+	from django.http import StreamingHttpResponse
+	
+	vw_path = os.path.join(dataset.get_folder(), "vw.txt")
+	content = open(vw_path, 'r', encoding='utf-8').read()
+	response = StreamingHttpResponse(content) 
+	response['Content-Disposition'] = 'attachment; filename=%s.vw.txt' % dataset.text_id 
+	return response
+	
 def dump(request):
 	dataset = Dataset.objects.get(id = request.GET['dataset_id'])
+	
+	if not dataset.check_access(request.user):
+		return HttpResponseForbidden()
+	
 	import zipfile
 	import io
-	 
-	
 	
 	outfile = io.BytesIO()
 	folder = dataset.get_folder()

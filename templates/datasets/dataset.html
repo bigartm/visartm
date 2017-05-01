@@ -149,16 +149,20 @@
 	Number of terms: {{dataset.terms_count}}<br>
 	Language: {{dataset.language}}<br>
 	Created: {{dataset.creation_time}}<br>
-	
+	<hr>
 
 	{% if request.user == dataset.owner %}
-		<hr>
+		
 		<a href = "/datasets/reload?dataset={{dataset.text_id}}">Reload</a><br>
 		<a href = "/datasets/delete?id={{dataset.id}}">Delete</a><br>
 		<a href = "/research/create?dataset_id={{dataset.id}}">Research</a><br>
+		<hr>
 	{% endif %}
-	<a href = "/datasets/dump?dataset_id={{dataset.id}}">Dump</a><br>
-
+	
+	<h4>Downloads</h4>
+	
+	<a href = "/datasets/dump?dataset_id={{dataset.id}}">Full dump</a><br>
+	<a href = "/datasets/download_vw?dataset_id={{dataset.id}}">Vowpal wabbit</a>
 	
 	<hr>
 	{% if documents %}

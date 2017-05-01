@@ -6,6 +6,7 @@ urlpatterns = [
 	url(r'^create$', datasets_views.dataset_create),
 	url(r'^delete$', datasets_views.dataset_delete),
 	url(r'^dump$', datasets_views.dump), 
+	url(r'^download_vw$', datasets_views.download_vw), 
 	url(r'^document_all_topics$', datasets_views.document_all_topics), 
 	url(r'^document_segments$', datasets_views.document_segments), 
 ]

@@ -47,6 +47,10 @@ def vw2uci(request):
 		
 	return render(request, 'tools/vw2uci.html')
 
+class Logger:
+	def log(self, s):
+		print(s)
+	
 def uci2vw(request):
 	if request.method == 'POST': 		
 		with get_temp_folder() as folder:
@@ -65,7 +69,12 @@ def uci2vw(request):
 				for chunk in request.FILES['vocab'].chunks():
 					f.write(chunk)
 			
-			conv.uci2vw(docword_file, vocab_file, output_file)
+			if settings.DEBUG:
+				logger = Logger()
+			else:
+				logger = None
+			
+			conv.uci2vw(docword_file, vocab_file, output_file, logger=logger)
 			
 			with open(output_file) as f:
 				response = HttpResponse(f.read(), content_type='application/octet-stream')

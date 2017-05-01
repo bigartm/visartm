@@ -54,13 +54,11 @@ def corrected_average_neigbour_rank(dist, perm):
 			
 def average_neigbour_rank(dist, perm):
 	N = dist.shape[0]
-	ranks = []
-	ranks.append(rank(dist, perm[1], perm[0]))
-	for i in range(1,N-1): 
+	ranks = [] 
+	for i in range(1,N): 
 		ranks.append(rank(dist,perm[i-1],perm[i]))
-		ranks.append(rank(dist,perm[i+1],perm[i]))
-	
-	ranks.append(rank(dist, perm[N-2], perm[N-1]))
+		ranks.append(rank(dist,perm[i],perm[i-1])) 
+		
 	return np.mean(ranks)
 		
 def obtuse_angle_conserving(dist, perm):
@@ -85,18 +83,30 @@ def triple_order_conserving(dist, perm):
 					
 	return (6.0 * ctr) / (N * (N-1) * (N-2))
 	
-def AD(dist, perm):
+def distance_distance_curve(dist, perm):
+	N = dist.shape[0]
+	
+	ans = np.zeros(N)
+	for l in range(N):
+		for i in range(0, N - l):
+			ans[l] += avg_cos[perm[i]][perm[i+l]]
+		ans[l] /= (N - l)
+
+	return ans	
+	
+def cosine_distance_curve(dist, perm):
 	N = dist.shape[0]
 	avg_cos = np.zeros(N,N)
 	for i in range(N):
 		for j in range(i, N):
 			sum = 0
 			for k in range(N):
-				A = dist[i][k]
-				B = dist[j][k]
-				C = dist[i][j]
-				sum += (A*A+B*B-C*C) / (2*A*B)  
-			avg_cos[i][j] = sum / N
+				if k != i and k!=j:
+					A = dist[i][k]
+					B = dist[j][k]
+					C = dist[i][j]
+					sum += (A*A+B*B-C*C) / (2*A*B)  
+			avg_cos[i][j] = sum / (N-2)
 	
 	ans = np.zeros(N)
 	for l in range(N):
