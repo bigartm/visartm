@@ -145,5 +145,5 @@ def user_metric_correlation(assessment_C, dist):
 	D = np.array(D)
 	C = C - np.mean(C)
 	D = D - np.mean(D)
-	return np.abs(np.dot(C,D)) / np.sqrt(np.dot(C,C) * np.dot(D,D))
+	return -np.dot(C,D) / np.sqrt(np.dot(C,C) * np.dot(D,D))
 	

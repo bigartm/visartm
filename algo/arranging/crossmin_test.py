@@ -3,10 +3,10 @@ import time
 from crossmin import CrossMinimizer
 import matplotlib.pyplot as plt
 
-
+            
 def cm_test(N1, N2):
     A = np.zeros((N1,N2))
-    for i in range(N1*N2//20):
+    for i in range((N1*N2)//100):
         i1 = np.random.randint(0, N1)
         i2 = np.random.randint(0, N2)
         A[i1][i2]=1
@@ -14,50 +14,73 @@ def cm_test(N1, N2):
     cm = CrossMinimizer(A)
     
     ans = {}
-    elapsed = {}
-    for mode in ["baricenter", "median", "split", "split10", "binopt"]:
+    elapsed = {} 
+    for mode in ["baricenter", "median", "split", "split10", "split10N", "binopt_fast"]:
         start_time = time.time()
         p = cm.solve(mode=mode)
         elapsed[mode] = time.time() - start_time
         ans[mode] = cm.cross_count(p)
-    return  ans, elapsed
+    return ans, elapsed
 
 
-N1_range = range(5,50)
-time_chart = []
-bc_chart = []
+N1_range = range(5,101)
+#time_chart0 = []
+time_chart1 = []
+time_chart2 = []
+#bf_chart = []
+bc_chart = [] 
 md_chart = []
 sp_chart = []
-sp10_chart = []
+#sp10_chart = []
+sp10N_chart = []
+
 
 for N1 in N1_range:
-    ans, elapsed = cm_test(N1,200)
-    time_chart.append(elapsed["binopt"])
-    bc_chart.append(ans["baricenter"]/ ans["binopt"])
-    md_chart.append(ans["median"]/ ans["binopt"])
-    sp_chart.append(ans["split"]/ ans["binopt"])
-    sp10_chart.append(ans["split10"]/ ans["binopt"])
+    ans, elapsed = cm_test(N1,500)
+    #time_chart0.append(elapsed["binopt"])
+    time_chart1.append(elapsed["binopt_fast"])
+    time_chart2.append(elapsed["split10N"])
+    
+    #time_chart2.append(elapsed["opt"]) 
+    
+    #bf_chart.append(ans["binopt"]/ ans["binopt_fast"])
+    bc_chart.append(ans["baricenter"]/ ans["binopt_fast"])
+    md_chart.append(ans["median"]/ ans["binopt_fast"])
+    sp_chart.append(ans["split"]/ ans["binopt_fast"])
+    #sp10_chart.append(ans["split10"]/ ans["binopt_fast"])
+    sp10N_chart.append(ans["split10N"]/ ans["binopt_fast"])
+    
     print(N1)
     
 
-fig = plt.figure()    
+fig = plt.figure(figsize=(10,5))    
 ax = fig.gca()
-ax.plot(N1_range, time_chart)
+#ax.plot(N1_range, time_chart0, label="Pulp Overall")
+ax.plot(N1_range, time_chart1, label="CBC MILP Solver")
+ax.plot(N1_range, time_chart2, label="QuickSort-10N")
 ax.set_xlabel("N")
-ax.set_ylabel("Binopt Time, s")
+ax.set_ylabel("Time, s")
+ax.set_title("SCC minimizing time")
+lgd = ax.legend(loc='upper left')
+fig.savefig("scc-time.png")
 fig.show()
 
 
-fig = plt.figure()    
-ax = fig.gca()
+fig = plt.figure(figsize=(10,5))    
+ax = fig.gca() 
+#ax.plot(N1_range, bf_chart, label = "Binopt")
+
 ax.plot(N1_range, bc_chart, label = "Baricenter")
 ax.plot(N1_range, md_chart, label = "Median")
-ax.plot(N1_range, sp_chart, label = "Split")
-ax.plot(N1_range, sp10_chart, label = "Split-10")
+ax.plot(N1_range, sp_chart, label = "QuickSort")
+#ax.plot(N1_range, sp10_chart, label = "Split-10")
+ax.plot(N1_range, sp10N_chart, label = "QuickSort-10N")
 
 ax.set_xlabel("N")
-ax.set_ylabel("Quality")
-lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+ax.set_ylabel("Error")
+ax.set_title("SCC minimizing quality")
+lgd = ax.legend(loc='upper left')# , bbox_to_anchor=(1, 0.5))
+fig.savefig("scc-quality.png")
 fig.show()
 
 

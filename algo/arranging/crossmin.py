@@ -40,10 +40,10 @@ class CrossMinimizer:
 					ans = perm
 			return ans
 		if mode == "auto":
-			if self.N1 <= 25:
-				return self.solve_binopt()
+			if self.N1 <= 50:
+				return self.solve_binopt(use_pulp=False)
 			else:
-				return self.solve_split_repeat(10)
+				return self.solve_split_repeat(10*self.N1)
 		if mode == "baricenter":
 			return self.solve_baricenter()
 		elif mode == "median":
@@ -52,8 +52,12 @@ class CrossMinimizer:
 			return self.solve_split()
 		elif mode == "split10":
 			return self.solve_split_repeat(10)
+		elif mode == "split10N":
+			return self.solve_split_repeat(10*self.N1)
 		elif mode == "binopt":
-			return self.solve_binopt()
+			return self.solve_binopt(use_pulp=True)
+		elif mode == "binopt_fast":
+			return self.solve_binopt(use_pulp=False)	
 		else:
 			raise ValueError("Unknown mode")
 		
@@ -106,7 +110,7 @@ class CrossMinimizer:
 		return self.ans
 	
 		
-	def solve_binopt(self): 
+	def solve_binopt(self, use_pulp=True): 
 		ctr = np.zeros((self.N1, self.N1), dtype=np.int32)
 		counter = 0 
 		for i in range(self.N1):
@@ -116,7 +120,7 @@ class CrossMinimizer:
 		
 		N = self.N1*(self.N1-1)//2
 		M = self.N1*(self.N1-1)*(self.N1-2)//3
-		A = np.zeros((M,N))
+		A = [0 for i in range(M)]
 		b = np.zeros(M)
 		c = np.zeros(N)
 		
@@ -128,13 +132,9 @@ class CrossMinimizer:
 		for i in range(self.N1):
 			for j in range(i+1, self.N1):
 				for k in range(j+1, self.N1):
-					A[ct_cnt][ctr[i][j]] = 1
-					A[ct_cnt][ctr[j][k]] = 1
-					A[ct_cnt][ctr[i][k]] = -1
+					A[ct_cnt] = {ctr[i][j] : 1, ctr[j][k] : 1, ctr[i][k] : -1}
+					A[ct_cnt+1] = {ctr[i][j] : -1, ctr[j][k] : -1, ctr[i][k] : 1}
 					b[ct_cnt] = 1
-					A[ct_cnt+1][ctr[i][j]] = -1
-					A[ct_cnt+1][ctr[j][k]] = -1
-					A[ct_cnt+1][ctr[i][k]] = 1
 					b[ct_cnt+1] = 0
 					ct_cnt+=2
 					
@@ -145,8 +145,9 @@ class CrossMinimizer:
 		except:
 			from binopt import minimize_binary_lp
 			
-		ans = minimize_binary_lp(A, b, c)
-		#print("ans", ans)
+		
+		ans = minimize_binary_lp(A, b, c, use_pulp=use_pulp)
+		
 		X = np.zeros((self.N1, self.N1))
 		for i in range(self.N1):
 			for j in range(i+1, self.N1):
