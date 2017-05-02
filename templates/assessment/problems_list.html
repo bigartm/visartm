@@ -3,8 +3,8 @@
 {% block title %}VisARTM | {{account}}{% endblock %}
 
 {% block content %}	
+	<h3>Assessment problems</h3>
 	{% if assessment_problems %}
-		<h3>Assessment problems</h3>
 		{% for entry in assessment_problems %}
 			<h4>{{entry.problem}}</h4>
 			<ul>
@@ -28,11 +28,37 @@
 			</ul>
 		{% endfor %} 
 		<hr>
+	{% else %}
+		<p>Nothing to see here.</p>
 	{% endif %}
 	 
   
 {% endblock %}
 
 {% block right %}
+	<h4>Create new assessment problem</h4>
+	<form method="get" action="/assessment/create_problem">
+		<div>
+			Dataset: 
+			<select name="dataset_id">
+				{% for dataset in datasets %}
+					<option value="{{dataset.id}}">{{dataset}}</option>
+				{% endfor %}								
+			</select>
+		</div> 
+		
+		<div>
+			Type: 
+			<select name="type">
+				{% for type in types %}
+					<option value="{{type}}">{{type}}</option>
+				{% endfor %}								
+			</select>
+		</div> 
+		  
+		<button type="submit">Create!</button>
+	</form>
+	<hr>
+	
 	<a href="/admin/assessment/assessmentproblem/">Administration</a>
 {% endblock %}

@@ -28,7 +28,7 @@ class CrossMinimizer:
 				else:
 					self.C[x][y] = sum([self.A[x][j] * A_sum[y][j-1] for j in range(1,self.N2)])
 		
-	def solve(self, mode="tryall", model=None):
+	def solve(self, mode="auto", model=None):
 		if mode == "tryall":
 			best = self.N1*self.N1*self.N2*self.N2
 			for new_mode in ["baricenter", "median", "split10", "binopt"]:
@@ -39,6 +39,11 @@ class CrossMinimizer:
 					best = cc
 					ans = perm
 			return ans
+		if mode == "auto":
+			if self.N1 <= 25:
+				return self.solve_binopt()
+			else:
+				return self.solve_split_repeat(10)
 		if mode == "baricenter":
 			return self.solve_baricenter()
 		elif mode == "median":
@@ -46,7 +51,7 @@ class CrossMinimizer:
 		elif mode == "split":
 			return self.solve_split()
 		elif mode == "split10":
-			return self.solve_split10()
+			return self.solve_split_repeat(10)
 		elif mode == "binopt":
 			return self.solve_binopt()
 		else:
@@ -59,9 +64,9 @@ class CrossMinimizer:
 		return np.argsort([np.median([j for j in range(self.N2) if self.A[i][j]==1]) for i in range(self.N1)])
 		
 		
-	def solve_split10(self):
+	def solve_split_repeat(self, times):
 		best = self.N1*self.N1*self.N2*self.N2
-		for i in range(10):
+		for i in range(times):
 			perm = self.solve_split()
 			cc = self.cross_count(perm) 
 			if cc < best:

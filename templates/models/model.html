@@ -27,7 +27,7 @@
 	{% endif %}
 	
 	Author: <a href="/accounts/user/{{model.author}}">{{model.author}}</a><br>
-	Arrangement: {{model.arrangement}}
+	Arrangement: {{model.arrangement_mode}}, metric={{model.metric}}
 	
 <hr>
 
@@ -51,25 +51,44 @@
 
 
 	{% if request.user == model.author %} 
+		<h4>Arrange</h4>
+		
+		<form method="get" action="/models/arrange_topics">
+			<div>
+				Mode: 
+				<select id="arrangement_mode" name="mode">
+					<option value="alphabet">alphabet</option>
+					<option value="hamilton">hamilton</option>
+					{% if model.layers_count > 1 %}
+						<option value="hierarchical">hierarchical</option> 
+					{% endif %}
+					<option value="tsne">tsne</option>
+					<option value="mds">mds</option>
+					<option value="dendro">dendro</option>
+				</select>
+			</div> 
+			
+			<div>
+				Metric: 
+				<select id="arrangement_metric" name="metric">
+					{% for metric in metrics %}
+						<option value="{{metric}}">{{metric}}</option>
+					{% endfor %}								
+				</select>
+			</div> 
+			
+			<input type="hidden" name="model" value="{{model.id}}"></input>
+			  
+			<button type="submit">Arrange!</button>
+		</form>
+		
+		<hr>
+	
 		<h4>Options</h4>
 		<a href = "/models/settings?model_id={{model.id}}">Settings</a> 
 		<br>
 		<a href = "/models/reload_model?model={{model.id}}">Reload</a> 
-		<br>
-		<a href = "/models/arrange_topics?model={{model.id}}&mode=alphabet">Arrange topics(alphabetically)</a> 
-		<br>
-		<a href = "/models/arrange_topics?model={{model.id}}&mode=hamilton">Arrange topics(Hamilton path)</a>  
-		<br>
-		{% if model.layers_count > 1 %}
-			<a href = "/models/arrange_topics?model={{model.id}}&mode=hierarchical">Arrange topics(Hierarchical)</a>  
-			<br>
-		{% endif %}
-		<a href = "/models/arrange_topics?model={{model.id}}&mode=tsne">Arrange topics(t-SNE)</a> 
-		<br>
-		<a href = "/models/arrange_topics?model={{model.id}}&mode=mds">Arrange topics(MDS)</a> 
-		<br>
-		<a href = "/models/arrange_topics?model={{model.id}}&mode=dendro">Arrange topics (dendrogramm)</a>  
-		<br>
+		<br>  
 		<a href = "/models/reset_visuals?model={{model.id}}">Reset visualizations</a> 
 		<br>
 		<a href = "/models/delete_model?model={{model.id}}">Delete</a>
@@ -80,4 +99,11 @@
 		<br>
 		<a href = "/admin/models/artmmodel/{{model.id}}/change/">Administration</a>  
 	{% endif %}  
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+	document.getElementById("arrangement_mode").value = "{{model.arrangement_mode}}";
+	document.getElementById("arrangement_metric").value = "{{model.metric}}";
+</script>
 {% endblock %}

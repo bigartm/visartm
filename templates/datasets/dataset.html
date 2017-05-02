@@ -118,15 +118,6 @@
 	<hr>
 	{% endif %}
 	
-	{% if assessment.problems_to_create %}
-		<h3>Create new assessment problem</h3>
-		{% for problem in assessment.problems_to_create %}
-			<a href = "/assessment/create_problem?dataset_id={{dataset.id}}&type={{problem}}">{{problem}}</a>
-			<br>
-		{% endfor %}
-		<hr>
-	{% endif %}
-	
 	{% if assessment.problems_to_assess %}
 		<h3>Problems to assess</h3>
 		{% for problem in assessment.problems_to_assess %}

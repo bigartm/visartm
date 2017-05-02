@@ -14,6 +14,9 @@ from django.db import transaction
 import traceback
 import struct
 import time
+import algo.metrics as metrics
+
+from models.bigartm_config import BANNED_WORDS, TOPIC_TITLE_SIZE
 
 
 class ArtmModel(models.Model):
@@ -27,7 +30,8 @@ class ArtmModel(models.Model):
 	topics_count = models.TextField(null = False, default = "")
 	status = models.IntegerField(null = False, default = 0)  #0-ready,  1-running, 2-error, 3-empty, 11-running, but not critical
 	error_message = models.TextField(null=True, blank=True) 
-	arrangement = models.TextField(default="none", null=False) 
+	arrangement_mode = models.TextField(default="none", null=False) 
+	metric = models.TextField(default="jaccard", null=False) 
 	threshold_hier = models.IntegerField(null = False, default = 100) 
 	threshold_docs = models.IntegerField(null = False, default = 100) 
 	max_parents_hier = models.IntegerField(null = False, default = 1) 
@@ -477,9 +481,10 @@ class ArtmModel(models.Model):
 		root_topic.title = "root"
 		root_topic.layer = 0
 		root_topic.save()		 	
-		
-		title_size = 3 
+		 
 		top_terms_size = 100
+		
+		banned_words = set(BANNED_WORDS)
 		
 		row_counter = 0
 		for layer_id in range(1, self.layers_count + 1):
@@ -521,7 +526,7 @@ class ArtmModel(models.Model):
 						if mc == 0:
 							break
 						
-					if title_counter < title_size and term.modality.is_word:
+					if title_counter < TOPIC_TITLE_SIZE and term.modality.is_word and not term.text in banned_words:
 						title_counter += 1 						
 						terms_to_title.append(term.text) 
 				
@@ -600,6 +605,16 @@ class ArtmModel(models.Model):
 			layer=self.layers_count
 		return Topic.objects.filter(model = self, layer = layer).order_by("index_id")
 	
+	def get_related_topics(self, topic, metric="default"):
+		metric = metrics.get_metric_by_name(metric)
+		topics_index = Topic.objects.filter(model=self, layer=topic.layer).order_by("index_id")
+	
+		phi_t = self.get_phi_t(topic.layer)
+		target_row =  phi_t[topic.index_id]
+		distances = [metric(target_row, row) for row in phi_t]
+		idx = np.argsort(distances)
+		return [{"distance":distances[int(i)], "topic": topics_index[int(i)]} for i in idx]
+	
 	def get_layer_range(self, layer):
 		topics_count = [int(x) for x in self.topics_count.split()]
 		shift = 0
@@ -623,7 +638,6 @@ class ArtmModel(models.Model):
 				
 			phi_t = self.get_phi_t(layer)
 			
-			import algo.metrics as metrics
 			metric = metrics.get_metric_by_name(metric)
 				
 			for i in range(topics_count[layer]):
@@ -638,12 +652,14 @@ class ArtmModel(models.Model):
 	
 	# Only horizontal arranging
 	@transaction.atomic
-	def arrange_topics(self, mode = "alphabet", metric="default", beta=0.8):
+	def arrange_topics(self, mode = "default", metric="default", beta=0.8):
 		# Counting horizontal relations topic-topic
 		self.log("Counting horizontal relations topic-topic...")	 
 		self.topics_index = [[topic for topic in Topic.objects.filter(model = self, layer = i).order_by("index_id")] 
 			for i in range(self.layers_count + 1)]
 		
+		if metric == "default":
+			metric = metrics.default_metric
 		
 		TopicRelated.objects.filter(model = self).delete()
 		self.topic_distances = [self.get_topics_distances(metric=metric, layer=i) for i in range(self.layers_count + 1)]
@@ -663,6 +679,12 @@ class ArtmModel(models.Model):
 		topic_hier_relations = TopicInTopic.objects.filter(model=self)
 		
 		cluster_mode = False
+		
+		if mode == "default":
+			if self.layers_count == 1:
+				mode = "hamilton"
+			else:
+				mode = "hierarchical"
 		
 		if mode == "hierarchical":
 			self.arrange_topics_hierarchical(beta=beta)
@@ -685,7 +707,7 @@ class ArtmModel(models.Model):
 						clusters = None
 				
 				
-				self.log("Building topics spectrum for layer %d, mode=%s..." % (layer_id, mode))
+				self.log("Building topics spectrum for layer %d, mode=%s, metric=%s..." % (layer_id, mode, metric))
 				if mode == "alphabet":
 					titles = [self.topics_index[layer_id][topic_id].title for topic_id in range(0, layer_size)]
 					idx = np.argsort(titles)
@@ -702,18 +724,18 @@ class ArtmModel(models.Model):
 					topic.save() 
 				
 		self.status = 0
-		self.arrangement = mode + ", metric=" + metric
+		self.arrangement_mode = mode
+		self.metric = metric
 		self.save()
 		
 		self.log("Resetting visualizations...")
 		self.reset_visuals()
 	 
 	
-	def arrange_topics_hierarchical(self, beta=0.8, cross_min_mode="tryall"):
+	def arrange_topics_hierarchical(self, beta=0.8, cross_min_mode="auto"):
 		if self.layers_count == 1:
 			raise ValueError("Model is flat!")
-		
-		
+			
 		# Arrange lower level, minimizing NDS
 		lower_layer = self.layers_count
 		dist = self.topic_distances[lower_layer]
@@ -896,15 +918,15 @@ class ArtmModel(models.Model):
 	
 	
 	# Returns list of related documents to the document with given index_id (sorted from most related)
-	def get_related_documents(self, document_index_id, count=20):
-		from algo.metrics import euclidean
+	def get_related_documents(self, document_index_id, count=20, metric="euclidean"):
 		documents_count = self.dataset.documents_count
 		documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
 		dist = np.zeros(documents_count)
 		theta_t = self.get_theta_t()
 		self_distr = theta_t[document_index_id]
+		metric = metrics.get_metrics_by_name(metric)
 		for other_document_id in range(0, documents_count):
-			dist[other_document_id] = euclidean(self_distr, theta_t[other_document_id])
+			dist[other_document_id] = metric(self_distr, theta_t[other_document_id])
 		
 		idx = np.argsort(dist)[1 : count+1]		
 		return [documents_index[int(i)] for i in idx]

@@ -305,7 +305,7 @@ class Dataset(models.Model):
 			return Dataset.objects.filter(is_public=True)
 		else:
 			return Dataset.objects.filter(is_public=True) |\
-				Document.objects.filter(is_public=False, dataset__owner=request.user)
+				Dataset.objects.filter(is_public=False, owner=request.user)
 		
 	
 	'''

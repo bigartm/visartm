@@ -198,15 +198,8 @@ def visual_dataset(request):
 	elif mode == 'assessment':
 		from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor	
 		context['assessment'] = {}
-		if request.user == dataset.owner:
-			supervised_problems = AssessmentProblem.objects.filter(dataset=dataset)
-			assessment_folders = os.listdir(os.path.join(settings.BASE_DIR, "templates", "assessment"))
-			problems_to_create = [x for x in assessment_folders if not '.' in x]
-			#for problem in supervised_problems:
-			#	if problem.type in problems_to_create: 
-			#		problems_to_create.remove(problem.type)				
-			context['assessment']['supervised_problems'] = supervised_problems
-			context['assessment']['problems_to_create'] = problems_to_create		
+		if request.user == dataset.owner:			 			
+			context['assessment']['supervised_problems'] = AssessmentProblem.objects.filter(dataset=dataset) 	
 	
 		try:
 			context['assessment']['problems_to_assess'] = ProblemAssessor.objects.filter(assessor=request.user,problem__dataset=dataset)

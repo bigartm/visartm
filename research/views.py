@@ -101,6 +101,13 @@ def get_picture(request, research_id, pic_id):
 	path = os.path.join(settings.BASE_DIR, "data", "research", research_id, "pic", pic_id + ".png")
 	with open(path, "rb") as f:
 		return HttpResponse(f.read(), content_type="image/png")
+
+def get_txt(request, research_id, txt_id):
+	path = os.path.join(settings.BASE_DIR, "data", "research", research_id, "pic", txt_id + ".txt")
+	with open(path, "r", encoding='utf-8') as f:
+		response = HttpResponse(f.read(), content_type="text/plain")
+		response['Content-Type'] = 'text/plain; charset=utf-8'
+		return response 
 		
 def view_script(request, script_name):
 	path = os.path.join(settings.BASE_DIR, "algo", "research", script_name + ".py")

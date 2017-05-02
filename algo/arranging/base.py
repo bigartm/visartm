@@ -86,19 +86,19 @@ def triple_order_conserving(dist, perm):
 def distance_distance_curve(dist, perm):
 	N = dist.shape[0]
 	
-	ans = np.zeros(N)
-	for l in range(N):
+	ans = np.zeros(N-1)
+	for l in range(1,N):
 		for i in range(0, N - l):
-			ans[l] += avg_cos[perm[i]][perm[i+l]]
-		ans[l] /= (N - l)
+			ans[l-1] += dist[perm[i]][perm[i+l]]
+		ans[l-1] /= (N - l)
 
 	return ans	
 	
 def cosine_distance_curve(dist, perm):
 	N = dist.shape[0]
-	avg_cos = np.zeros(N,N)
+	avg_cos = np.zeros((N,N))
 	for i in range(N):
-		for j in range(i, N):
+		for j in range(N):
 			sum = 0
 			for k in range(N):
 				if k != i and k!=j:
@@ -108,11 +108,11 @@ def cosine_distance_curve(dist, perm):
 					sum += (A*A+B*B-C*C) / (2*A*B)  
 			avg_cos[i][j] = sum / (N-2)
 	
-	ans = np.zeros(N)
-	for l in range(N):
+	ans = np.zeros(N-1)
+	for l in range(1,N):
 		for i in range(0, N - l):
-			ans[l] += avg_cos[perm[i]][perm[i+l]]
-		ans[l] /= (N - l)
+			ans[l-1] += avg_cos[perm[i]][perm[i+l]]
+		ans[l-1] /= (N - l)
 
 	return ans
 	
@@ -141,4 +141,9 @@ def user_metric_correlation(assessment_C, dist):
 			C.append(assessment_C[i][j])
 			D.append(dist[i][j])
 	
-	return np.corrcoef(np.array(C), np.array(D))
+	C = np.array(C)
+	D = np.array(D)
+	C = C - np.mean(C)
+	D = D - np.mean(D)
+	return np.abs(np.dot(C,D)) / np.sqrt(np.dot(C,C) * np.dot(D,D))
+	

@@ -103,6 +103,24 @@ class Research(models.Model):
 			f.write("<div align='%s'><img src='pic/%s' width='%d' heigth='%d' /></div>\n" % (align, file_name, width, height))	
 		del self.figure
 		
+	def latex_table(self, table, format):	
+		nrows = len(table)
+		ncols = len(table[0])
+		
+		ans = "\\begin{tabular}{|%s|}\n" % "|".join(["c" for i in range(ncols)])
+		for row in table:
+			ans += "\\hline\n"
+			for i in range(ncols):
+				ans += (format % row[i])
+				if i == ncols-1:
+					ans += " \\\\\n"
+				else:
+					ans += " & "
+		
+		ans += "\\hline\n"
+		ans += "\\end{tabular}\n"
+		return ans
+		
 	def report_table(self, table, format="%s"):
 		with open(self.get_report_file(), "a", encoding="utf-8") as f: 
 			f.write('<table border="1" cellpadding="0" cellspacing="0">\n')
@@ -115,6 +133,11 @@ class Research(models.Model):
 						f.write("</td>")
 				f.write("</tr>\n")
 			f.write("</table>\n")
+			self.img_counter += 1
+			f.write("<p><a href='pic/%d.txt'>Table in LaTeX</a></p>" % self.img_counter)
+		
+		with open(os.path.join(self.get_pic_folder(), str(self.img_counter) + '.txt'), "w", encoding='utf-8') as f:
+			f.write(self.latex_table(table, format))
 		
 	def get_folder(self):
 		path = os.path.join(settings.DATA_DIR, "research", str(self.id))

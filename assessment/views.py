@@ -12,6 +12,7 @@ from models.models import ArtmModel
 from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
 from django.contrib.auth.models import User	
 import visartm.views as general_views
+from django.conf import settings
 
 @login_required		
 def problems_list(request):
@@ -23,6 +24,10 @@ def problems_list(request):
 			"supervise": (entry.problem.dataset.owner == request.user)
 	})	
 	context = {"assessment_problems": assessment_problems}
+	context["datasets"] = Dataset.objects_safe(request)
+	
+	assessment_folder = os.listdir(os.path.join(settings.BASE_DIR, "templates", "assessment")) 
+	context["types"] = [x for x in assessment_folder if not '.' in x]
 	return render(request, 'assessment/problems_list.html', Context(context)) 
 		
 
@@ -74,7 +79,7 @@ def create_problem(request):
 	dataset = Dataset.objects.get(id = dataset_id)		
 	if dataset.owner != request.user:
 		return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can create assessment problem.")
-	problem = AssessmentProblem()
+	problem = AssessmentProblem() 
 	problem.dataset = dataset
 	problem.type = type 
 	problem.save()

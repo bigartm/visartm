@@ -29,10 +29,12 @@
 	<form method='post'>
 		<input type="hidden" name="task_id" value="{{task.id}}" />
 		<input type="hidden" name="selected_topics" id="selected_topics" value="[]" />
-		<button class="btn btn-success">Done</button>
+		<button class="btn btn-success">Next!</button>
 		<input type="hidden" name="finished" />
+		<input id="continue" type="hidden" name="continue" value="true" />
 		{% csrf_token %}
 	</form>
+	
 {% endblock %}
 
 {% block javascript %}

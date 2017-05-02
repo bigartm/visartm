@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 #Number of assessment for each topic
-ASSESS_RATIO = 5
+ASSESS_RATIO = 2
 
 def initialize_problem(problem):
 	if problem.model:
@@ -57,12 +57,15 @@ def get_task_context(task):
 	ans = {}
 	answer = json.loads(task.answer)
 	ans["task"] = task
-	ans["target_topic"] = Topic.objects.get(
+	target_topic = Topic.objects.get(
 		model=task.problem.model, 
 		layer=task.problem.model.layers_count, 
 		index_id=answer["target_topic_index_id"]
 	)
-	ans["topics"] = Topic.objects.filter(model=task.problem.model, layer=ans["target_topic"].layer).order_by("title")
+	ans["target_topic"] = target_topic
+	ans["topics"] = [x["topic"] for x in task.problem.model.get_related_topics(target_topic, metric="jaccard")]
+	
+	Topic.objects.filter(model=task.problem.model, layer=ans["target_topic"].layer).order_by("title")
 	return ans
 	
 def create_task(problem, request):
@@ -117,9 +120,12 @@ def get_problem_results(problem):
 	params = json.loads(problem.params)
 	ret = np.array(params["matrix"])
 	N = ret.shape[0]
+	
+	'''
 	for i in range(N):
 		for j in range(N):
 			ret[i][j] *= (1/params["topics"][str(i)])
+	'''
 	
 	return ((1/(2*ASSESS_RATIO))*(ret + ret.transpose())).tolist()
 	#from assessment.models import AssessmentTask
