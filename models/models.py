@@ -89,7 +89,7 @@ class ArtmModel(models.Model):
 			elif mode == "empty":
 				sample_script_file = os.path.join(self.get_folder(), "sample.py")
 				batches_folder = os.path.join(self.dataset.get_folder(), "batches")
-				dictionary_file = os.path.join(batches_folder, "dict.txt")
+				dictionary_file = os.path.join(batches_folder, "dictionary.txt")
 				text =  "import artm\n" + \
 					    "batch_vectorizer = artm.BatchVectorizer(data_path = '" + batches_folder + "', data_format = 'batches')\n" + \
 						"dictionary = artm.Dictionary()\n" + \
@@ -172,6 +172,10 @@ class ArtmModel(models.Model):
 		
 		self.log("Saving matrix phi...") 
 		artm_object.get_phi().to_pickle(os.path.join(self.get_folder(), "phi"))
+		 
+		if self.dataset.modalities_count > 1:
+			for modality in Modality.objects.filter(dataset=self.dataset):
+				artm_object.get_phi(class_ids=[modality.name]).to_pickle(os.path.join(self.get_folder(), "phi_" + modality.name))
 		 
 		is_hierarchial = True
 		try:
@@ -846,8 +850,7 @@ class ArtmModel(models.Model):
 				self.log("max=" + str(np.max(sums)))
 				self.log("min=" + str(np.min(sums)))
 				self.log("avg=" + str(np.mean(sums)))
-				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized. %f %f %f" %
-				(np.min(sums), np.mean(sums), np.max(sums)))
+				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized. %f %f %f" % (np.min(sums), np.mean(sums), np.max(sums)))
 			  
 			j = 0
 			for row in phi_t:

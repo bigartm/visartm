@@ -280,7 +280,14 @@ def dump_model(request):
 	outfile = io.BytesIO()
 	folder = model.get_folder()
 	with zipfile.ZipFile(outfile, 'w') as zf:
-		files = ["theta", "phi"]
+		files = ["theta"]
+		
+		if model.dataset.modalities_count == 1:
+			files.append("phi")
+		else:
+			for modality in Modality.objects.filter(dataset=model.dataset):
+				files.append("phi_" + modality.name)
+		
 		files += [("psi%d" % i) for i in range(1, model.layers_count)]
 		for file_name in files:
 			zf.write(os.path.join(folder, file_name), file_name) 

@@ -351,7 +351,7 @@ class Dataset(models.Model):
 			
 		for term in query_set:
 				terms_index[term.text] = term.index_id
-				# terms_index[term.text + "#$" + term.modality.name] = term.index_id
+				#terms_index[term.text + "#$" + term.modality.name] = term.index_id
 		return terms_index
  
 	def check_terms_order(self, index, full=True):
