@@ -50,9 +50,9 @@ def dataset_delete(request):
 		return general_views.message(request, "Dataset was completely deleted.<br><a href ='/'>Return to start page</a>.")
 	else:
 		return general_views.message(request, 
-				"Are you sure that you want delete dataset " + str(dataset) + " permanently?<br>" + 
-				"<a href = '/datasets/delete?id=" + str(dataset.id) + "&sure=yes'>Yes</a><br>" +
-				"<a href = '/dataset?dataset=" + dataset.text_id + "'>No</a>")		
+				"Are you sure that you want delete dataset %s permanently?<br>" + 
+				"<a href = '/datasets/delete?dataset_id=%d&sure=yes'>Yes</a><br>" +
+				"<a href = '/dataset?dataset_id=%d>No</a>" % (str(dataset), dataset.id, dataset.id))		
 
 @login_required
 @permission_required('datasets.add_dataset')
