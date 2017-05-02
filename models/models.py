@@ -337,7 +337,8 @@ class ArtmModel(models.Model):
 			psi = self.get_psi(top_layer)
 			self.log("Building topics hierarchy between layers %d and %d" % (top_layer, bottom_layer))
 			for bottom_topic_id in range(topics_count[bottom_layer]):
-				p = (psi[bottom_topic_id] * pt[top_layer])/pt[bottom_layer][bottom_topic_id] # Conditional probabilities(parent_topic | child_topic)
+				#p = (psi[bottom_topic_id] * pt[top_layer])/pt[bottom_layer][bottom_topic_id] # Conditional probabilities(parent_topic | child_topic)
+				p = psi[bottom_topic_id]
 				best_top_topic_id = np.argmax(p)
 				relation = TopicInTopic()
 				relation.model = self
@@ -544,15 +545,10 @@ class ArtmModel(models.Model):
 				row_counter += 1
 				if row_counter % 10 == 0:
 					self.log("Created topic %d/%d." % (row_counter, total_topics_count))
-				
-		
-		
-		
 		
 		self.build_hier()
 		
 			
-		
 		# Loading temporary reference for documents
 		# documents_index = Document.objects.filter(dataset = self.dataset).order_by("index_id")
 		self.extract_docs()
