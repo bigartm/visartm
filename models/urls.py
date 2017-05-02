@@ -13,4 +13,5 @@ urlpatterns = [
 	url(r'^rename_topic$', models_views.rename_topic),
 	url(r'^related_topics$', models_views.related_topics),
 	url(r'^model_log$', models_views.model_log),
+	url(r'^dump$', models_views.dump_model),
 ]

@@ -21,9 +21,9 @@ def datasets_list(request):
 	
 @login_required	
 def	dataset_reload(request):	
-	dataset = Dataset.objects.get(text_id = request.GET['dataset'])
-	if request.user != dataset.owner:
-		return HttpResponseForbidden("You are not owner.")
+	dataset = Dataset.get_dataset(request, modify=True)
+	if not dataset:
+		return HttpResponseForbidden()
 	dataset.status = 1
 	dataset.creation_time = datetime.now()
 	dataset.save()	
@@ -39,9 +39,11 @@ def	dataset_reload(request):
 	
 @login_required
 def dataset_delete(request):
-	dataset = Dataset.objects.get(id = request.GET['id'])
-	if request.user != dataset.owner:
-		return HttpResponseForbidden("You are not owner.")
+	dataset = Dataset.get_dataset(request, modify=True)
+	if not dataset:
+		return HttpResponseForbidden()
+	
+	
 	
 	if 'sure' in request.GET and request.GET['sure'] == 'yes': 
 		dataset.delete()
@@ -121,9 +123,9 @@ def	dataset_create(request):
 from django.conf import settings
 def visual_dataset(request):  
 	if request.method == "POST":
-		dataset = Dataset.objects.get(text_id = request.POST['dataset'])
-		if request.user != dataset.owner:
-			return HttpResponseForbidden("You are not the owner.")
+		dataset = Dataset.get_dataset(request, modify=True)
+		if not dataset:
+			return HttpResponseForbidden()
 		dataset.name = request.POST['name']
 		dataset.description = request.POST['description']
 		dataset.preprocessing_params = request.POST['preprocessing_params']	
@@ -133,7 +135,7 @@ def visual_dataset(request):
 		return redirect("/dataset?dataset=" + request.POST['dataset'] + "&mode=settings")
 	
 	
-	dataset = Dataset.objects.get(text_id = request.GET['dataset'])
+	dataset = Dataset.get_dataset(request)
 	if dataset.status == 1:
 		return general_views.wait(request, dataset.read_log() + \
 			"<br><a href = '/datasets/reload?dataset=" + dataset.text_id + "'>Reload</a>", dataset.creation_time)
@@ -251,7 +253,7 @@ def visual_document(request):
 		document = Document.objects.get(id = request.GET['id'])
 		dataset = document.dataset
 	else:
-		dataset = Dataset.objects.get(text_id = request.GET['dataset'])
+		dataset = Dataset.get_dataset(request)
 		document = Document.objects.get(dataset = dataset, index_id = int(request.GET['iid']))
 	
 	try:
@@ -481,7 +483,7 @@ def visual_term(request):
 	if "id" in request.GET:
 		term = Term.objects.filter(id = request.GET['id'])[0]
 	else:
-		dataset = Dataset.objects.filter(id = request.GET['ds'])[0]
+		dataset = Dataset.get_dataset(request)
 		term = Term.objects.filter(dataset = dataset, index_id = request.GET['iid'])[0]
 	
 	try:
@@ -536,9 +538,8 @@ def visual_modality(request):
 	
 
 def download_vw(request):
-	dataset = Dataset.objects.get(id = request.GET['dataset_id'])
-	
-	if not dataset.check_access(request.user):
+	dataset = Dataset.get_dataset(request)
+	if not dataset:
 		return HttpResponseForbidden()
 	
 	from django.http import StreamingHttpResponse
@@ -551,9 +552,8 @@ def download_vw(request):
 	return response
 	
 def dump(request):
-	dataset = Dataset.objects.get(id = request.GET['dataset_id'])
-	
-	if not dataset.check_access(request.user):
+	dataset = Dataset.get_dataset(request)
+	if not dataset:
 		return HttpResponseForbidden()
 	
 	import zipfile
@@ -567,11 +567,11 @@ def dump(request):
 				continue
 			rel_path = root[len(folder)+1:]
 			for file in files:
-					if file[0] == '.':
-						continue
-					if 'models' in root and '.' in file and (not file[:-4] == '.txt'):
-						continue
-					zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
+				if file[0] == '.':
+					continue
+				if 'models' in root and '.' in file and (not file[:-4] == '.txt'):
+					continue
+				zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
 
 	zipped_file = outfile.getvalue()
 	response = HttpResponse(zipped_file, content_type='application/octet-stream')

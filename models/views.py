@@ -271,6 +271,25 @@ def visual_topic(request):
 	
 	return render(request, 'models/topic.html', Context(context))
 	
+def dump_model(request):
+	model = ArtmModel.objects.get(id=request.GET["model_id"])
+	
+	import zipfile
+	import io
+	
+	outfile = io.BytesIO()
+	folder = model.get_folder()
+	with zipfile.ZipFile(outfile, 'w') as zf:
+		files = ["theta", "phi"]
+		files += [("psi%d" % i) for i in range(1, model.layers_count)]
+		for file_name in files:
+			zf.write(os.path.join(folder, file_name), file_name) 
+
+	zipped_file = outfile.getvalue()
+	response = HttpResponse(zipped_file, content_type='application/octet-stream')
+	response['Content-Disposition'] = 'attachment; filename=%s_%s.zip' % (str(model.dataset), str(model))
+	return response
+
 
 	
 def related_topics(request):

@@ -846,7 +846,8 @@ class ArtmModel(models.Model):
 				self.log("max=" + str(np.max(sums)))
 				self.log("min=" + str(np.min(sums)))
 				self.log("avg=" + str(np.mean(sums)))
-				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized")
+				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized. %f %f %f" %
+				(np.min(sums), np.mean(sums), np.max(sums)))
 			  
 			j = 0
 			for row in phi_t:

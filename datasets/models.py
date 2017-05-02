@@ -368,7 +368,24 @@ class Dataset(models.Model):
 				if index[term_iid] != Term.objects.get(dataset_id=self.id, index_id=term_iid).text:
 					return False
 		return True
+	
+
+	def get_dataset(request, modify=False):
+		if "dataset_id" in request.GET:
+			dataset = Dataset.objects.get(id=request.GET['dataset_id'])
+		elif "ds" in request.GET:
+			dataset = Dataset.objects.get(id=request.GET['ds'])
+		elif "dataset" in request.GET:
+			dataset = Dataset.objects.get(text_id=request.GET['dataset'])
+		elif "dataset" in request.POST:
+			dataset = Dataset.objects.get(text_id=request.POST['dataset'])	
+		else:
+			return None
 		
+		if (modify or not dataset.is_public) and not dataset.owner == request.user:
+			return None
+		return dataset
+	
 	def check_access(self, user):
 		if self.is_public:
 			return True
@@ -709,6 +726,14 @@ class Term(models.Model):
 			return Term.objects.filter(dataset__is_public=True)
 		return Term.objects.filter(dataset__is_public=True) | \
 			Term.objects.filter(dataset__is_public=False, dataset__owner=request.user)
+	
+	
+	
+	
+	
+	
+	
+	
 	
 from django.contrib import admin
 admin.site.register(Dataset)
