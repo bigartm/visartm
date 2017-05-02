@@ -924,7 +924,7 @@ class ArtmModel(models.Model):
 		dist = np.zeros(documents_count)
 		theta_t = self.get_theta_t()
 		self_distr = theta_t[document_index_id]
-		metric = metrics.get_metrics_by_name(metric)
+		metric = metrics.get_metric_by_name(metric)
 		for other_document_id in range(0, documents_count):
 			dist[other_document_id] = metric(self_distr, theta_t[other_document_id])
 		

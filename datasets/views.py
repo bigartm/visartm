@@ -565,16 +565,13 @@ def dump(request):
 	folder = dataset.get_folder()
 	with zipfile.ZipFile(outfile, 'w') as zf:
 		for root, dirs, files in os.walk(folder):
-			if "batches" in root or "_MACOSX" in root:
-				continue
 			rel_path = root[len(folder)+1:]
-			for file in files:
-				if file[0] == '.':
-					continue
-				if 'models' in root and '.' in file and (not file[:-4] == '.txt'):
-					continue
-				zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
-
+			if rel_path == "" or rel_path in ["documents", "meta", "wordpos"]:
+				for file in files:
+					if file[0] == '.' or file[0] == '_':
+						continue
+					zf.write(os.path.join(root, file), os.path.join(rel_path, file)) 
+				
 	zipped_file = outfile.getvalue()
 	response = HttpResponse(zipped_file, content_type='application/octet-stream')
 	response['Content-Disposition'] = 'attachment; filename=%s.zip' % dataset.text_id 
