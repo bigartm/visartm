@@ -142,7 +142,7 @@ def visual_dataset(request):
 				modality.weight_spectrum = float(request.POST[modality.name + "_ws"])	
 				modality.save()
 				
-			dataset.normalize_modalities_weigths()
+			dataset.normalize_modalities_weights()
 			dataset.delete_cached_distances()
 			dataset.reset_terms_weights()
 			return redirect("/dataset?dataset=" + request.POST['dataset'] + "&mode=modalities")
