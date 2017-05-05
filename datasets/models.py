@@ -815,12 +815,10 @@ class Term(models.Model):
 				relations.append((count, document.index_id))
 		relations.sort(reverse=True)
 		
-		i=0
 		for count, document_index_id in relations:
 			self.documents += struct.pack('I', document_index_id) + struct.pack('H', count) 
-			i+=1
-			if i%10000==0:
-				self.save()
+		
+		self.save()
  
 	def get_documents(self):
 		self.count_documents_index() 
