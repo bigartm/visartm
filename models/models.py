@@ -555,9 +555,10 @@ class ArtmModel(models.Model):
 					idx = idx[::-1]
 					for i in idx:
 						term = terms_index[int(i)]
-						if title_counter < title_size and not term.text in banned_words:
-							title_counter += 1 						
-							terms_to_title.append(term.text) 
+						if title_counter < title_size:
+							if not term.text in banned_words:
+								title_counter += 1 						
+								terms_to_title.append(term.text) 
 						else:
 							break
 					topic.title = ', '.join(terms_to_title)
@@ -1032,7 +1033,7 @@ class Topic(models.Model):
 		return ret 
 		
 	def top_words_list(self, count=10):
-		return ', '.join(self.top_words(count=count))
+		return ', '.join(top_words(count=count))
 			
 	def top_words(self, count = 10):
 		return [x.term.text for x in TopTerm.objects.filter(topic=self).order_by('-weight_normed')[0:count]]
