@@ -39,5 +39,7 @@
 {% block right %}
 	{% if perms.datasets.add_dataset %}
 		<a href = "/datasets/create">Create new dataset...</a>
+		<br>
+		<a href="/admin/datasets/dataset/">Administration</a>
 	{% endif %}
 {% endblock %}

@@ -258,7 +258,7 @@ def visual_topic(request):
 		if 'modality' in request.GET and request.GET['modality'] != 'all':
 			modality = Modality.objects.get(dataset=model.dataset, name=request.GET["modality"])
 			top_terms = top_terms.filter(term__modality=modality)
-		top_terms=top_terms.order_by("-weight")
+		top_terms=top_terms.order_by("-weight_normed")
 		context['top_terms'] = top_terms
 	elif mode == 'topics':
 		context['topics'] = TopicInTopic.objects.filter(parent = topic) 
@@ -272,7 +272,7 @@ def visual_topic(request):
 	return render(request, 'models/topic.html', Context(context))
 	
 def dump_model(request):
-	model = ArtmModel.objects.get(id=request.GET["model_id"])
+	model = ArtmModel.get_model(request)
 	
 	import zipfile
 	import io
@@ -327,7 +327,7 @@ def rename_topic(request):
 def model_settings(request):
 	if request.method == 'POST':
 		action = request.POST['action']
-		model = ArtmModel.objects.get(id=request.POST['model_id'])
+		model = ArtmModel.get_model(request)
 		if request.user != model.author:
 			return HttpResponseForbidden("You are not the author.")
 		
@@ -349,6 +349,9 @@ def model_settings(request):
 				model.build_hier() 
 				
 			model.reset_visuals()
+		elif action == 'topic_naming':
+			model.topic_naming_top_words = int(request.POST["topic_naming_top_words"])
+			model.save()
 		elif action == 'matrices':
 			model.log("Archive uploaded.")
 			archive = request.FILES['archive'] 
@@ -375,3 +378,9 @@ def model_settings(request):
 		return HttpResponseForbidden("You are not the author.")
 	context = {'model': model}
 	return render(request, 'models/model_settings.html', Context(context))
+
+def delete_cached_distances(request):
+	model = ArtmModel.get_model(request, modify=True)
+	model.delete_cached_distances()
+	return redirect("/model?model=%d" % model.id)
+	

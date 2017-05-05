@@ -11,6 +11,5 @@ REGULARIZERS = [
 		{"name":"threshold", "default":"None"}
 	]}
 ]
-
-TOPIC_TITLE_SIZE = 4
+ 
 BANNED_WORDS = ["наш", "при", "чтобы", "потому", "pcourse", "себя", "num", "использовать", "кто", "the", "and", "там", "более"]

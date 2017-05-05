@@ -28,6 +28,7 @@ class Dataset(models.Model):
 	preprocessing_params = models.TextField(null=False, default = "{}")
 	time_provided = models.BooleanField(null=False, default = True)
 	is_public = models.BooleanField(null=False, default = True)
+	 
 	
 	def __str__(self):
 		return self.name 
@@ -222,11 +223,14 @@ class Dataset(models.Model):
 				
 		for key, modality in modalities_index.items():
 			if modality.id == word_modality_id:
-				modality.is_word = True
+				#modality.is_word = True
+				modality.weight_spectrum = 1
+				modality.weight_naming = 1
 			if 'tag' in modality.name:
 				modality.is_tag = True
 			modality.save()
-			
+		
+		self.normalize_modalities_weights()
 		
 	@transaction.atomic
 	def load_documents(self):
@@ -347,7 +351,7 @@ class Dataset(models.Model):
 		if modality:
 			query_set = Term.objects.filter(dataset=self, modality=modality)
 		else:
-			query_set = Term.objects.filter(dataset=self).order_by("-modality__is_word")
+			query_set = Term.objects.filter(dataset=self).order_by("-modality__weight_naming")
 			
 		for term in query_set:
 				terms_index[term.text] = term.index_id
@@ -369,7 +373,31 @@ class Dataset(models.Model):
 					return False
 		return True
 	
-
+	@transaction.atomic	
+	def normalize_modalities_weights(self):
+		weight_naming_sum = 0
+		weight_spectrum_sum = 0
+		
+		modalities = Modality.objects.filter(dataset=self)
+		
+		wn = Dataset.normalize_weights([m.weight_naming for m in modalities])
+		ws = Dataset.normalize_weights([m.weight_spectrum for m in modalities])
+	
+		for i in range(len(modalities)):
+			modality = modalities[i]
+			modality.weight_naming = wn[i]
+			modality.weight_spectrum = ws[i]
+			modality.save()
+	
+	def normalize_weights(w):
+		s = sum(w)
+		if s == 0:
+			w[0] = 1
+			return w
+		w = [int((x/s)*1000) for x in w]
+		w[0] += (1000 - sum(w))
+		return [x/1000 for x in w]
+		
 	def get_dataset(request, modify=False):
 		if "dataset_id" in request.GET:
 			dataset = Dataset.objects.get(id=request.GET['dataset_id'])
@@ -386,11 +414,71 @@ class Dataset(models.Model):
 			return None
 		return dataset
 	
+	'''
 	def check_access(self, user):
 		if self.is_public:
 			return True
 		else:
 			return (user == self.owner)
+	'''
+	
+	def get_terms_weights(self, mode):
+		if not os.path.exists(os.path.join(self.get_folder(), "terms_weights")):
+			self.reset_terms_weights()
+	
+		if mode == "spectrum":
+			return np.load(os.path.join(self.get_folder(), "terms_weights", "spectrum.npy"))
+		elif mode == "naming":
+			return np.load(os.path.join(self.get_folder(), "terms_weights", "naming.npy"))
+				
+	
+	def reset_terms_weights(self):
+		folder = os.path.join(self.get_folder(), "terms_weights")
+		if not os.path.exists(folder):
+			os.makedirs(folder)
+		
+		weights_spectrum = np.zeros(self.terms_count)
+		weights_naming = np.zeros(self.terms_count)
+		 
+		
+		for modality in Modality.objects.filter(dataset=self):
+			ws = modality.weight_spectrum
+			wn = modality.weight_naming
+			for term in Term.objects.filter(modality=modality):
+				weights_spectrum[term.index_id] = ws
+				weights_naming[term.index_id] = wn
+		
+		np.save(os.path.join(folder, "spectrum.npy"), weights_spectrum)
+		np.save(os.path.join(folder, "naming.npy"), weights_naming)
+		 
+		
+	def delete_cached_distances(self):
+		from models.models import ArtmModel
+		for model in ArtmModel.objects.filter(dataset=self):
+			model.delete_cached_distances()
+		
+	def delete_unused_folders(self):
+		from models.models import ArtmModel 
+		models_folder = os.path.join(self.get_folder(), "models")
+		legit_models = set([model.text_id for model in ArtmModel.objects.filter(dataset=self)])
+		for folder in os.listdir(models_folder):
+			if not folder in legit_models:
+				folder_to_remove = os.path.join(models_folder, folder)
+				print("Removing trash: %s", folder_to_remove)
+				rmtree(folder_to_remove)
+				
+	def get_modalities_mask(self):
+		path = os.path.join(self.get_folder(), "modalities_mask.npy")
+		if os.path.exists(path):
+			return np.load(path)
+		else:
+			ans = np.zeros(self.terms_count, dtype=np.int32)
+			i = 0
+			for term in Term.objects.filter(dataset=self):
+				ans[i] = term.modality.index_id
+				i += 1
+			np.save(path, ans)
+			return ans
 		
 from django.db.models.signals import pre_delete
 from django.dispatch import receiver
@@ -404,11 +492,17 @@ def remove_dataset_files(sender, instance, using, **kwargs):
 		pass 
  
 def on_start():
+	for dataset in Dataset.objects.all():
+		try:
+			dataset.delete_unused_folders()
+		except:
+			pass
+			
 	for dataset in Dataset.objects.filter(status=1):
 		dataset.status = 2
 		dataset.error_message = "Dataset processing was interrupted."
 		dataset.save()
-	
+		
 class Document(models.Model):
 	title = models.TextField(null=False)
 	url = models.URLField(null=True)
@@ -514,6 +608,8 @@ class Document(models.Model):
 		else:
 			return Document.objects.filter(dataset__is_public=True) | \
 				Document.objects.filter(dataset__is_public=False, dataset__owner=request.user)
+	
+
 	
 	def count_term(self, iid):
 		bow = self.bag_of_words
@@ -680,8 +776,13 @@ class Modality(models.Model):
 	dataset = models.ForeignKey(Dataset, null = False)
 	terms_count = models.IntegerField(null = False, default = 0)
 	index_id = models.IntegerField(null = False, default = 0)
-	is_word = models.BooleanField(null = False, default = False)
+	#is_word = models.BooleanField(null = False, default = False)
 	is_tag = models.BooleanField(null = False, default = False)
+	
+	weight_naming = models.FloatField(null=False, default=0)
+	weight_spectrum = models.FloatField(null=False, default=0)
+	
+	
 	def __str__(self):
 		return self.dataset.name + "/" + self.name
 		

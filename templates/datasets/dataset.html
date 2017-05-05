@@ -29,41 +29,65 @@
 		<a href = "/term?id={{term.id}}" >{{term}}</a> ({{term.token_tf}})<br>
 	{% endfor %}
 {% elif modalities %}
-	<div class= "col-sm-5">
-		<table class = "table table-bordered table-hover">
-			<thead>
-				<tr>
-					<td>Name</td>
-					<td>Words</td>
-					<td>Is word</td>
-					<td>Is tag</td>
-				</tr>
-			</thead>
-			<tbody>
-			{% for modality in modalities %}
-				<tr>
-					<td><a href = "/modality?id={{modality.id}}" >{{modality.name}}</a></td>
-					<td>{{modality.terms_count}}</td>
-					<td>
-						<input 
-							type="checkbox"  
-							{% if modality.is_word %}checked="checked"{% endif %}
-							onclick="api.setParameter('Modality', {{modality.id}}, 'is_word', 'change');"
-						/>
-					</td>
-					<td>
-						<input 
-							type="checkbox"  
-							{% if modality.is_tag %}checked="checked"{% endif %}
-							onclick="api.setParameter('Modality', {{modality.id}}, 'is_tag', 'change');"
-						/>
-					</td>
-				</tr>
-			{% endfor %}
-			</tbody>
-		</table> 
+	<div class= "col-sm-7">
+	
+		<form method="post">
+			<table class = "table table-bordered table-hover">
+				<thead>
+					<tr>
+						<td>Name</td>
+						<td> Words</td> 
+						<td> Is tag</td>
+						<td> Weight<br><small>(topic naming)</small> </td>
+						<td> Weight<br><small>(spectrum)</small> </td>
+					</tr>
+				</thead>
+				<tbody>
+				{% for modality in modalities %}
+					<tr>
+						<td><a href = "/modality?id={{modality.id}}" >{{modality.name}}</a></td>
+						<td>{{modality.terms_count}}</td>
+						<td>
+							<input 
+								type="checkbox"  
+								{% if modality.is_tag %}checked="checked"{% endif %}
+								onclick="api.setParameter('Modality', {{modality.id}}, 'is_tag', 'change');"
+							/>
+						</td>
+						<td>
+							<input 
+								type="number" 
+								value="{{modality.weight_naming}}" 
+								step="0.001" 
+								min="0" 
+								max="1"
+								name="{{modality.name}}_wn"
+							></input>
+						</td>
+						<td>
+							<input 
+								type="number" 
+								value="{{modality.weight_spectrum}}" 
+								step="0.001" 
+								min="0" 
+								max="1"
+								name="{{modality.name}}_ws"
+							></input>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table> 
+		
+			<input type="hidden" name="type" value="modalitites_weights" />
+			<input type = "hidden" name = "dataset" value = "{{dataset.text_id}}"/>
+			<div class="offset-sm-2 col-sm-10">
+				<button type="submit" class="btn btn-primary">Save</button>
+			</div> 
+			{% csrf_token %}
+		</form>
 	</div>
-	<div class = "col-sm-4" id = "pie_modality" ></div>
+	<div style='width: 350px;' class = "col-sm-2" id = "pie_modality"></div>
 {% elif stats %}
 	<h4>Word frequency</h4>
 	<div id="freq_chart"></div>		 
@@ -106,6 +130,8 @@
 		<div class="offset-sm-2 col-sm-10">
 			<button type="submit" class="btn btn-primary">Save</button>
 		</div> 
+		
+		<input type="hidden" name="type" value="settings" />
  		{% csrf_token %}
 	</form>
 {% elif assessment %}
@@ -299,7 +325,7 @@
 		},
 		"size": {
 			"canvasHeight": 200,
-			"canvasWidth": 400,
+			"canvasWidth": 350,
 			"pieOuterRadius": "100%"
 		},
 		"data": { 
@@ -326,17 +352,17 @@
 				"font": "verdana"
 			},
 			"percentage": {
-				"color": THEME_textColor,
+				"color": theme.textColor,
 				"font": "verdana",
 				"decimalPlaces": 1
 			},
 			"value": {
-				"color": THEME_textColor,
+				"color": theme.textColor,
 				"font": "verdana"
 			},
 			"lines": {
 				"enabled": true,
-				"color": THEME_textColor
+				"color": theme.textColor
 			},
 			"truncation": {
 				"enabled": true

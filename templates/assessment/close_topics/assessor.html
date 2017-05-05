@@ -3,24 +3,13 @@
 
 {% block content %}
 	
-	Target topic: <span  
-				data-toggle="tooltip" 
-				data-placement="right" 
-				title="{{target_topic.top_words_html}}"
-				data-html="true">
-				{{target_topic}}
-				</span>
+	Target topic:  
+				{{target_topic.top_words_list}} 
 	<hr>
 	{% for topic in topics %}
 		{% if topic != target_topic %}
 			<input type="checkbox" onclick="checkChanged({{topic.index_id}});">
-				<span  
-				data-toggle="tooltip" 
-				data-placement="right" 
-				title="{{topic.top_words_html}}"
-				data-html="true">
-				{{topic}}
-				</span>
+				{{topic.top_words_list}}  
 			</input>
 			<br>
 		{% endif %}

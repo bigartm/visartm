@@ -16,7 +16,7 @@ import struct
 import time
 import algo.metrics as metrics
 
-from models.bigartm_config import BANNED_WORDS, TOPIC_TITLE_SIZE
+from models.bigartm_config import BANNED_WORDS
 
 
 class ArtmModel(models.Model):
@@ -35,14 +35,28 @@ class ArtmModel(models.Model):
 	threshold_hier = models.IntegerField(null = False, default = 100) 
 	threshold_docs = models.IntegerField(null = False, default = 100) 
 	max_parents_hier = models.IntegerField(null = False, default = 1) 
-	
+	topic_naming_top_words = models.IntegerField(null = False, default = 3) 
 	
 	
 	def __str__(self):
 		if not self.name or len(self.name) == 0:
 			return self.text_id
 		else: 
-			return self.name		
+			return self.name	
+	
+	def get_model(request, modify=False):
+		if "model_id" in request.GET:
+			model = ArtmModel.objects.get(id=request.GET['model_id'])
+		else:
+			return None
+		
+		if not model.dataset.is_public and model.dataset.owner != request.user:
+			return None
+		
+		if not modify and not model.author == request.user:
+			return None
+			
+		return model
 	
 	def create_generic(self, POST):
 		mode = POST['mode']
@@ -490,6 +504,9 @@ class ArtmModel(models.Model):
 		top_terms_size = 100
 		
 		banned_words = set(BANNED_WORDS)
+		title_size = self.topic_naming_top_words
+		terms_weights = self.dataset.get_terms_weights("naming") 
+		
 		
 		row_counter = 0
 		for layer_id in range(1, self.layers_count + 1):
@@ -505,8 +522,6 @@ class ArtmModel(models.Model):
 				distr = phi_t[row_counter] 
 				idx = np.argsort(distr)
 				idx = idx[::-1]
-				terms_to_title = []				
-				title_counter = 0
 				mc = self.dataset.modalities_count
 				top_terms_counter = dict()
 				
@@ -523,6 +538,7 @@ class ArtmModel(models.Model):
 						relation.topic = topic
 						relation.term = term
 						relation.weight = weight
+						relation.weight_normed = weight * terms_weights[i]
 						relation.save()
 						
 						top_terms_counter[mid] += 1
@@ -530,12 +546,20 @@ class ArtmModel(models.Model):
 							mc -= 1
 						if mc == 0:
 							break
+						 
 						
-					if title_counter < TOPIC_TITLE_SIZE and term.modality.is_word and not term.text in banned_words:
-						title_counter += 1 						
-						terms_to_title.append(term.text) 
-				
 				if 'topic' in topic_names[layer_id][topic_id]:
+					terms_to_title = []				
+					title_counter = 0	
+					idx = np.argsort(phi_t[row_counter] * terms_weights)
+					idx = idx[::-1]
+					for i in idx:
+						term = terms_index[int(i)]
+						if title_counter < title_size and not term.text in banned_words:
+							title_counter += 1 						
+							terms_to_title.append(term.text) 
+						else:
+							break
 					topic.title = ', '.join(terms_to_title)
 					topic.title_multiline = '\n'.join(terms_to_title)
 				else:
@@ -549,7 +573,7 @@ class ArtmModel(models.Model):
 				row_counter += 1
 				if row_counter % 10 == 0:
 					self.log("Created topic %d/%d." % (row_counter, total_topics_count))
-		
+					 
 		self.build_hier()
 		
 			
@@ -609,7 +633,7 @@ class ArtmModel(models.Model):
 		metric = metrics.get_metric_by_name(metric)
 		topics_index = Topic.objects.filter(model=self, layer=topic.layer).order_by("index_id")
 	
-		phi_t = self.get_phi_t(topic.layer)
+		phi_t = self.get_phi_t_norm(topic.layer)
 		target_row =  phi_t[topic.index_id]
 		distances = [metric(target_row, row) for row in phi_t]
 		idx = np.argsort(distances)
@@ -636,7 +660,7 @@ class ArtmModel(models.Model):
 			ret = np.zeros((topics_count[layer], topics_count[layer]))
 			
 				
-			phi_t = self.get_phi_t(layer)
+			phi_t = self.get_phi_t_norm(layer)
 			
 			metric = metrics.get_metric_by_name(metric)
 				
@@ -646,9 +670,10 @@ class ArtmModel(models.Model):
 			np.save(matrix_name, ret)
 		return ret
 	
-	
-		
-	
+	def delete_cached_distances(self):
+		rmtree(self.get_dist_folder())
+		if hasattr(self, "phi_t_norm"):
+			del self.phi_t_norm
 	
 	# Only horizontal arranging
 	@transaction.atomic
@@ -837,27 +862,25 @@ class ArtmModel(models.Model):
 		except:
 			self.theta = np.load(os.path.join(self.get_folder(), "theta.npy"))
 			return self.theta
+	
+	
+	# Return phi transposed and normalized by modalities weights, for distance counting
+	def get_phi_t_norm(self, layer):
+		if not hasattr(self, "phi_t_norm"):
+			self.phi_t_norm = dict()
+		if not layer in self.phi_t_norm:
+			phi_t_norm = self.get_phi().transpose()[self.get_layer_range(layer)]
 			
-	def get_phi_t(self, layer):
-		if not hasattr(self, "phi_t"):
-			self.phi_t = dict()
-		if not layer in self.phi_t:
-			phi_t = self.get_phi().transpose()[self.get_layer_range(layer)]
-			
-			sums = np.sum(phi_t, axis = 1)
-			if (np.max(sums) - np.min(sums)) / np.mean(sums) > 1e-1:
-				self.log(str(sums))
-				self.log("max=" + str(np.max(sums)))
-				self.log("min=" + str(np.min(sums)))
-				self.log("avg=" + str(np.mean(sums)))
-				raise ValueError("Column of matrix phi have different sums, so they cannot be normalized. %f %f %f" % (np.min(sums), np.mean(sums), np.max(sums)))
-			  
-			j = 0
-			for row in phi_t:
-				row /= sums[j]
-				j += 1 
-			self.phi_t[layer] = phi_t
-		return self.phi_t[layer]
+			if self.dataset.modalities_count > 1:
+				self.log("Normalizing phi according to modalitites weights...")
+				phi_t_norm = phi_t_norm * self.dataset.get_terms_weights("spectrum")
+				self.log("Normalized.")
+				sums = np.sum(phi_t_norm, axis = 1)
+				if np.min(sums) < 0.999 or np.max(sums) > 1.001:
+					raise RuntimeError("Phi is not stochastic!")
+				#print(sums)
+			self.phi_t_norm[layer] = phi_t_norm
+		return self.phi_t_norm[layer]
 			
 	def get_theta_t(self):
 		try:
@@ -976,7 +999,7 @@ class Topic(models.Model):
 	title_short = models.TextField(null=True) 
 	spectrum_index = models.IntegerField(null = True, default = 0) 
 	layer = models.IntegerField(default = 1) 
-	documents = models.BinaryField(null=True) #[4 bytes - document.id][4 bytes - weight]
+	documents = models.BinaryField(null=True) #[4 bytes - document.index_id][4 bytes - weight]
 	documents_count =  models.IntegerField(null=False, default=0)
 	
 	def __str__(self):
@@ -996,9 +1019,7 @@ class Topic(models.Model):
 	def get_documents_index_ids(self):  
 		return [struct.unpack('I', self.documents[8*i : 8*i+4])[0] for i in range(self.documents_count)]
 		
-	def top_words(self, count = 10):
-		return [x.term.text for x in TopTerm.objects.filter(topic=self, term__modality__is_word=True).order_by('-weight')[0:count]]
-			
+		
 	def top_words_html(self, count=10):
 		ret = ""
 		tw = self.top_words(count=count)
@@ -1008,8 +1029,15 @@ class Topic(models.Model):
 			i += 1
 			if i % 3 == 0:
 				ret +="<br>"
-		return ret
-		 
+		return ret 
+		
+	def top_words_list(self, count=10):
+		return ', '.join(self.top_words(count=count))
+			
+	def top_words(self, count = 10):
+		return [x.term.text for x in TopTerm.objects.filter(topic=self).order_by('-weight_normed')[0:count]]
+	
+			
 		
 class TopicInDocument(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
@@ -1026,10 +1054,6 @@ class TopicInTopic(models.Model):
 	weight = models.FloatField(default=0)
 	is_main =  models.BooleanField(default=True)
 	
-class TopTerm(models.Model):
-	topic = models.ForeignKey(Topic)
-	term = models.ForeignKey(Term)
-	weight = models.FloatField()
 		
 class TopicRelated(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)
@@ -1038,6 +1062,14 @@ class TopicRelated(models.Model):
 	weight = models.FloatField()
 	def __str__(self):
 		return str(self.topic2) + "{0:.1f}%".format(100 * self.weight)		
+
+		
+class TopTerm(models.Model):
+	topic = models.ForeignKey(Topic)
+	term = models.ForeignKey(Term)
+	weight = models.FloatField(default=0)		
+	weight_normed = models.FloatField(default=0)		
+	
 
 class TopicInTerm(models.Model):
 	model = models.ForeignKey(ArtmModel, null = False)

@@ -126,15 +126,27 @@ from django.conf import settings
 def visual_dataset(request):  
 	if request.method == "POST":
 		dataset = Dataset.get_dataset(request, modify=True)
-		if not dataset:
-			return HttpResponseForbidden()
-		dataset.name = request.POST['name']
-		dataset.description = request.POST['description']
-		dataset.preprocessing_params = request.POST['preprocessing_params']	
-		dataset.is_public = ("is_public" in request.POST)
-		dataset.language = request.POST['language']
-		dataset.save() 
-		return redirect("/dataset?dataset=" + request.POST['dataset'] + "&mode=settings")
+		if request.POST['type'] == 'settings':
+			if not dataset:
+				return HttpResponseForbidden()
+			dataset.name = request.POST['name']
+			dataset.description = request.POST['description']
+			dataset.preprocessing_params = request.POST['preprocessing_params']	
+			dataset.is_public = ("is_public" in request.POST)
+			dataset.language = request.POST['language']
+			dataset.save() 
+			return redirect("/dataset?dataset=" + request.POST['dataset'] + "&mode=settings")
+		elif request.POST['type'] == 'modalitites_weights':
+			for modality in Modality.objects.filter(dataset=dataset):
+				modality.weight_naming = float(request.POST[modality.name + "_wn"])
+				modality.weight_spectrum = float(request.POST[modality.name + "_ws"])	
+				modality.save()
+				
+			dataset.normalize_modalities_weigths()
+			dataset.delete_cached_distances()
+			dataset.reset_terms_weights()
+			return redirect("/dataset?dataset=" + request.POST['dataset'] + "&mode=modalities")
+		
 	
 	
 	dataset = Dataset.get_dataset(request)
