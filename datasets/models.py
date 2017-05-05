@@ -809,12 +809,21 @@ class Term(models.Model):
 		self.save()
 		relations = []
 		documents = Document.objects.filter(dataset = self.dataset)
+		
+		temp_count = 0
+		
 		for document in documents:
 			count = document.count_term(self.index_id)
 			if count != 0:
 				relations.append((count, document.index_id))
+				if temp_count < 5:
+					self.documents += struct.pack('I', document.index_id) + struct.pack('H', count) 
+					temp_count += 1
+					self.save()
+					
 		relations.sort(reverse=True)
 		
+		self.documents = bytes()
 		for count, document_index_id in relations:
 			self.documents += struct.pack('I', document_index_id) + struct.pack('H', count) 
 		
