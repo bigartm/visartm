@@ -169,9 +169,9 @@ def create_model(request):
 	#print(request.POST)
 
 	
-	dataset = Dataset.objects.get(text_id = request.POST['dataset'])
-	if not dataset.check_access(request.user):
-		return HttpResponceForbidden("You have not access to this dataset")
+	dataset = Dataset.get_dataset(request)
+	if not dataset:
+		return HttpResponceForbidden()
 	model = ArtmModel()
 	model.dataset = dataset
 	model.name = request.POST['model_name']
