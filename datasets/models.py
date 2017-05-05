@@ -464,7 +464,7 @@ class Dataset(models.Model):
 		for folder in os.listdir(models_folder):
 			if not folder in legit_models:
 				folder_to_remove = os.path.join(models_folder, folder)
-				print("Removing trash: %s", folder_to_remove)
+				print("Removing trash: %s" % folder_to_remove)
 				rmtree(folder_to_remove)
 				
 	def get_modalities_mask(self):
@@ -492,12 +492,14 @@ def remove_dataset_files(sender, instance, using, **kwargs):
 		pass 
  
 def on_start():
+	'''
 	for dataset in Dataset.objects.all():
 		try:
 			dataset.delete_unused_folders()
 		except:
 			pass
-			
+	'''
+		
 	for dataset in Dataset.objects.filter(status=1):
 		dataset.status = 2
 		dataset.error_message = "Dataset processing was interrupted."
