@@ -140,9 +140,9 @@ def reset_visuals(request):
 @login_required
 def create_model(request):
 	if request.method == 'GET': 
-		dataset = Dataset.objects.get(text_id=request.GET['dataset'])
-		if not dataset.check_access(request.user):
-			return HttpResponceForbidden("You have not access to this dataset")
+		dataset = Dataset.get_dataset(request)
+		if not dataset:
+			return HttpResponceForbidden()
 		modalities = Modality.objects.filter(dataset = dataset)
 		scripts = os.listdir(os.path.join(settings.DATA_DIR, "scripts"))
 		
