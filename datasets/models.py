@@ -797,21 +797,23 @@ class Term(models.Model):
 	token_tf = models.IntegerField(default=0)
 	token_df = models.IntegerField(default=0)
 	documents = models.BinaryField(null=True)
+	documents_defined = models.BooleanField(default=False)
 
 	def __str__(self):
 		return self.text	
 	
 	
 	def count_documents_index(self):
-		if self.documents:
+		if self.documents_defined:
 			return
-		self.documents = bytes()
+		self.documents_defined = True
 		self.save()
 		relations = []
 		documents = Document.objects.filter(dataset = self.dataset)
 		
 		temp_count = 0
 		
+		self.documents = bytes()
 		for document in documents:
 			count = document.count_term(self.index_id)
 			if count != 0:

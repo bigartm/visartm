@@ -540,7 +540,7 @@ def visual_term(request):
 		if weight_sum == 0:
 			context['topics_all_zeros'] = True
 	
-	if not term.documents:
+	if not term.documents_defined:
 		t = Thread(target = Term.count_documents_index, args = (term, ), daemon = True)
 		t.start()
 
