@@ -540,7 +540,10 @@ def visual_term(request):
 		if weight_sum == 0:
 			context['topics_all_zeros'] = True
 	
-	term.count_documents_index()
+	
+	t = Thread(target = Term.count_documents_index, args = (term, ), daemon = True)
+	t.start()
+
 	return render(request, 'datasets/term.html', Context(context)) 
 	
 	
