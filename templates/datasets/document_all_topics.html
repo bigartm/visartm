@@ -7,7 +7,7 @@
 	<hr>
 	<h3>All topics</h3>
 	{% for topic in topics %}
-	<p><a href ="/visual/topic?id={{topic.topic.id}}">{{topic.topic}}</a>  {{topic.weight | floatformat:3}}%</p>
+	<p><a href ="/topic?id={{topic.topic.id}}">{{topic.topic}}</a>  {{topic.weight | floatformat:3}}%</p>
 	{% endfor %}
 {% endblock %}
  
