@@ -3,7 +3,7 @@ import json
 import numpy as np
 
 #Number of assessment for each topic
-ASSESS_RATIO = 2
+ASSESS_RATIO = 5
 
 def initialize_problem(problem):
 	if problem.model:
@@ -63,7 +63,8 @@ def get_task_context(task):
 		index_id=answer["target_topic_index_id"]
 	)
 	ans["target_topic"] = target_topic
-	ans["topics"] = [x["topic"] for x in task.problem.model.get_related_topics(target_topic, metric="jaccard")]
+	ans["topics"] = Topic.objects.get(model=target_topic.model, layer=target_topic.layer)
+	#ans["topics"] = [x["topic"] for x in task.problem.model.get_related_topics(target_topic, metric="jaccard")]
 	
 	Topic.objects.filter(model=task.problem.model, layer=ans["target_topic"].layer).order_by("title")
 	return ans

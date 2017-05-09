@@ -1033,7 +1033,7 @@ class Topic(models.Model):
 		return ret 
 		
 	def top_words_list(self, count=10):
-		return ', '.join(top_words(count=count))
+		return ', '.join(self.top_words(count=count))
 			
 	def top_words(self, count = 10):
 		return [x.term.text for x in TopTerm.objects.filter(topic=self).order_by('-weight_normed')[0:count]]
