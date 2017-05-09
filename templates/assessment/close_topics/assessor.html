@@ -1,10 +1,12 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 
 {% block content %}
 	
-	Target topic:  
-				{{target_topic.top_words_list}} 
+	<p>Выберите 2-4 темы, которые считаете близкими по смыслу к целевой теме.</p>
+	
+	<p>Целевая тема:  <br>
+				{{target_topic.top_words_list}} </p>
 	<hr>
 	{% for topic in topics %}
 		{% if topic != target_topic %}
