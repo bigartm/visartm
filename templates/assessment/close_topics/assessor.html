@@ -17,7 +17,7 @@
 		{% endif %}
 	{% endfor %}
 	
-	<form method='post'>
+	<form method='post' id='finishForm'>
 		<input type="hidden" name="task_id" value="{{task.id}}" />
 		<input type="hidden" name="selected_topics" id="selected_topics" value="[]" />
 		<button class="btn btn-success">Next!</button>
@@ -25,6 +25,9 @@
 		<input id="continue" type="hidden" name="continue" value="true" />
 		{% csrf_token %}
 	</form>
+	
+	<br>
+	<a onclick="finish();">Save and finish</a>  
 	
 {% endblock %}
 
@@ -49,6 +52,12 @@
 		if (val.length > 0)	val = val.substr(0, val.length - 1);
 		val = "[" + val + "]";
 		document.getElementById("selected_topics").value = val;
+	}
+	
+	function finish()  {
+		finishForm = document.getElementById("finishForm");
+		document.getElementById("continue").value = "false";
+		finishForm.submit();
 	}
 </script>
 {% endblock %}
