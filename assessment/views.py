@@ -78,7 +78,7 @@ def create_problem(request):
 	type = request.GET["type"]
 	dataset = Dataset.objects.get(id = dataset_id)		
 	if dataset.owner != request.user:
-		return HttpResponseForbidden("Only owner of dataset (" + str(problem.dataset.owner) + ") can create assessment problem.")
+		return HttpResponseForbidden("Only owner of dataset (" + str(dataset.owner) + ") can create assessment problem.")
 	problem = AssessmentProblem() 
 	problem.dataset = dataset
 	problem.type = type 

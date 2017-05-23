@@ -737,6 +737,8 @@ class ArtmModel(models.Model):
 				if mode == "alphabet":
 					titles = [self.topics_index[layer_id][topic_id].title for topic_id in range(0, layer_size)]
 					idx = np.argsort(titles)
+				elif mode == "index":
+					idx = np.array(range(layer_size))
 				else:
 					from algo.arranging.base import get_arrangement_permutation
 					if cluster_mode:
