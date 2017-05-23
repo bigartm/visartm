@@ -880,6 +880,7 @@ class ArtmModel(models.Model):
 				self.log("Normalized.")
 				sums = np.sum(phi_t_norm, axis = 1)
 				if np.min(sums) < 0.999 or np.max(sums) > 1.001:
+					print(sums)
 					raise RuntimeError("Phi is not stochastic!")
 				#print(sums)
 			self.phi_t_norm[layer] = phi_t_norm
