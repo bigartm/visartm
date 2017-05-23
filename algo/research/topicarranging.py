@@ -30,6 +30,7 @@ mode_names = {
 identical = [i for i in range(N)] 
  
 answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OAC", "TOC", "UP", "UMC"]]
+answers_lkh = [["Метрика", "CANR", "TOC", "UP", "UMC"]]
 for metric in metrics.metrics_list:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<h2>Метрика %s</h2>" % metric)
@@ -60,6 +61,14 @@ for metric in metrics.metrics_list:
 		])
 		
 		if mode == "hamilton":
+			answers_lkh.append([metric,
+				"%.04f" % arr.corrected_average_neigbour_rank(dist, perm),
+				"%.04f" % arr.triple_order_conserving(dist, perm),
+				"%.02f" % arr.user_penalty(C, perm),
+				"%.04f" % arr.user_metric_correlation(C, dist)
+			])
+		
+		if mode == "hamilton":
 			DDC = arr.distance_distance_curve(dist, perm)
 			CDC = arr.cosine_distance_curve(dist, perm)
 			
@@ -79,3 +88,4 @@ for metric in metrics.metrics_list:
 			research.report_picture(width=400)
 			
 research.report_table(answers)
+research.report_table(answers_lkh)
