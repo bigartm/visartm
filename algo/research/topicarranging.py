@@ -29,8 +29,8 @@ mode_names = {
 }
 identical = [i for i in range(N)] 
  
-answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OAC", "TOC", "UP", "UMC"]]
-answers_lkh = [["Метрика", "CANR", "TOC", "UP", "UMC"]]
+answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OANC", "TONC", "UP", "UMC"]]
+answers_lkh = [["Метрика", "CANR", "TONC", "UP", "UMC"]]
 for metric in metrics.metrics_list:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<h2>Метрика %s</h2>" % metric)
@@ -41,8 +41,8 @@ for metric in metrics.metrics_list:
 			"No arranging", 
 			"%.04f" % arr.neigbor_distances_sum(dist, identical),
 			"%.04f" % arr.corrected_average_neigbour_rank(dist, identical),
-			"%.04f" % arr.obtuse_angle_conserving(dist, identical),
-			"%.04f" % arr.triple_order_conserving(dist, identical),
+			"%.04f" % arr.OANC(dist, identical),
+			"%.04f" % arr.TONC(dist, identical),
 			"%.02f" % arr.user_penalty(C, identical),
 			"%.04f" % arr.user_metric_correlation(C, dist),
 		])
@@ -54,8 +54,8 @@ for metric in metrics.metrics_list:
 			mode_names[mode], 
 			"%.04f" % arr.neigbor_distances_sum(dist, perm),
 			"%.04f" % arr.corrected_average_neigbour_rank(dist, perm),
-			"%.04f" % arr.obtuse_angle_conserving(dist, perm),
-			"%.04f" % arr.triple_order_conserving(dist, perm),
+			"%.04f" % arr.OANC(dist, perm),
+			"%.04f" % arr.TONC(dist, perm),
 			"%.02f" % arr.user_penalty(C, perm),
 			""
 		])
@@ -63,7 +63,7 @@ for metric in metrics.metrics_list:
 		if mode == "hamilton":
 			answers_lkh.append([metric,
 				"%.04f" % arr.corrected_average_neigbour_rank(dist, perm),
-				"%.04f" % arr.triple_order_conserving(dist, perm),
+				"%.04f" % arr.TONC(dist, perm),
 				"%.02f" % arr.user_penalty(C, perm),
 				"%.04f" % arr.user_metric_correlation(C, dist)
 			])

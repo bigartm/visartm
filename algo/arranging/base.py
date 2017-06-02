@@ -61,7 +61,7 @@ def average_neigbour_rank(dist, perm):
 		
 	return np.mean(ranks)
 		
-def obtuse_angle_conserving(dist, perm):
+def OANC(dist, perm):
 	N = dist.shape[0]
 	ctr = 0
 	for i in range(N):
@@ -72,13 +72,13 @@ def obtuse_angle_conserving(dist, perm):
 					
 	return (6.0 * ctr) / (N * (N-1) * (N-2))
 		
-def triple_order_conserving(dist, perm):
+def TONC(dist, perm):
 	N = dist.shape[0]
 	ctr = 0
 	for i in range(N):
 		for j in range(i+1, N):
 			for k in range(j+1, N):
-				if dist[perm[i]][perm[k]] > max(dist[perm[i]][perm[j]],dist[perm[j]][perm[k]]):
+				if dist[perm[i]][perm[k]] < max(dist[perm[i]][perm[j]],dist[perm[j]][perm[k]]):
 					ctr += 1
 					
 	return (6.0 * ctr) / (N * (N-1) * (N-2))

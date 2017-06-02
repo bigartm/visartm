@@ -23,7 +23,7 @@ class AssessmentProblem(models.Model):
 	
 	params = models.TextField(null=False, default = "{}")
 	last_refreshed = models.DateTimeField(null=False, default=datetime.now) 
-	timeout = models.IntegerField(null=False, default=3600)
+	timeout = models.IntegerField(null=False, default=1000000000)
 	
 	def __str__(self):
 		return "#" + str(self.id) + " (" + self.dataset.name + "," + self.type \
@@ -44,6 +44,12 @@ class AssessmentProblem(models.Model):
 		context["problem"] = self
 		return context
 	
+	# Get superviser/instructions view. Returns view context as dict.
+	def get_report_context(self):
+		context = self.get_module().get_report_context(self)
+		context["problem"] = self
+		return context
+			
 	# Create Task instance, initialize it and save it	
 	def create_task(self, request):
 		self.refresh()
@@ -106,12 +112,14 @@ class AssessmentProblem(models.Model):
 		now = datetime.now()
 		if (now - self.last_refreshed).seconds < 150:
 			return 
+		'''	
 		deadline = now - timedelta(0, self.timeout)
 		dead_tasks = AssessmentTask.objects.filter(problem=self, status=1, creation_time__lte=deadline)
 		#for task in dead_tasks:
 		#	task.status = 3
 		#	task.save()
 		dead_tasks.delete()
+		'''
 		self.last_refreshed = now
 		self.save()
 		
@@ -154,6 +162,10 @@ class AssessmentTask(models.Model):
 	creation_time = models.DateTimeField(null=False, default = datetime.now) 
 	completion_time = models.DateTimeField(null=True)
 	status = models.IntegerField(null=False, default = 0)  # 1-issued, 2-completed
+	 
+	words_selected = models.IntegerField(default=0)
+	segments_selected = models.IntegerField(default=0)
+	
 	
 	# Get assessor view. Returns view context as dict.
 	def get_view_context(self):		

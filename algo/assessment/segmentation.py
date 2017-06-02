@@ -1,6 +1,7 @@
 from models.models import ArtmModel, Topic 
 from datasets.models import Document, Term
 
+
 import os
 import json
 from django.db.models.functions import Lower
@@ -15,6 +16,92 @@ def get_problem_context(problem):
 	ret["topics"] = Segmentation_Topic.objects.filter(problem=problem).order_by("id")
 	return ret
 	
+def get_report_context(problem):
+	from assessment.models import AssessmentTask, ProblemAssessor
+	import numpy as np
+	tasks = AssessmentTask.objects.filter(problem=problem)
+	assessors = [x.assessor for x in ProblemAssessor.objects.filter(problem=problem)]
+	
+	N = max([x.id for x in assessors])+1
+	current_tasks = np.zeros(N, dtype=int)
+	skipped_tasks = np.zeros(N, dtype=int)
+	done_tasks = np.zeros(N, dtype=int)
+	words_count = np.zeros(N, dtype=int)
+	segments_count = np.zeros(N, dtype=int)
+	
+	
+	for task in tasks:
+		if task.status == 1:
+			current_tasks[task.assessor_id] += 1
+		elif task.status == 2:
+			if task.segments_selected > 0:
+				done_tasks[task.assessor_id] += 1
+			else:
+				skipped_tasks[task.assessor_id]+=1
+		words_count[task.assessor_id] += task.words_selected
+		segments_count[task.assessor_id] += task.segments_selected
+		
+	ret = {}
+	#ret["tasks"] = tasks 
+	ret["assessors"] = [{
+		"user":x, 
+		"done_tasks": done_tasks[x.id], 
+		"skipped_tasks": skipped_tasks[x.id],
+		"current_tasks": current_tasks[x.id],
+		"words_count": words_count[x.id],
+		"segments_count": segments_count[x.id]
+	} for x in assessors]
+	
+	return ret
+	
+def get_assessor_report(problem, request):
+	from django.http import HttpResponse
+	from django.contrib.auth.models import User
+	from assessment.models import AssessmentTask
+	assessor = User.objects.get(id=request.GET["assessor_id"])
+	tasks = AssessmentTask.objects.filter(problem=problem, assessor=assessor)
+	
+	topics = {}
+	for task in tasks:
+		load_answer(task)
+		text = task.document.get_text()
+		for selection in task.answer["selections"]:
+			sel_text = text[selection[0]: selection[1]]
+			topic_id = selection[2]
+			if not (topic_id in topics):
+				topics[topic_id] = [sel_text]
+			else:
+				topics[topic_id].append(sel_text)
+	
+	if request.GET["type"] == "html":
+		ans = ""
+		for topic_id, selections in topics.items():
+			ans += "<b>" + Segmentation_Topic.objects.get(problem=problem, index_id=topic_id).name + "</b><br>"
+			ans += "<br>".join(selections)
+			ans +="<br><br>"
+		return HttpResponse(ans)
+	elif request.GET["type"] == "xls":
+		import pandas as pd
+		from django.views.static import serve
+		topics_list = []
+		segments_list = []
+		for topic_id, selections in topics.items():
+			topic_name = Segmentation_Topic.objects.get(problem=problem, index_id=topic_id).name
+			for x in selections:
+				topics_list.append(topic_name)
+				segments_list.append(x)
+		
+		df = pd.DataFrame({"Topic":topics_list, "Segment":segments_list})
+		df = df[['Topic', 'Segment']]
+		file_name = os.path.join(problem.get_folder(), "segments_%s.xlsx" % assessor.username)		
+		writer = pd.ExcelWriter(file_name)
+		df.to_excel(writer, assessor.username, index=False)
+		writer.save()
+ 
+		response = serve(request, os.path.basename(file_name), os.path.dirname(file_name))
+		response['Content-Disposition'] = 'attachment; filename=segments_%s.xlsx' % assessor.username
+		return response
+		
 def create_task(self, request):
 	from assessment.models import AssessmentTask
 	
@@ -281,13 +368,18 @@ def finalize_task(task, POST):
 				terms.append(term_id)
 				terms_assessions[i] = topic_id
 			i += 1
+			
 		if len(terms) > 1:
 			assessed_segments.append([terms, topic_id])
 			segment = Segmentation_TypicalSegment.get_segment(task.problem, terms)
 			segment.add_topic(topic_id)
-			
+	
+		task.words_selected += len(terms)
+		
+	
 	task.answer["terms_assessions"] = terms_assessions
-	task.answer["assessed_segments"] = assessed_segments 
+	task.answer["assessed_segments"] = assessed_segments
+	task.segments_selected = len(selections)
 	save_answer(task)
 	
 def get_problem_results(problem):

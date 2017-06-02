@@ -55,6 +55,14 @@ def problem(request):
 		context = problem.get_view_context()
 		context["no_footer"] = True
 		return render(request, os.path.join("assessment", problem.type, "settings.html"), Context(context))
+	elif "mode" in request.GET and request.GET["mode"] == "report":
+		if problem.type == "segmentation":
+			context = problem.get_report_context()
+			return render(request, os.path.join("assessment", problem.type, "report.html"), Context(context))
+		else:
+			return HttpResponse("Reports on this problem are not provided.")
+	elif "mode" in request.GET and request.GET["mode"] == "assessor_report":
+		return problem.get_module().get_assessor_report(problem, request)
 	else:
 		from django.contrib.auth.models import User
 		not_assessors = [x.username for x in User.objects.all()]
