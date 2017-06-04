@@ -39,12 +39,12 @@ for metric in metrics.metrics_list:
 	answers.append([
 			metric, 
 			"No arranging", 
-			"%.04f" % arr.neigbor_distances_sum(dist, identical),
-			"%.04f" % arr.corrected_average_neigbour_rank(dist, identical),
-			"%.04f" % arr.OANC(dist, identical),
+			"%.04f" % arr.NDS(dist, identical),
+			"%.04f" % arr.CANR(dist, identical),
+			"%.06f" % arr.OANC(dist, identical),
 			"%.04f" % arr.TONC(dist, identical),
-			"%.02f" % arr.user_penalty(C, identical),
-			"%.04f" % arr.user_metric_correlation(C, dist),
+			"%.02f" % arr.UP(C, identical),
+			"%.04f" % arr.UMC(C, dist),
 		])
 	
 	for mode in modes:
@@ -52,25 +52,25 @@ for metric in metrics.metrics_list:
 		answers.append([
 			"", 
 			mode_names[mode], 
-			"%.04f" % arr.neigbor_distances_sum(dist, perm),
-			"%.04f" % arr.corrected_average_neigbour_rank(dist, perm),
-			"%.04f" % arr.OANC(dist, perm),
+			"%.04f" % arr.NDS(dist, perm),
+			"%.04f" % arr.CANR(dist, perm),
+			"%.06f" % arr.OANC(dist, perm),
 			"%.04f" % arr.TONC(dist, perm),
-			"%.02f" % arr.user_penalty(C, perm),
+			"%.02f" % arr.UP(C, perm),
 			""
 		])
 		
 		if mode == "hamilton":
 			answers_lkh.append([metric,
-				"%.04f" % arr.corrected_average_neigbour_rank(dist, perm),
+				"%.04f" % arr.CANR(dist, perm),
 				"%.04f" % arr.TONC(dist, perm),
-				"%.02f" % arr.user_penalty(C, perm),
-				"%.04f" % arr.user_metric_correlation(C, dist)
+				"%.02f" % arr.UP(C, perm),
+				"%.04f" % arr.UMC(C, dist)
 			])
 		
 		if mode == "hamilton":
-			DDC = arr.distance_distance_curve(dist, perm)
-			CDC = arr.cosine_distance_curve(dist, perm)
+			DDC = arr.DDC(dist, perm)
+			CDC = arr.CDC(dist, perm)
 			
 			
 			fig = research.get_figure(figsize=(10,10))

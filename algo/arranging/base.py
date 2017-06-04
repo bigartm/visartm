@@ -18,7 +18,7 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 		perm = np.argsort(tsne_result)
 	elif mode == "mds":
 		from sklearn.manifold import MDS
-		mds = MDS(n_components=1, max_iter=3000, eps=1e-9, random_state=0,dissimilarity="precomputed", n_jobs=4)
+		mds = MDS(n_components=1, max_iter=3000, eps=1e-9, random_state=0, dissimilarity="precomputed", n_jobs=4)
 		result = mds.fit_transform(dist).reshape(-1) 
 		perm = np.argsort(result)
 	elif mode == "dendro":
@@ -29,13 +29,14 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 		raise ValueError("Unknown mode: %s" % mode)
 	
 	if model:
-		model.NDS = neigbor_distances_sum(dist, perm)
+		model.NDS = NDS(dist, perm)
 		model.log("NDS=%f" % model.NDS)
-		model.log("CANR=%f" % corrected_average_neigbour_rank(dist, perm))
+		model.log("CANR=%f" % CANR(dist, perm))
 		 
 	return perm
 
-def neigbor_distances_sum(dist, perm):
+# Neigbor distances sum
+def NDS(dist, perm):
 	N = dist.shape[0]
 	ans = 0
 	for i in range(N-1):
@@ -49,10 +50,10 @@ def rank(dist, x, y):
 		if idx[i]==x:
 			return i
 
-def corrected_average_neigbour_rank(dist, perm):
-	return average_neigbour_rank(dist, perm) - 1.5
+
 			
-def average_neigbour_rank(dist, perm):
+# Average neigbour rank
+def ANR(dist, perm):
 	N = dist.shape[0]
 	ranks = [] 
 	for i in range(1,N): 
@@ -60,8 +61,14 @@ def average_neigbour_rank(dist, perm):
 		ranks.append(rank(dist,perm[i],perm[i-1])) 
 		
 	return np.mean(ranks)
-		
-def OANC(dist, perm):
+
+	
+# Corrected average neigbour rank
+def CANR(dist, perm):
+	return ANR(dist, perm) - 1.5
+	
+# Obtuse angle conserving
+def OAC(dist, perm):
 	N = dist.shape[0]
 	ctr = 0
 	for i in range(N):
@@ -71,19 +78,32 @@ def OANC(dist, perm):
 					ctr += 1
 					
 	return (6.0 * ctr) / (N * (N-1) * (N-2))
-		
-def TONC(dist, perm):
+	
+
+# Triple order conserving	
+def TOC(dist, perm):
 	N = dist.shape[0]
 	ctr = 0
 	for i in range(N):
 		for j in range(i+1, N):
 			for k in range(j+1, N):
-				if dist[perm[i]][perm[k]] < max(dist[perm[i]][perm[j]],dist[perm[j]][perm[k]]):
+				if dist[perm[i]][perm[k]] > max(dist[perm[i]][perm[j]],dist[perm[j]][perm[k]]):
 					ctr += 1
 					
 	return (6.0 * ctr) / (N * (N-1) * (N-2))
 	
-def distance_distance_curve(dist, perm):
+	
+# Obtuse angle non-conserving
+def OANC(dist, perm):
+	return 1 - OAC(dist, perm)
+	
+
+# Triple order non-conserving	
+def TONC(dist, perm):
+	return 1 - TOC(dist, perm)
+	
+# Distance-distance curve
+def DDC(dist, perm):
 	N = dist.shape[0]
 	
 	ans = np.zeros(N-1)
@@ -94,7 +114,9 @@ def distance_distance_curve(dist, perm):
 
 	return ans	
 	
-def cosine_distance_curve(dist, perm):
+	
+# Cosine-distance curve
+def CDC(dist, perm):
 	N = dist.shape[0]
 	avg_cos = np.zeros((N,N))
 	for i in range(N):
@@ -117,8 +139,8 @@ def cosine_distance_curve(dist, perm):
 	return ans
 	
 	
-	
-def user_penalty(assessment_C, perm):	
+# User penalty
+def UP(assessment_C, perm):	
 	N = len(perm)
 	rev = [i for i in range(N)]
 	for i in range(N):
@@ -131,8 +153,8 @@ def user_penalty(assessment_C, perm):
 	return ans	
 	
 	
-	
-def user_metric_correlation(assessment_C, dist):
+# User-metric correlation
+def UMC(assessment_C, dist):
 	N = dist.shape[0]
 	C = []
 	D = []
@@ -145,5 +167,5 @@ def user_metric_correlation(assessment_C, dist):
 	D = np.array(D)
 	C = C - np.mean(C)
 	D = D - np.mean(D)
-	return -np.dot(C,D) / np.sqrt(np.dot(C,C) * np.dot(D,D))
+	return np.dot(C,D) / np.sqrt(np.dot(C,C) * np.dot(D,D))
 	
