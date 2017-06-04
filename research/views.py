@@ -82,7 +82,7 @@ def rerun_research(request):
 	
 def show_research(request, research_id):
 	research = Research.objects.get(id=research_id)
-	if research.researcher != request.user:
+	if research.is_private and research.researcher != request.user:
 		return HttpResponseForbidden("You are not authorized to see this report.")
 	
 	if research.status == 3:

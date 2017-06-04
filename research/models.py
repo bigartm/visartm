@@ -20,6 +20,7 @@ class Research(models.Model):
 	sealed = models.BooleanField(default=False)
 	status = models.IntegerField(null=False, default = 0)  # 1-running,2-OK,3-errror,4-interrupted, 5-backup
 	error_message = models.TextField(null=True, blank=True)
+	is_private = models.BooleanField(default=False)
 	
 	def run(self):	
 		with open(self.get_report_file(), "w", encoding="utf-8") as f:
