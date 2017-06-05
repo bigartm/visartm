@@ -2,7 +2,7 @@
 import numpy as np 
 import json 
 from algo.arranging.hamilton_path import HamiltonPath
-from algo.arranging.base import path_weight
+from algo.arranging.base import NDS
 from algo.arranging.dendro_arranger import DendroArranger
 
 
@@ -27,12 +27,12 @@ for metric in metrics_list:
 	dist = model.get_topics_distances(metric=metric)	
 	da = DendroArranger(dist)
 	dendro_perm = da.arrange()
-	dendro_quality = path_weight(dist, dendro_perm)
+	dendro_quality = NDS(dist, dendro_perm)
 	research.report("Dendro %f" % dendro_quality)
 	
 	hp = HamiltonPath(dist, caller=research)
 	hp.solve_lkh()
-	lkh_quality = path_weight(dist, hp.path)
+	lkh_quality = NDS(dist, hp.path)
 	research.report("LKH %f" % lkh_quality)
 	
 		
@@ -41,7 +41,7 @@ for metric in metrics_list:
 	quality_chart = []
 	for steps in steps_range:
 		hp.solve_annealing(steps=int(10**steps))
-		quality_chart.append(path_weight(dist, hp.path))
+		quality_chart.append(NDS(dist, hp.path))
 		research.report("Annealing %d %f" % (int(10**steps), quality_chart[-1]))
 	
 	axes = research.gca(figsize=(20,10))

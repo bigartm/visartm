@@ -44,21 +44,22 @@ def NDS(dist, perm):
 	return ans		
 		
 
-def rank(dist, x, y):
-	idx = np.argsort(dist[y])
-	for i in range(len(idx)):
-		if idx[i]==x:
-			return i
+
 
 
 			
 # Average neigbour rank
 def ANR(dist, perm):
+	def rank(x, y):
+		idx = np.argsort(dist[y])
+		for i in range(len(idx)):
+			if idx[i]==x:
+				return i
 	N = dist.shape[0]
 	ranks = [] 
 	for i in range(1,N): 
-		ranks.append(rank(dist,perm[i-1],perm[i]))
-		ranks.append(rank(dist,perm[i],perm[i-1])) 
+		ranks.append(rank(perm[i-1],perm[i]))
+		ranks.append(rank(perm[i],perm[i-1])) 
 		
 	return np.mean(ranks)
 
@@ -79,6 +80,8 @@ def OAC(dist, perm):
 					
 	return (6.0 * ctr) / (N * (N-1) * (N-2))
 	
+	
+
 
 # Triple order conserving	
 def TOC(dist, perm):
@@ -168,4 +171,31 @@ def UMC(assessment_C, dist):
 	C = C - np.mean(C)
 	D = D - np.mean(D)
 	return np.dot(C,D) / np.sqrt(np.dot(C,C) * np.dot(D,D))
+	
+	
+	
+def count_ranks(x):
+	ranker = dict()
+	j = 0
+	for i in np.sort(x): 
+		if not i in ranker:
+			ranker[i] = j
+		j+=1
+	return [ranker[i] for i in x]
+
+		
+# Avarage neigbor rank (assessed)
+def ANRA(C, perm):			
+	def rank(x, y):
+		if x==y:
+			raise ValueError("Impossible.")
+		return count_ranks(-C[y])[x]
+			
+	N = len(perm)
+	ranks = [] 
+	for i in range(1,N): 
+		ranks.append(rank(perm[i-1],perm[i]))
+		ranks.append(rank(perm[i],perm[i-1])) 
+		
+	return np.mean(ranks)
 	

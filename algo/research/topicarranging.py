@@ -15,11 +15,14 @@ try:
 except:
 	C = np.zeros((N, N))
 
+	
 
 research.report("Темы:")
 research.report_table([[str(topic.index_id), topic.title] for topic in topics])
 	
-
+research.report("Оценки:")
+research.report_table(C)
+	
 modes = ["hamilton", "tsne", "mds", "dendro"] 
 mode_names = {
 	"hamilton" : "LKH",
@@ -29,8 +32,8 @@ mode_names = {
 }
 identical = [i for i in range(N)] 
  
-answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OANC", "TONC", "UP", "UMC"]]
-answers_lkh = [["Метрика", "CANR", "TONC", "UP", "UMC"]]
+answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OANC", "TONC", "ANRA", "UP", "UMC"]]
+answers_lkh = [["Метрика", "CANR", "TONC",  "ANRA", "UP", "UMC"]]
 for metric in metrics.metrics_list:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<h2>Метрика %s</h2>" % metric)
@@ -42,7 +45,8 @@ for metric in metrics.metrics_list:
 			"%.04f" % arr.NDS(dist, identical),
 			"%.04f" % arr.CANR(dist, identical),
 			"%.06f" % arr.OANC(dist, identical),
-			"%.04f" % arr.TONC(dist, identical),
+			"%.04f" % arr.TONC(dist, identical),			
+			"%.02f" % arr.ANRA(C, identical),
 			"%.02f" % arr.UP(C, identical),
 			"%.04f" % arr.UMC(C, dist),
 		])
@@ -56,6 +60,7 @@ for metric in metrics.metrics_list:
 			"%.04f" % arr.CANR(dist, perm),
 			"%.06f" % arr.OANC(dist, perm),
 			"%.04f" % arr.TONC(dist, perm),
+			"%.02f" % arr.ANRA(C, identical),
 			"%.02f" % arr.UP(C, perm),
 			""
 		])
@@ -64,6 +69,7 @@ for metric in metrics.metrics_list:
 			answers_lkh.append([metric,
 				"%.04f" % arr.CANR(dist, perm),
 				"%.04f" % arr.TONC(dist, perm),
+				"%.04f" % arr.ANRA(C, perm),
 				"%.02f" % arr.UP(C, perm),
 				"%.04f" % arr.UMC(C, dist)
 			])
