@@ -22,47 +22,49 @@ research.report_table([[str(topic.index_id), topic.title] for topic in topics])
 	
 research.report("Оценки:")
 research.report_table(C)
+
+
+research.report("Ближашие три темы по мнению пользователей:")
+for i in range(N):
+	research.report(str(topics[i]))
+	print(list(np.argsort(C[i])))
+	for jj in np.argsort(-C[i])[0:3]:
+		j = int(jj)
+		research.report_html("&nbsp; &nbsp; &nbsp; &nbsp;  %s (%f)<br>" % (str(topics[j]), C[i][j] ))
+
+
 	
-modes = ["hamilton", "tsne", "mds", "dendro"] 
+modes = ["none", "hamilton", "tsne", "mds", "dendro"] 
 mode_names = {
+	"none" : "No arranging",
 	"hamilton" : "LKH",
 	"tsne" : "t-SNE",
 	"mds" : "MDS",
 	"dendro" : "Agl. Clust."
 }
-identical = [i for i in range(N)] 
+
  
-answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OANC", "TONC", "ANRA", "UP", "UMC"]]
-answers_lkh = [["Метрика", "CANR", "TONC",  "ANRA", "UP", "UMC"]]
+answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OANC", "TONC", "RNP", "ANRA", "UP", "UMC"]]
+answers_lkh = [["Метрика", "CANR", "TONC",  "ANRA", "UP", "UMC", "RNP"]]
 for metric in metrics.metrics_list:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<h2>Метрика %s</h2>" % metric)
 	research.show_matrix(dist)
 	
-	answers.append([
-			metric, 
-			"No arranging", 
-			"%.04f" % arr.NDS(dist, identical),
-			"%.04f" % arr.CANR(dist, identical),
-			"%.06f" % arr.OANC(dist, identical),
-			"%.04f" % arr.TONC(dist, identical),			
-			"%.02f" % arr.ANRA(C, identical),
-			"%.02f" % arr.UP(C, identical),
-			"%.04f" % arr.UMC(C, dist),
-		])
 	
 	for mode in modes:
 		perm = arr.get_arrangement_permutation(dist, mode)
 		answers.append([
-			"", 
+			(metric if mode == "none" else ""), 
 			mode_names[mode], 
 			"%.04f" % arr.NDS(dist, perm),
 			"%.04f" % arr.CANR(dist, perm),
 			"%.06f" % arr.OANC(dist, perm),
 			"%.04f" % arr.TONC(dist, perm),
-			"%.02f" % arr.ANRA(C, identical),
+			"%.02f" % arr.RNP(C, perm),
+			"%.02f" % arr.ANRA(C, perm),
 			"%.02f" % arr.UP(C, perm),
-			""
+			("%.04f" % arr.UMC(C, dist) if mode=="none" else "")
 		])
 		
 		if mode == "hamilton":
@@ -71,7 +73,8 @@ for metric in metrics.metrics_list:
 				"%.04f" % arr.TONC(dist, perm),
 				"%.04f" % arr.ANRA(C, perm),
 				"%.02f" % arr.UP(C, perm),
-				"%.04f" % arr.UMC(C, dist)
+				"%.04f" % arr.UMC(C, dist),
+				"%.02f" % arr.RNP(C, perm)
 			])
 		
 		if mode == "hamilton":

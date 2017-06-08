@@ -26,21 +26,21 @@ for metric in metrics.metrics_list:
 
  
 	ax3 = fig.add_subplot(313)
-	ax3.set_xlabel(r"$\beta$", fontsize=20)
-	ax3.set_ylabel("Neighbor distance sum (layer 2)", fontsize=20)
-	ax3.plot(beta_range, NDS2_chart, label="2 layer")
+	ax3.set_xlabel(r"$\beta$", fontsize=25)
+	ax3.set_ylabel(r"$NDS_2$" fontsize=25)
+	ax3.plot(beta_range, NDS2_chart)
 	
 	ax2 = fig.add_subplot(312 )
-	ax2.set_xlabel(r"$\beta$", fontsize=20)
-	ax2.set_ylabel("Neighbor distance sum (layer 1)", fontsize=20)
+	ax2.set_xlabel(r"$\beta$", fontsize=25)
+	ax2.set_ylabel(r"$NDS_1$", fontsize=25)
 	ax2.plot(beta_range, NDS1_chart )
 
 	ax1 = fig.add_subplot(311 )
-	ax1.set_xlabel(r"$\beta$", fontsize=20)
-	ax1.set_ylabel("Spectrum crosses count", fontsize=20)
+	ax1.set_xlabel(r"$\beta$", fontsize=25)
+	ax1.set_ylabel("SCC", fontsize=25)
 	ax1.plot(beta_range, SCC_chart )
 	
-	fig.suptitle(r"Hierarchical spectrum quality, depending on $\beta$", fontsize=20)
+	#fig.suptitle(r"Hierarchical spectrum quality, depending on $\beta$", fontsize=20)
 	#axes.set_title(r"Hierarchical spectrum quality, depending on $\beta$")
 	#lgd = axes.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 	research.report_picture(width=800)

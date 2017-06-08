@@ -2,6 +2,8 @@ import numpy as np
 from django.conf import settings
 
 def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm=None):
+	if mode == "none":
+		return [i for i in range(dist.shape[0])] 
 	if mode == "hamilton":
 		from algo.arranging.hamilton_path import HamiltonPath 
 		hp = HamiltonPath(dist, caller=model)
@@ -199,3 +201,11 @@ def ANRA(C, perm):
 		
 	return np.mean(ranks)
 	
+# Related neigbours proportion
+def RNP(C, perm):
+	N = len(perm)
+	ans = 0
+	for i in range(N-1):
+		if C[perm[i]][perm[i+1]]>0:
+			ans += 1
+	return (1.0 * ans) / (N-1)
