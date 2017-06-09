@@ -201,11 +201,11 @@ def ANRA(C, perm):
 		
 	return np.mean(ranks)
 	
-# Related neigbours proportion
-def RNP(C, perm):
+# Non-related neigbors
+def NRN(C, perm):
 	N = len(perm)
 	ans = 0
 	for i in range(N-1):
 		if C[perm[i]][perm[i+1]]>0:
 			ans += 1
-	return (1.0 * ans) / (N-1)
+	return 1 - (1.0 * ans) / (N-1)

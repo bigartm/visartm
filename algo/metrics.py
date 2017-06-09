@@ -63,6 +63,9 @@ def jaccard(P, Q):
 	intersection = (P & Q).sum()
 	return 1.0 - (1.0 * intersection) / union
 	
+def badmetric(a,b):
+	return np.abs(a[2]-b[2])
+	
 '''	
 def filter_tails(matrix, start, end):
 	for row in matrix:
@@ -74,7 +77,7 @@ def filter_tails(matrix, start, end):
 	return matrix
 '''
 
-metrics_list = ["euclidean", "cosine", "minkovsky", "hellinger", "jsd", "jaccard"]
+metrics_list = ["euclidean", "cosine", "minkovsky", "hellinger", "jsd", "jaccard", "badmetric"]
 default_metric = "jaccard"
 
 def get_metric_by_name(name):
@@ -96,6 +99,8 @@ def get_metric_by_name(name):
 		return jsd
 	elif name == "jaccard":  
 		return jaccard
+	elif name == "badmetric":
+		return badmetric
 	else:
 		return name
 
