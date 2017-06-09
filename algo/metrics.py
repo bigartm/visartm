@@ -10,7 +10,7 @@ def euclidean(p, q):
 def cosine(p, q):
 	return 1 - (np.dot(p,q) / (np.linalg.norm(p)*np.linalg.norm(q)))
 
-def minkovsky(p, q):
+def manhattan(p, q):
 	return np.sum(np.abs(p-q))
 
  
@@ -63,8 +63,8 @@ def jaccard(P, Q):
 	intersection = (P & Q).sum()
 	return 1.0 - (1.0 * intersection) / union
 	
-def badmetric(a,b):
-	return np.abs(a[2]-b[2])
+def chebyshev(p, q):
+	return np.max(np.abs(p-q))
 	
 '''	
 def filter_tails(matrix, start, end):
@@ -77,7 +77,7 @@ def filter_tails(matrix, start, end):
 	return matrix
 '''
 
-metrics_list = ["euclidean", "cosine", "minkovsky", "hellinger", "jsd", "jaccard", "badmetric"]
+metrics_list = ["euclidean", "cosine", "manhattan", "hellinger", "jsd", "jaccard", "chebyshev"]
 default_metric = "jaccard"
 
 def get_metric_by_name(name):
@@ -87,8 +87,8 @@ def get_metric_by_name(name):
 		return euclidean 
 	elif name == "cosine": 
 		return cosine  
-	elif name == "minkovsky":
-		return minkovsky
+	elif name == "manhattan":
+		return manhattan
 	elif name == "cov":
 		return cov
 	elif name == "hellinger": 
@@ -99,8 +99,8 @@ def get_metric_by_name(name):
 		return jsd
 	elif name == "jaccard":  
 		return jaccard
-	elif name == "badmetric":
-		return badmetric
+	elif name == "chebyshev":
+		return chebyshev
 	else:
 		return name
 
