@@ -46,8 +46,14 @@ mode_names = {
  
 answers = [["Метрика", "Алгоритм", "NDS", "ANR", "OANC", "TONC", "NRN", "ANRA", "UP", "UMC"]]
 answers_lkh = [["Метрика", "ANR", "TONC",  "ANRA", "UP", "UMC", "NRN"]]
+
+
+dist_all = dict()
 for metric in metrics.metrics_list:	
-	dist =	model.get_topics_distances(metric=metric)	
+	dist_all[metric] =	model.get_topics_distances(metric=metric)	
+
+for metric in metrics.metrics_list:	
+	dist = dist_all[metric]
 	research.report_html("<h2>Метрика %s</h2>" % metric)
 	research.show_matrix(dist)
 	
@@ -78,21 +84,17 @@ for metric in metrics.metrics_list:
 			])
 		
 		if mode == "hamilton":
-			DDC = arr.DDC(dist, perm)
-			CDC = arr.CDC(dist, perm)
+			#CDC = arr.CDC(dist, perm)
 			
 			
-			fig = research.get_figure(figsize=(10,10))
-		 
-			ax1 = fig.add_subplot(211)
-			ax1.set_xlabel("d", fontsize=20)
-			ax1.set_ylabel("CDC", fontsize=20)
-			ax1.plot(range(1,N-1), CDC[0:N-2])
+			ax = research.gca(figsize=(10,10))
+			ax.set_xlabel("d", fontsize=20)
+			ax.set_ylabel("DDC", fontsize=20)
 			
-			ax2 = fig.add_subplot(212)
-			ax2.set_xlabel("d", fontsize=20)
-			ax2.set_ylabel("DDC", fontsize=20)
-			ax2.plot(range(1,N-1), DDC[0:N-2])
+			for target_metric in metrics.metrics_list:
+				DDC = arr.DDC(dist_all[target_metric], perm)
+				ax.plot(range(1,N-1), DDC[0:N-2]/np.max(DDC[0:N-2]), label=target_metric)
+			lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 			research.report_picture(width=400)
 			
