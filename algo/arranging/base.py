@@ -33,7 +33,7 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 	if model:
 		model.NDS = NDS(dist, perm)
 		model.log("NDS=%f" % model.NDS)
-		model.log("CANR=%f" % CANR(dist, perm))
+		model.log("ANR=%f" % ANR(dist, perm))
 		 
 	return perm
 

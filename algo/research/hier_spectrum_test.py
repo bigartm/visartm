@@ -27,7 +27,7 @@ for metric in metrics.metrics_list:
  
 	ax3 = fig.add_subplot(313)
 	ax3.set_xlabel(r"$\beta$", fontsize=25)
-	ax3.set_ylabel(r"$NDS_2$" fontsize=25)
+	ax3.set_ylabel(r"$NDS_2$", fontsize=25)
 	ax3.plot(beta_range, NDS2_chart)
 	
 	ax2 = fig.add_subplot(312 )
