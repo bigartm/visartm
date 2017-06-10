@@ -4,6 +4,15 @@ import json
 import algo.arranging.base as arr
 import algo.metrics as metrics
 
+
+
+# Makes linear transformation, such as minimal non-diagonal element becomes 0 and maximal element becomes 1
+def normalize_metric_matrix(x):
+	N = x.shape[0]
+	x_max = np.max(x)
+	x_min = np.min(x + x_max * np.identity(N))
+	return (x - x_min) * (1.0/(x_max-x_min))
+
 model = research.model
 topics = model.get_topics()
 
@@ -50,11 +59,13 @@ answers_lkh = [["Метрика", "ANR", "TONC",  "ANRA", "UP", "UMC", "NRN"]]
 
 dist_all = dict()
 for metric in metrics.metrics_list:	
-	dist_all[metric] =	model.get_topics_distances(metric=metric)	
+	dist_all[metric] = model.get_topics_distances(metric=metric)
 	
-# Assessmentt-distance curves
+	
+# Assessment-distance curves
 ADC = dict()
-
+	
+	
 for metric in metrics.metrics_list:	
 	dist = dist_all[metric]
 	research.report_html("<h2>Метрика %s</h2>" % metric)
@@ -90,28 +101,30 @@ for metric in metrics.metrics_list:
 		if mode == "hamilton":
 			#CDC = arr.CDC(dist, perm)
 			
-			ax = research.gca(figsize=(10,10))
-			ax.set_xlabel("d", fontsize=20)
-			ax.set_ylabel("DDC", fontsize=20)
+			ax = research.gca(figsize=(15,10))
+			ax.set_xlabel("d", fontsize=30)
+			ax.set_ylabel("DDC", fontsize=30)
 			
 			for target_metric in metrics.metrics_list:
-				DDC = arr.DDC(dist_all[target_metric], perm)
-				lw = (3 if (metric == target_metric) else 1)
-				ax.plot(range(1,N-1), DDC/np.max(DDC), label=target_metric, linewidth = lw)
-			lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-			research.report_picture(width=400)
+				DDC = arr.DDC(normalize_metric_matrix(dist_all[target_metric]), perm)
+				lw = (4 if (metric == target_metric) else 2)
+				ax.plot(range(1,N-1), DDC, label=target_metric, linewidth = lw)
+			lgd = ax.legend(loc='best')
+			ax.tick_params(labelsize=20) 
+			ax.set_ylim([0,1])
+			research.report_picture(width=600)
 		
 		
 
 research.report("Assessment-Distance Curves")			
-ax = research.gca(figsize=(10,10))
-ax.set_xlabel("d", fontsize=20)
-ax.set_ylabel("ADC", fontsize=20)
+ax = research.gca(figsize=(15,10))
+ax.set_xlabel("d", fontsize=30)
+ax.set_ylabel("ADC", fontsize=30)
 for metric in metrics.metrics_list:
-	ax.plot(range(1,N-1), ADC[metric], label=metric)
-lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-research.report_picture(width=400)
+	ax.plot(range(1,N-1), ADC[metric], label=metric, linewidth=2)
+lgd = ax.legend(loc='best')
+ax.tick_params(labelsize=20) 
+research.report_picture(width=600)
 
 
 
