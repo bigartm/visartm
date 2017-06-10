@@ -27,7 +27,7 @@ research.report_table(C)
 research.report("Ближашие три темы по мнению пользователей:")
 for i in range(N):
 	research.report(str(topics[i]))
-	print(list(np.argsort(C[i])))
+	#print(list(np.argsort(C[i])))
 	for jj in np.argsort(-C[i])[0:3]:
 		j = int(jj)
 		research.report_html("&nbsp; &nbsp; &nbsp; &nbsp;  %s (%f)<br>" % (str(topics[j]), C[i][j] ))
