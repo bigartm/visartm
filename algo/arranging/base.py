@@ -111,15 +111,15 @@ def TONC(dist, perm):
 def DDC(dist, perm):
 	N = dist.shape[0]
 	
-	ans = np.zeros(N-1)
-	for l in range(1,N):
+	ans = np.zeros(N-2)
+	for l in range(1,N-1):
 		for i in range(0, N - l):
 			ans[l-1] += dist[perm[i]][perm[i+l]]
 		ans[l-1] /= (N - l)
-
 	return ans	
 	
 	
+'''
 # Cosine-distance curve
 def CDC(dist, perm):
 	N = dist.shape[0]
@@ -142,7 +142,7 @@ def CDC(dist, perm):
 		ans[l-1] /= (N - l)
 
 	return ans
-	
+'''
 	
 # User penalty
 def UP(assessment_C, perm):	
