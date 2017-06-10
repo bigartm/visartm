@@ -102,6 +102,12 @@ def get_picture(request, research_id, pic_id):
 	with open(path, "rb") as f:
 		return HttpResponse(f.read(), content_type="image/png")
 
+def get_picture_eps(request, research_id, pic_id):
+	path = os.path.join(settings.BASE_DIR, "data", "research", research_id, "pic", pic_id + ".eps")
+	with open(path, "rb") as f:
+		return HttpResponse(f.read(), content_type="application/eps")
+
+		
 def get_txt(request, research_id, txt_id):
 	path = os.path.join(settings.BASE_DIR, "data", "research", research_id, "pic", txt_id + ".txt")
 	with open(path, "r", encoding='utf-8') as f:

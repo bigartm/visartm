@@ -110,9 +110,10 @@ for metric in metrics.metrics_list:
 				lw = (4 if (metric == target_metric) else 2)
 				ax.plot(range(1,N-1), DDC, label=target_metric, linewidth = lw)
 			lgd = ax.legend(loc='best', fontsize=20)
+			lgd.get_frame().set_alpha(0.8)
 			ax.tick_params(labelsize=20) 
 			ax.set_ylim([0,1])
-			research.report_picture(width=600)
+			research.report_picture(width=600, name=("DDC_%s_%s" % (str(research.dataset), metric)))
 		
 		
 
@@ -123,8 +124,9 @@ ax.set_ylabel("ADC", fontsize=30)
 for metric in metrics.metrics_list:
 	ax.plot(range(1,N-1), ADC[metric], label=metric, linewidth=2)
 lgd = ax.legend(loc='best', fontsize=20)
+lgd.get_frame().set_alpha(0.8)
 ax.tick_params(labelsize=20) 
-research.report_picture(width=600)
+research.report_picture(width=600, name=("ADC_%s" % str(research.dataset)) )
 
 
 

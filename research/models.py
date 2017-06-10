@@ -85,7 +85,8 @@ class Research(models.Model):
 		
 	def get_figure(self, figsize=None):
 		import matplotlib as mpl
-		mpl.use("Agg")
+		mpl.use("Agg") 
+		
 		import matplotlib.pyplot as plt 
 		self.figure = plt.figure(figsize=figsize)
 		return self.figure
@@ -94,14 +95,18 @@ class Research(models.Model):
 		self.gca().imshow(m, interpolation = "nearest")
 		self.report_picture()
 	
-	def report_picture(self, height=400, width=400, align='left', bbox_extra_artists=None):
+	def report_picture(self, height=400, width=400, align='left', bbox_extra_artists=None, name=None):
 		self.img_counter += 1
 		file_name = str(self.img_counter) + '.png'
-		path = os.path.join(self.get_pic_folder(), file_name)
-		self.figure.savefig(path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
+		eps_file_name = str(self.img_counter) + '.eps'
+		if name:
+			eps_file_name = name + ".eps"
+		self.figure.savefig(os.path.join(self.get_pic_folder(), eps_file_name), bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
+		self.figure.savefig(os.path.join(self.get_pic_folder(), file_name), bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
 		self.figure.clf()
 		with open(self.get_report_file(), "a", encoding="utf-8") as f:
-			f.write("<div align='%s'><img src='pic/%s' width='%d' heigth='%d' /></div>\n" % (align, file_name, width, height))	
+			f.write("<div align='%s'><a href='pic/%s'><img src='pic/%s' width='%d' heigth='%d' /></a></div>\n" % 
+				(align, eps_file_name, file_name, width, height))	
 		del self.figure
 		
 	def latex_table(self, table, format):	
