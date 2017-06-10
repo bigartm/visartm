@@ -109,7 +109,7 @@ for metric in metrics.metrics_list:
 				DDC = arr.DDC(normalize_metric_matrix(dist_all[target_metric]), perm)
 				lw = (4 if (metric == target_metric) else 2)
 				ax.plot(range(1,N-1), DDC, label=target_metric, linewidth = lw)
-			lgd = ax.legend(loc='best')
+			lgd = ax.legend(loc='best', fontsize=20)
 			ax.tick_params(labelsize=20) 
 			ax.set_ylim([0,1])
 			research.report_picture(width=600)
@@ -122,7 +122,7 @@ ax.set_xlabel("d", fontsize=30)
 ax.set_ylabel("ADC", fontsize=30)
 for metric in metrics.metrics_list:
 	ax.plot(range(1,N-1), ADC[metric], label=metric, linewidth=2)
-lgd = ax.legend(loc='best')
+lgd = ax.legend(loc='best', fontsize=20)
 ax.tick_params(labelsize=20) 
 research.report_picture(width=600)
 
