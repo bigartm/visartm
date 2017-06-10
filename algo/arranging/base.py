@@ -67,8 +67,8 @@ def ANR(dist, perm):
 
 	
 # Corrected average neigbour rank
-def CANR(dist, perm):
-	return ANR(dist, perm) - 1.5
+#def CANR(dist, perm):
+#	return ANR(dist, perm) - 1.5
 	
 # Obtuse angle conserving
 def OAC(dist, perm):

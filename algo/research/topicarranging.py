@@ -44,8 +44,8 @@ mode_names = {
 }
 
  
-answers = [["Метрика", "Алгоритм", "NDS", "CANR", "OANC", "TONC", "NRN", "ANRA", "UP", "UMC"]]
-answers_lkh = [["Метрика", "CANR", "TONC",  "ANRA", "UP", "UMC", "NRN"]]
+answers = [["Метрика", "Алгоритм", "NDS", "ANR", "OANC", "TONC", "NRN", "ANRA", "UP", "UMC"]]
+answers_lkh = [["Метрика", "ANR", "TONC",  "ANRA", "UP", "UMC", "NRN"]]
 for metric in metrics.metrics_list:	
 	dist =	model.get_topics_distances(metric=metric)	
 	research.report_html("<h2>Метрика %s</h2>" % metric)
@@ -58,7 +58,7 @@ for metric in metrics.metrics_list:
 			(metric if mode == "none" else ""), 
 			mode_names[mode], 
 			"%.04f" % arr.NDS(dist, perm),
-			"%.04f" % arr.CANR(dist, perm),
+			"%.04f" % arr.ANR(dist, perm),
 			"%.06f" % arr.OANC(dist, perm),
 			"%.04f" % arr.TONC(dist, perm),
 			"%.02f" % arr.NRN(C, perm),
@@ -69,7 +69,7 @@ for metric in metrics.metrics_list:
 		
 		if mode == "hamilton":
 			answers_lkh.append([metric,
-				"%.04f" % arr.CANR(dist, perm),
+				"%.04f" % arr.ANR(dist, perm),
 				"%.04f" % arr.TONC(dist, perm),
 				"%.04f" % arr.ANRA(C, perm),
 				"%.02f" % arr.UP(C, perm),
