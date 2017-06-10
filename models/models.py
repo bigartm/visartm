@@ -14,7 +14,7 @@ from django.db import transaction
 import traceback
 import struct
 import time
-import algo.metrics as metrics
+import algo.arranging.metrics as metrics
 
 from models.bigartm_config import BANNED_WORDS
 

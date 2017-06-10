@@ -5,7 +5,7 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 	if mode == "none":
 		return [i for i in range(dist.shape[0])] 
 	if mode == "hamilton":
-		from algo.arranging.hamilton_path import HamiltonPath 
+		from hamilton_path import HamiltonPath 
 		hp = HamiltonPath(dist, caller=model)
 		if clusters:
 			hp.set_clusters(clusters, init_perm)

@@ -193,6 +193,7 @@ class HamiltonPath:
 		out_path = os.path.join(temp_folder, "hamilton.out")
 		
 		if not os.path.exists(exe_path):
+			raise ImportWarning("LKH algorithm isn't installed. Install it following instructions at /algo/lkh/readme.txt")
 			self.log("LKH algorithm isn't installed.")
 			return False
 		
