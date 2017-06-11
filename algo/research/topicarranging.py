@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import numpy as np 
 import json 
-import algo.arranging.base as arr
-import algo.metrics as metrics
+import algo.arranging.quality as qual
+import algo.arranging.base as arranging_base
+import algo.arranging.metrics as metrics
 
 
 
@@ -72,41 +73,53 @@ for metric in metrics.metrics_list:
 	research.show_matrix(dist)
 	
 	
+	# Assessment-Distance correlation plot
+	ax = research.gca(figsize=(10,10))
+	ax.scatter(qual.flatten_symmetric_matrix(dist),qual.flatten_symmetric_matrix(C))
+	ax.set_xlabel("Metric (%s)" % metric, fontsize=20)
+	ax.set_ylabel("Assessment", fontsize=20)
+	ax.tick_params(labelsize=15) 
+	research.report_picture(width=400, name=("AD_scatter_%s_%s" % (str(research.dataset), metric)))
+
+	
 	for mode in modes:
-		perm = arr.get_arrangement_permutation(dist, mode)
+		perm = arranging_base.get_arrangement_permutation(dist, mode)
 		answers.append([
 			(metric if mode == "none" else ""), 
 			mode_names[mode], 
-			"%.04f" % arr.NDS(dist, perm),
-			"%.04f" % arr.ANR(dist, perm),
-			"%.06f" % arr.OANC(dist, perm),
-			"%.04f" % arr.TONC(dist, perm),
-			"%.02f" % arr.NRN(C, perm),
-			"%.02f" % arr.ANRA(C, perm),
-			"%.02f" % arr.UP(C, perm),
-			("%.04f" % arr.UMC(C, dist) if mode=="none" else "")
+			"%.04f" % qual.NDS(dist, perm),
+			"%.04f" % qual.ANR(dist, perm),
+			"%.06f" % qual.OANC(dist, perm),
+			"%.04f" % qual.TONC(dist, perm),
+			"%.02f" % qual.NRN(C, perm),
+			"%.02f" % qual.ANRA(C, perm),
+			"%.02f" % qual.UP(C, perm),
+			("%.04f" % qual.UMC(C, dist) if mode=="none" else "")
 		])
 		
 		if mode == "hamilton":
 			answers_lkh.append([metric,
-				"%.04f" % arr.ANR(dist, perm),
-				"%.04f" % arr.TONC(dist, perm),
-				"%.04f" % arr.ANRA(C, perm),
-				"%.02f" % arr.UP(C, perm),
-				"%.04f" % arr.UMC(C, dist),
-				"%.02f" % arr.NRN(C, perm)
+				"%.04f" % qual.ANR(dist, perm),
+				"%.04f" % qual.TONC(dist, perm),
+				"%.04f" % qual.ANRA(C, perm),
+				"%.02f" % qual.UP(C, perm),
+				"%.04f" % qual.UMC(C, dist),
+				"%.02f" % qual.NRN(C, perm)
 			])
-			ADC[metric] = arr.DDC(C, perm)
+			ADC[metric] = qual.DDC(C, perm)
 		
+			
+		
+		# DDC Chart
 		if mode == "hamilton":
-			#CDC = arr.CDC(dist, perm)
+			#CDC = qual.CDC(dist, perm)
 			
 			ax = research.gca(figsize=(15,10))
 			ax.set_xlabel("d", fontsize=30)
 			ax.set_ylabel("DDC", fontsize=30)
 			
 			for target_metric in metrics.metrics_list:
-				DDC = arr.DDC(normalize_metric_matrix(dist_all[target_metric]), perm)
+				DDC = qual.DDC(normalize_metric_matrix(dist_all[target_metric]), perm)
 				lw = (4 if (metric == target_metric) else 2)
 				ax.plot(range(1,N-1), DDC, label=target_metric, linewidth = lw)
 			lgd = ax.legend(loc='best', fontsize=20)

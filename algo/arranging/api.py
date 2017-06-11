@@ -2,8 +2,9 @@ from base import get_arrangement_permutation
 from metrics import get_metric_by_name
 import numpy as np
 
-# Phi : matrix [N_words, N_topics]
-# metrics: "euclidean", "cosine", "manhattan", "hellinger", "jsd", "jaccard"
+# Returns best permutation of topics for topics spectrum
+# Phi : stochastic numpy matrix of size[N_words, N_topics], where Phi[w,t]=p(w|t)
+# metrics: string, one of ["euclidean", "cosine", "manhattan", "hellinger", "jsd", "jaccard"]
 def arrange_topics(phi, metric="hellinger"):
 	metric = get_metric_by_name(metric)
 	phi_t = phi.transpose()
