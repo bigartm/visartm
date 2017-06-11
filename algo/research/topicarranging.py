@@ -13,6 +13,13 @@ def normalize_metric_matrix(x):
 	x_max = np.max(x)
 	x_min = np.min(x + x_max * np.identity(N))
 	return (x - x_min) * (1.0/(x_max-x_min))
+	
+
+def scatter_and_regression(ax, x, y):
+    A = np.vstack([x, np.ones(len(x))]).T
+    m, c = np.linalg.lstsq(A, y)[0]
+    ax.scatter(x, y)    
+    ax.plot(x, m*x + c, 'r')  
 
 model = research.model
 topics = model.get_topics()
@@ -74,8 +81,8 @@ for metric in metrics.metrics_list:
 	
 	
 	# Assessment-Distance correlation plot
-	ax = research.gca(figsize=(10,10))
-	ax.scatter(qual.flatten_symmetric_matrix(dist),qual.flatten_symmetric_matrix(C))
+	ax = research.gca(figsize=(10,10))	
+	scatter_and_regression(ax, qual.flatten_symmetric_matrix(dist), qual.flatten_symmetric_matrix(C))
 	ax.set_xlabel("Metric (%s)" % metric, fontsize=20)
 	ax.set_ylabel("Assessment", fontsize=20)
 	ax.tick_params(labelsize=15) 
