@@ -82,7 +82,8 @@ for metric in metrics.metrics_list:
 	
 	# Assessment-Distance correlation plot
 	ax = research.gca(figsize=(10,10))	
-	scatter_and_regression(ax, qual.flatten_symmetric_matrix(dist), qual.flatten_symmetric_matrix(C))
+	#scatter_and_regression(ax, qual.flatten_symmetric_matrix(dist), qual.flatten_symmetric_matrix(C))
+	ax.scatter(qual.flatten_symmetric_matrix(dist), qual.flatten_symmetric_matrix(C))
 	ax.set_xlabel("Metric (%s)" % metric, fontsize=20)
 	ax.set_ylabel("Assessment", fontsize=20)
 	ax.tick_params(labelsize=15) 
