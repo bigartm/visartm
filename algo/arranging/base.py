@@ -36,10 +36,10 @@ def get_arrangement_permutation(dist, mode, model=None, clusters=None, init_perm
 	
 	
 	if model:
-		from .quality import NDS, ANR
+		from .quality import NDS, MNR
 		model.NDS = NDS(dist, perm)
 		model.log("NDS=%f" % model.NDS)
-		model.log("ANR=%f" % ANR(dist, perm))
+		model.log("MNR=%f" % MNR(dist, perm))
 		model.log("Time=%f" % (time.time() - start_time))
 	
 	return perm

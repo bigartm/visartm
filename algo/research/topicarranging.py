@@ -61,8 +61,8 @@ mode_names = {
 }
 
  
-answers = [["Метрика", "Алгоритм", "NDS", "ANR", "NRN", "ANRA", "UP", "UMC"]]
-answers_lkh = [["Метрика", "ANR",  "ANRA", "UP", "UMC", "NRN"]]
+answers = [["Метрика", "Алгоритм", "NDS", "MNR", "ADP", "AMND", "ADNP", "AMC"]]
+answers_lkh = [["Метрика", "MNR", "ADP", "AMND", "ADNP", "AMC"]]
 
 
 dist_all = dict()
@@ -96,20 +96,20 @@ for metric in metrics.metrics_list:
 			(metric if mode == "none" else ""), 
 			mode_names[mode], 
 			"%.04f" % qual.NDS(dist, perm),
-			"%.04f" % qual.ANR(dist, perm), 
-			"%.02f" % qual.NRN(C, perm),
-			"%.02f" % qual.ANRA(C, perm),
-			"%.02f" % qual.UP(C, perm),
-			("%.04f" % qual.UMC(C, dist) if mode=="none" else "")
+			"%.04f" % qual.MNR(dist, perm), 
+			"%.02f" % qual.ADP(C, perm),
+			"%.02f" % qual.AMND(C, perm),
+			"%.02f" % qual.ADNP(C, perm),
+			("%.04f" % qual.AMC(C, dist) if mode=="none" else "")
 		])
 		
 		if mode == "hamilton":
 			answers_lkh.append([metric,
-				"%.04f" % qual.ANR(dist, perm), 
-				"%.04f" % qual.ANRA(C, perm),
-				"%.02f" % qual.UP(C, perm),
-				"%.04f" % qual.UMC(C, dist),
-				"%.02f" % qual.NRN(C, perm)
+				"%.04f" % qual.MNR(dist, perm), 
+				"%.04f" % qual.ADP(C, perm),
+				"%.02f" % qual.AMND(C, perm),
+				"%.04f" % qual.ADNP(C, perm),
+				"%.02f" % qual.AMC(C, dist)
 			])
 			ADC[metric] = qual.DDC(C, perm)
 		
