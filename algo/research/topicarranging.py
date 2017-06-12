@@ -106,7 +106,7 @@ for metric in metrics.metrics_list:
 		if mode == "hamilton":
 			answers_lkh.append([metric,
 				"%.04f" % qual.MNR(dist, perm), 
-				"%.04f" % qual.ADP(C, perm),
+				"%.02f" % qual.ADP(C, perm),
 				"%.02f" % qual.AMND(C, perm),
 				"%.04f" % qual.ADNP(C, perm),
 				"%.02f" % qual.AMC(C, dist)
@@ -125,7 +125,7 @@ for metric in metrics.metrics_list:
 			
 			for target_metric in metrics.metrics_list:
 				DDC = qual.DDC(normalize_metric_matrix(dist_all[target_metric]), perm)
-				lw = (4 if (metric == target_metric) else 2)
+				lw = (5 if (metric == target_metric) else 2)
 				ax.plot(range(1,N-1), DDC, label=target_metric, linewidth = lw)
 			lgd = ax.legend(loc='best', fontsize=20)
 			lgd.get_frame().set_alpha(0.8)
