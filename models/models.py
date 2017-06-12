@@ -1024,7 +1024,7 @@ class Topic(models.Model):
 	def top_words(self, count = 10):
 		banned_words = set(BANNED_WORDS)
 		ret = [x.term.text for x in TopTerm.objects.filter(topic=self).order_by('-weight_normed')[0:count+10]]
-		return [x for x in ret if not x in banned_words]
+		return [x for x in ret if not x in banned_words][0:count]
 	
 			
 		
