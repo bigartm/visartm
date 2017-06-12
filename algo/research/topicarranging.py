@@ -6,7 +6,6 @@ import algo.arranging.base as arranging_base
 import algo.arranging.metrics as metrics
 
 
-
 # Makes linear transformation, such as minimal non-diagonal element becomes 0 and maximal element becomes 1
 def normalize_metric_matrix(x):
 	N = x.shape[0]
@@ -51,18 +50,19 @@ for i in range(N):
 
 
 	
-modes = ["none", "hamilton", "tsne", "mds", "dendro"] 
+modes = ["none", "hamilton", "hamilton_annealing", "tsne", "mds", "dendro"] 
 mode_names = {
 	"none" : "No arranging",
 	"hamilton" : "LKH",
 	"tsne" : "t-SNE",
 	"mds" : "MDS",
-	"dendro" : "Agl. Clust."
+	"dendro" : "Agl. Clust.",
+	"hamilton_annealing" : "Annealing"
 }
 
  
-answers = [["Метрика", "Алгоритм", "NDS", "ANR", "OANC", "TONC", "NRN", "ANRA", "UP", "UMC"]]
-answers_lkh = [["Метрика", "ANR", "TONC",  "ANRA", "UP", "UMC", "NRN"]]
+answers = [["Метрика", "Алгоритм", "NDS", "ANR", "NRN", "ANRA", "UP", "UMC"]]
+answers_lkh = [["Метрика", "ANR",  "ANRA", "UP", "UMC", "NRN"]]
 
 
 dist_all = dict()
@@ -91,14 +91,12 @@ for metric in metrics.metrics_list:
 
 	
 	for mode in modes:
-		perm = arranging_base.get_arrangement_permutation(dist, mode)
+		perm = arranging_base.get_arrangement_permutation(dist, mode, model=research.model)
 		answers.append([
 			(metric if mode == "none" else ""), 
 			mode_names[mode], 
 			"%.04f" % qual.NDS(dist, perm),
-			"%.04f" % qual.ANR(dist, perm),
-			"%.06f" % qual.OANC(dist, perm),
-			"%.04f" % qual.TONC(dist, perm),
+			"%.04f" % qual.ANR(dist, perm), 
 			"%.02f" % qual.NRN(C, perm),
 			"%.02f" % qual.ANRA(C, perm),
 			"%.02f" % qual.UP(C, perm),
@@ -107,8 +105,7 @@ for metric in metrics.metrics_list:
 		
 		if mode == "hamilton":
 			answers_lkh.append([metric,
-				"%.04f" % qual.ANR(dist, perm),
-				"%.04f" % qual.TONC(dist, perm),
+				"%.04f" % qual.ANR(dist, perm), 
 				"%.04f" % qual.ANRA(C, perm),
 				"%.02f" % qual.UP(C, perm),
 				"%.04f" % qual.UMC(C, dist),

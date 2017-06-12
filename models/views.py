@@ -72,7 +72,7 @@ def visual_model(request):
 			"topics": topics.filter(layer = i + 1).order_by("spectrum_index")} for i in range (0, model.layers_count)]
 	template = loader.get_template('models/model.html')
 	context = Context({'model': model, 'topics_layers' : topics_layers})
-	from algo.metrics import metrics_list
+	from algo.arranging.metrics import metrics_list
 	context["metrics"] = metrics_list
 	return render(request, 'models/model.html', context) 
 
@@ -304,7 +304,7 @@ def related_topics(request):
 	model = topic.model
 	
 	
-	import algo.metrics as metrics
+	import algo.arranging.metrics as metrics
 	if "metric" in request.GET:
 		metric = request.GET["metric"]
 	else:

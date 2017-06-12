@@ -43,9 +43,11 @@ class HamiltonPath:
 			ans += self.A[self.path[i]][self.path[i+1]]
 		return ans
 	
+	
 	# Set restriction on possible permutations.
 	# Allowed only those permutations, which have same clusters as _path_
 	# Cluster is substring of permutation, length of clusters given in _clusters_
+	# NOTE: this feature is not used and probably is useless
 	def set_clusters(self, clusters, path):
 		self.log("Custom path: " + str(path))
 		self.log("Custom clusters:" + str(clusters))
@@ -174,6 +176,7 @@ class HamiltonPath:
 	def solve(self):	
 		if self.solve_lkh():
 			return self.path
+		raise Warning("LKH is not installed. Will use simulated annealing.")
 		return self.solve_annealing()
 		
 	def solve_lkh(self):
@@ -219,9 +222,8 @@ class HamiltonPath:
 			
 			
 		self.log("Invoking LKH...")
-		start_time = time.time()
-			
-		os.system("%s %s < %s" % (exe_path, par_path, par_path))
+		start_time = time.time()	
+		os.popen("%s %s < %s" % (exe_path, par_path, par_path)).read()
 		self.log("LKH done.  Running time %f" % (time.time() - start_time))
 		
 		
@@ -309,6 +311,7 @@ class HamiltonPath:
 		start_time = time.time()
 		
 		if not self.DEBUG:
+			self.log("Starting C annealing with %d steps..." % steps)
 			self.solve_annealing_c(steps, Tmin, Tmax)
 		else:
 			cur_weight = self.path_weight()

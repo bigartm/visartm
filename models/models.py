@@ -703,8 +703,7 @@ class ArtmModel(models.Model):
 					relation.save()
 		
 		topic_hier_relations = TopicInTopic.objects.filter(model=self)
-		
-		cluster_mode = False
+		 
 		
 		if mode == "default":
 			if self.layers_count == 1:
@@ -718,20 +717,7 @@ class ArtmModel(models.Model):
 			# Building topics spectrum
 			for layer_id in range (1, self.layers_count + 1):
 				layer_size = self.get_layer_size(layer_id)
-				if cluster_mode:
-					if layer_id > 1:
-						clusters = []
-						init_perm = []
-						for i in idx:
-							parent_topic = Topic.objects.get(model=self, layer=layer_id-1, index_id=i)
-							relations = topic_hier_relations.filter(parent=parent_topic, is_main=True)
-							topics = [relation.child.index_id for relation in relations]
-							clusters.append(len(topics))
-							init_perm += topics
-					else:
-						init_perm = None
-						clusters = None
-				
+				 
 				
 				self.log("Building topics spectrum for layer %d, mode=%s, metric=%s..." % (layer_id, mode, metric))
 				if mode == "alphabet":
@@ -741,10 +727,7 @@ class ArtmModel(models.Model):
 					idx = np.array(range(layer_size))
 				else:
 					from algo.arranging.base import get_arrangement_permutation
-					if cluster_mode:
-						idx = get_arrangement_permutation(self.topic_distances[layer_id], mode, model=self, clusters=clusters, init_perm=init_perm)
-					else:
-						idx = get_arrangement_permutation(self.topic_distances[layer_id], mode, model=self)
+					idx = get_arrangement_permutation(self.topic_distances[layer_id], mode, model=self)
 				
 				for i in range(self.get_layer_size(layer_id)):
 					topic = self.topics_index[layer_id][idx[i]]

@@ -24,10 +24,35 @@ def generate_matrix(N):
     
     return dist, best
 
-N=1000
-dist, best = generate_matrix(N)
-print(best)
-hp = HamiltonPath(dist)
-hp.solve_lkh()
-print(hp.path)
-print(hp.path_weight())
+def solve(dist, mode):
+    start_time= time.time()
+    hp = HamiltonPath(dist)
+    print(mode+"...")
+    if mode == "LKH":
+        hp.solve_lkh()
+    elif mode == "annealing":
+        hp.solve_annealing()
+    return hp.path_weight(), time.time() - start_time
+
+N_range = [50,100,150,200,300,400,500,600,700,800,900,1000]
+q_lkh = []
+#q_ann = []
+t_lkh = []
+#t_ann = []
+
+for N in N_range:
+    print(N)
+    dist, best = generate_matrix(N)
+    weight_lkh, time_lkh = solve(dist, "LKH")
+    #weight_ann, time_ann = solve(dist, "annealing")
+    q_lkh.append(best / weight_lkh)
+    #q_ann.append(best / weight_ann)
+    t_lkh.append(time_lkh)
+    #t_ann.append(time_ann)
+    
+plt.plot(N_range, t_lkh, label="LKH")
+#plt.plot(N_range, q_ann, label="Annealing")
+plt.legend()
+
+    
+    

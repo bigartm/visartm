@@ -8,7 +8,7 @@ def euclidean(p, q):
 	return np.linalg.norm(p-q)
 			
 def cosine(p, q):
-	return 1 - (np.dot(p,q) / (np.linalg.norm(p)*np.linalg.norm(q)))
+	return 1.0 - (np.dot(p,q) / (np.linalg.norm(p)*np.linalg.norm(q)))
 
 def manhattan(p, q):
 	return np.sum(np.abs(p-q))
