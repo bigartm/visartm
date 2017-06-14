@@ -2,11 +2,12 @@
 import numpy as np 
 import json 
 import algo.arranging.base as arr
-import algo.metrics as metrics
+import algo.arranging.metrics as metrics
  
 def put_vertical(ax, line, xs):
-	for x in xs:
-		ax.plot([x,x], [np.min(line), np.max(line)], color="red")
+	ymin, ymax = ax.get_ylim()
+	for x in xs:		
+		ax.plot([x,x], [ymin, ymax], color="red")
 	
 
 model = research.model
@@ -53,9 +54,9 @@ for metric in metrics.metrics_list:
 	ax3.tick_params(labelsize=15) 
 	fig.subplots_adjust(hspace=.15)
 	
-	put_vertical(ax1, SCC_chart, [0.5,0.9])
-	put_vertical(ax2, NDS1_chart, [0.5,0.9])
-	put_vertical(ax3, NDS2_chart, [0.5,0.9])
+	put_vertical(ax1, SCC_chart, [0.8])
+	put_vertical(ax2, NDS1_chart, [0.8])
+	put_vertical(ax3, NDS2_chart, [0.8])
 	
 	
 	#fig.suptitle(r"Hierarchical spectrum quality, depending on $\beta$", fontsize=20)

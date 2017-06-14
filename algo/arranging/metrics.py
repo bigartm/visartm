@@ -78,7 +78,6 @@ def filter_tails(matrix, start, end):
 '''
 
 metrics_list = ["euclidean", "cosine", "manhattan", "hellinger", "jsd", "jaccard", "chebyshev"]
-metrics_list = ["euclidean", "cosine", "manhattan", "hellinger", "jsd", "jaccard", "chebyshev"]
 
 default_metric = "jaccard"
 

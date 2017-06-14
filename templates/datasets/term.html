@@ -122,7 +122,10 @@
 				},
 				"callbacks": {
 					onClickSegment : function (obj) {
-						window.location.href = "/topic?id=" + obj["data"]["id"];
+						var topic_id = obj["data"]["id"]; 
+						if (topic_id){
+							window.location.href = "/topic?id=" + topic_id;
+						}
 					}
 				},
 			});		

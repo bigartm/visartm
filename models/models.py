@@ -37,6 +37,7 @@ class ArtmModel(models.Model):
 	max_parents_hier = models.IntegerField(null = False, default = 1) 
 	topic_naming_top_words = models.IntegerField(null = False, default = 3) 
 	
+	is_public = models.BooleanField(null=False, default=True)
 	
 	def __str__(self):
 		if not self.name or len(self.name) == 0:
@@ -49,6 +50,9 @@ class ArtmModel(models.Model):
 			model = ArtmModel.objects.get(id=request.GET['model_id'])
 		else:
 			return None
+		
+		if model.is_public:
+			return model
 		
 		if not model.dataset.is_public and model.dataset.owner != request.user:
 			return None
@@ -507,6 +511,12 @@ class ArtmModel(models.Model):
 		title_size = self.topic_naming_top_words
 		terms_weights = self.dataset.get_terms_weights("naming") 
 		
+		# Number of unique terms in each document
+		# TODO: cache this value
+		nd = np.array([doc.terms_count for doc in Document.objects.filter(dataset=self.dataset).order_by("index_id")])
+		
+		# Total number of unique words in collection
+		n = np.sum(nd)
 		
 		row_counter = 0
 		for layer_id in range(1, self.layers_count + 1):
@@ -516,6 +526,7 @@ class ArtmModel(models.Model):
 				topic.index_id = topic_id
 				topic.layer = layer_id
 				topic.matrix_id = row_counter
+				topic.probability = np.dot(theta[row_counter], nd)/n 
 				topic.save()
 				
 				# Naming and top words extracting
@@ -988,6 +999,7 @@ class Topic(models.Model):
 	layer = models.IntegerField(default = 1) 
 	documents = models.BinaryField(null=True) #[4 bytes - document.index_id][4 bytes - weight]
 	documents_count =  models.IntegerField(null=False, default=0)
+	probability = models.FloatField(null=False, default=1) # 'a prior' probability of topic, p(t) 
 	
 	def __str__(self):
 		return self.title

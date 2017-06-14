@@ -64,7 +64,7 @@ def minimize_binary_lp(A, b, c, use_pulp=False):
         prob.solve() 
         return np.array([pulp.value(x[names[i]]) for i in range(N)])
     else:
-        temp_path = os.path.join(os.getcwd(), str(int(10*time.time())))
+        temp_path = os.path.join(os.getcwd(), "temp", str(int(10*time.time()))+str(np.random.uniform()))
         os.makedirs(temp_path)
         lp_path = os.path.join(temp_path, "input.lp")
         sol_path = os.path.join(temp_path, "sol.txt")

@@ -53,20 +53,20 @@ for N1 in N1_range:
     print(N1)
     
 
-fig = plt.figure(figsize=(10,5))    
+fig = plt.figure(figsize=(8,5))    
 ax = fig.gca()
 #ax.plot(N1_range, time_chart0, label="Pulp Overall")
 ax.plot(N1_range, time_chart1, label="CBC MILP Solver")
 ax.plot(N1_range, time_chart2, label="QuickSort-10N")
-ax.set_xlabel("N")
-ax.set_ylabel("Time, s")
-ax.set_title("SCC minimizing time")
-lgd = ax.legend(loc='upper left')
-fig.savefig("scc-time.png")
+ax.set_xlabel("N", fontsize=15)
+ax.set_ylabel("Time, s", fontsize=15)
+ax.set_title("SCC minimizing time", fontsize=15)
+lgd = ax.legend(loc='best')
+fig.savefig("scc-time.eps", bbox_inches='tight')
 fig.show()
 
 
-fig = plt.figure(figsize=(10,5))    
+fig = plt.figure(figsize=(8,5))    
 ax = fig.gca() 
 #ax.plot(N1_range, bf_chart, label = "Binopt")
 
@@ -76,12 +76,12 @@ ax.plot(N1_range, sp_chart, label = "QuickSort")
 #ax.plot(N1_range, sp10_chart, label = "Split-10")
 ax.plot(N1_range, sp10N_chart, label = "QuickSort-10N")
 
-ax.set_xlabel("N")
-ax.set_ylabel("Error")
-ax.set_title("SCC minimizing quality")
-lgd = ax.legend(loc='upper left')# , bbox_to_anchor=(1, 0.5))
-fig.savefig("scc-quality.png")
-fig.show()
+ax.set_xlabel("N", fontsize=15)
+ax.set_ylabel("Error", fontsize=15)
+ax.set_title("SCC minimizing quality", fontsize=15)
+lgd = ax.legend(loc='best')# , bbox_to_anchor=(1, 0.5))
+fig.savefig("scc-quality.eps", bbox_inches='tight')
+#fig.show()
 
 
 

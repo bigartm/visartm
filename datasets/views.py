@@ -515,16 +515,21 @@ def visual_term(request):
 		for i in range(1, model.layers_count):
 			shift += topics_count[i]
 		
-		phi_row = model.get_phi()[term.index_id]
 		
 		total_weight = 0
 		topics = []
 		topics_list = []
 		topics_index = Topic.objects.filter(model = model, layer = model.layers_count).order_by("index_id")
 		
+		
+		phi_row = model.get_phi()[term.index_id]
+		p_tw = phi_row[shift: shift+topics_count[model.layers_count]]
+		p_tw = p_tw * np.array([t.probability for t in topics_index])
+		p_tw = p_tw / np.sum(p_tw)
+		
 		for topic_index_id in range(0, topics_count[model.layers_count]):
-			topics_list.append((phi_row[shift + topic_index_id], topic_index_id))
-			total_weight += phi_row[shift + topic_index_id]
+			topics_list.append((p_tw[topic_index_id], topic_index_id))
+			total_weight += p_tw[topic_index_id]
 		topics_list.sort(reverse = True) 
 		
 		weight_sum = 0

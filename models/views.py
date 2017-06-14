@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect
 from datasets.models import Dataset, Modality, Term
 from django.template import RequestContext, Context, loader
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponseForbidden
@@ -17,9 +18,9 @@ from models.bigartm_config import REGULARIZERS
 
 def models_list(request):
 	try:
-		models = ArtmModel.objects.filter(author = request.user).order_by("id")
+		models = ArtmModel.objects.filter(author = request.user).order_by("id") | ArtmModel.objects.filter(is_public=True)
 	except:
-		models = []
+		models = ArtmModel.objects.filter(is_public=True)
 		
 	context = {"models": models}
 	return render(request, 'models/models_list.html', context) 

@@ -179,7 +179,7 @@ class Dataset(models.Model):
 				term.index_id = term_index_id
 				term.token_value = float(parsed[2])
 				term.token_tf = int(parsed[3].split('.')[0])
-				term.token_df = int(parsed[4].split('.')[0]) 
+				term.token_df = int(parsed[4].split('.')[0])
 				modality_name = parsed[1]
 				if not modality_name in modalities_index:
 					modality = Modality()
