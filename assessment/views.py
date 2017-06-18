@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponseForbidden, HttpResponse
+﻿from django.shortcuts import render, redirect
+from django.http import HttpResponseForbidden, HttpResponse, HttpResponseNotFound
 from django.template import Context
 from django.contrib.auth.decorators import login_required
 
@@ -9,7 +9,7 @@ import os
 
 from datasets.models import Dataset
 from models.models import ArtmModel
-from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor
+from assessment.models import AssessmentProblem, AssessmentTask, ProblemAssessor, ExamVerification
 from django.contrib.auth.models import User	
 import visartm.views as general_views
 from django.conf import settings
@@ -108,6 +108,30 @@ def get_task(request):
 	problem = AssessmentProblem.objects.get(id = request.GET["problem_id"])	
 		
 	if problem.can_assess(request.user):
+		if problem.exam_needed:
+			try:
+				ver = ExamVerification.objects.get(problem=problem, assessor=request.user)
+			except:
+				ver = ExamVerification()
+				ver.problem = problem
+				ver.assessor = request.user
+				ver.passed = False
+				ver.save()
+			if not ver.passed:
+				import urllib
+				exam_url = "%s/start_exam?%s" % (
+					problem.exam_host, 
+					urllib.parse.urlencode({
+						"username": request.user.username, 
+						"problem_id": problem.id, 
+						"host": request.META['HTTP_HOST']
+					})
+				)
+				return general_views.message(request, 
+					"Вам нужно пройти тестирование, прежде чем присутпать к оцениванию.<br>" + 
+					"Чтобы приступить к тестированию, щёлкните <a href=%s>здесь</a>." % exam_url
+				)
+
 		task = problem.create_task(request)
 		if not task:
 			return general_views.message(request, "Seems like everything is assessed!")
@@ -180,4 +204,31 @@ def instructions(request):
 	if not problem.can_assess(request.user):
 		return HttpResponseForbidden("You are not authorized to assess this problem.")
 	return render(request, os.path.join("assessment", problem.type, "instructions.html"), Context(problem.get_view_context()))
+	
+def accept_exam(request):
+	def hash_md5(s):
+		import hashlib
+		hasher = hashlib.md5()
+		hasher.update(s.encode('utf-8'))
+		return hasher.hexdigest()
+	
+	assessor = User.objects.get(username=request.GET["username"])
+	problem = AssessmentProblem(id=int(request.GET["problem_id"]))
+	try:
+		ver = ExamVerification.objects.get(problem=problem, assessor=request.user)
+	except:
+		return HttpResponseNotFound("This exam wasn't requested by system.")
+
+	received_hash = request.GET["hash"]
+	correct_hash = hash_md5(assessor.username + str(problem.id) + settings.EXAM_KEY)
+	if correct_hash != received_hash:
+		return HttpResponseForbidden("Invalid verification hash.")
+
+	ver.passed = True
+	ver.save()
+	
+	return general_views.message(request, 
+		"Тестирование успешно пройдено<br>." + 
+		("Чтобы приступить к оценивванию, щёлкните <a href='/assessment/get_task?problem_id=%d'>здесь</a>." % (problem.id))
+	) 
 	

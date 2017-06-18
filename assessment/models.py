@@ -16,7 +16,7 @@ class AssessmentProblem(models.Model):
 
 	type = models.TextField() 
 	dataset = models.ForeignKey(Dataset, null=False)
-	model = models.ForeignKey(ArtmModel, null=True)
+	model = models.ForeignKey(ArtmModel, null=True, blank=True)
 	layer = models.IntegerField(null=True, blank=True)
 	
 	description = models.TextField(null=False, default = "", blank=True)
@@ -24,6 +24,9 @@ class AssessmentProblem(models.Model):
 	params = models.TextField(null=False, default = "{}")
 	last_refreshed = models.DateTimeField(null=False, default=datetime.now) 
 	timeout = models.IntegerField(null=False, default=1000000000)
+	
+	exam_needed = models.BooleanField(null=False, default=False)
+	exam_host = models.TextField(null=True)
 	
 	def __str__(self):
 		return "#" + str(self.id) + " (" + self.dataset.name + "," + self.type \
@@ -207,6 +210,11 @@ class ProblemAssessor(models.Model):
 	
 	class Meta:
 		unique_together = ('problem', 'assessor')
+		
+class ExamVerification(models.Model):
+	problem = models.ForeignKey(AssessmentProblem, null=False)
+	assessor = models.ForeignKey(User, null=False, default=0)
+	passed = models.BooleanField(null=False, default=False)
 	
 from django.contrib import admin
 admin.site.register(AssessmentProblem)

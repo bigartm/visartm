@@ -11,4 +11,5 @@ urlpatterns = [
 	url(r'^delete_assessor$', assessment_views.delete_assessor),	
 	url(r'^get_results$', assessment_views.get_results),
 	url(r'^instructions$', assessment_views.instructions),
+	url(r'^accept_exam$', assessment_views.accept_exam),
 ]
