@@ -20,6 +20,8 @@
 /visartm/settings.py
 /visartm.sqlite
 
+/static/docs
+
 /algo/lkh/*
 !/algo/lkh/readme.txt
 
