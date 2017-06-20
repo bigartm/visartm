@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | {{account}}{% endblock %}
+
+{% block content %}	
+	<h3>Assessment problems</h3>
+	{% if assessment_problems %}
+		{% for entry in assessment_problems %}
+			<h4>{{entry.problem}}</h4>
+			<ul>
+				{% if entry.supervise %}
+					<li><a href="/assessment/problem?problem_id={{entry.problem.id}}">General settings</a></li>
+					<li><a href="/assessment/problem?problem_id={{entry.problem.id}}&mode=settings">Specific settings</a></li>
+					<li><a href="/assessment/problem?problem_id={{entry.problem.id}}&mode=report">Report on assessors</a></li>
+					<li><a href="/assessment/get_results?problem_id={{entry.problem.id}}">Get results</a></li>
+					<li><a href="/assessment/get_results?problem_id={{entry.problem.id}}&mode=file">Get results (as file)</a></li>
+				{% endif %}
+				
+				<li><a href="/assessment/instructions?problem_id={{entry.problem.id}}">Read the instructions</a></li>
+				{% if entry.tasks %}
+					<li>Current tasks</li>
+					<ul>
+					{% for task in entry.tasks %}
+						<li><a href="/assessment/task?task_id={{task.id}}">{{task}}</a></li>
+					{% endfor %}
+					</ul>
+				{% endif %}
+				<li><a href="/assessment/get_task?problem_id={{entry.problem.id}}">Get new task</a></li>
+			</ul>
+		{% endfor %} 
+		<hr>
+	{% else %}
+		<p>Nothing to see here.</p>
+	{% endif %}
+	 
+  
+{% endblock %}
+
+{% block right %}
+	<h4>Create new assessment problem</h4>
+	<form method="get" action="/assessment/create_problem">
+		<div>
+			Dataset: 
+			<select name="dataset_id">
+				{% for dataset in datasets %}
+					<option value="{{dataset.id}}">{{dataset}}</option>
+				{% endfor %}								
+			</select>
+		</div> 
+		
+		<div>
+			Type: 
+			<select name="type">
+				{% for type in types %}
+					<option value="{{type}}">{{type}}</option>
+				{% endfor %}								
+			</select>
+		</div> 
+		  
+		<button type="submit">Create!</button>
+	</form>
+	<hr>
+	
+	<a href="/admin/assessment/assessmentproblem/">Administration</a>
+{% endblock %}

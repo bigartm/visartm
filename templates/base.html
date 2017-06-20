@@ -1,0 +1,121 @@
+<!--DOCTYPE html-->
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href='/static/logo/logo.png'/>
+
+	
+	
+	<!--
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	--->
+	
+	<!--  CSS -->
+	<link href="/static/css/base.css" type="text/css" rel="stylesheet"> 
+	<link href="/static/bootstrap-3.3.7/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+	
+	<!-- JS Scripts -->
+	<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> -->
+	<script src="/static/js/d3.v3.min.js"></script>
+	<script src="/static/jquery-1.11.3/jquery.min.js"></script>
+	<script src="/static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+	<script src="/static/js/base.js?version={% now 'U' %}"></script>
+	<script src="/static/js/artmonlineapi.js"></script>
+	<script src="/static/js/colors.min.js"></script>
+
+	{% load extra_tags %}
+	<!-- Color theme -->
+	<!--<link href="/static/themes/{% color_theme %}.css?version={% now 'U' %}" rel="stylesheet"> -->
+	<script src="/static/themes/{% color_theme %}.js"></script>
+	
+
+	{% block style %}
+	{% endblock %}
+
+	<title>{% block title %}VisARTM{% endblock %}</title>
+</head>
+
+<body>
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">VisARTM<sup>β</sup></a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        
+        <li><a href="/datasets">Datasets</a></li>
+		<li><a href="/models">Models</a></li>
+		<li><a href="/search">Search</a></li>
+		<li><a href="/research">Research</a></li>
+		<li><a href="/assessment">Assessment</a></li>
+		<li><a href="/tools">Tools</a></li>
+		<li><a href="/settings">Settings</a></li>
+		<li><a href="/docs">Docs</a></li>
+     </ul>
+	 
+      <ul class="nav navbar-nav navbar-right"> 
+		{% if not user.is_anonymous %}  
+			<li><a href="/accounts/user/{{ user.get_username }}">{{ user.get_username }}</a></li>
+			<li><a href="/accounts/logout">Log out</a></li>
+		{% else %}
+			<li><a href="/accounts/login?next={{request.get_full_path|urlencode}}">Log in</a></li>
+			<li><a href="/accounts/signup">Register</a></li>   
+		{% endif %} 
+      </ul>
+    </div> 
+  </div> 
+</nav>
+
+{% block supercontent %}
+	<div class='container-fluid'>
+		<div class="col-sm-9">
+			<div id="visartm-content">			
+				{% block content %} 
+				{% endblock %}
+			</div>
+		</div>
+		<div class="col-sm-3">
+			<div id="visartm-right">
+				{% block right %} 
+				{% endblock %}
+			</div>
+		</div>
+	</div>
+
+	{% if not no_footer %}
+	<p></p>
+	<hr>
+	<footer class="footer">
+	  <div class="container">
+		<p align="center" class="text-muted">
+			&copy; <a class="text-muted" href="https://fedimser.github.io">Dmitriy Fedoriaka</a>, 2017<br>
+			Support: <a class="text-muted" href="mailto:visartm@yandex.ru">visartm@yandex.ru</a>
+		</p>
+		 
+	  </div>
+	</footer>
+	{% endif %}
+{% endblock %}
+
+</body>
+
+
+{% block javascript %}
+{% endblock %}
+
+</html>

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | {{topic}} {% endblock %}
+
+{% block content %}
+	<h1> Related topics</h1>
+	<p>for topic <a href="/topic?id={{topic.id}}">{{topic}}</a> </p>
+	<hr>
+	
+	{% for topic in topics %}
+		<a href="/models/related_topics?topic_id={{topic.topic.id}}&metric={{metric}}">{{topic.topic}}</a> ({{topic.distance}}) <br>
+	{% endfor %}
+{% endblock %}
+
+
+
+{% block right %}
+	Metric: 
+	<select id = "select_metric" onchange="changeMetric();">
+		{% for metric in metrics %}
+		<option>{{metric}}</option> 
+		{% endfor %}
+	</select> 
+	
+{% endblock %}
+
+
+{% block javascript %}  
+
+<script src="/static/js/d3.v3.min.js"></script>  
+<script type="text/javascript">  
+	document.getElementById("select_metric").value = "{{metric}}";
+	
+	function changeMetric() { 
+		loc =  "/models/related_topics?topic_id={{topic.id}}&metric=" + document.getElementById("select_metric").value; 
+		window.location = loc;
+	}
+</script>
+{% endblock %}
+
+
+ 

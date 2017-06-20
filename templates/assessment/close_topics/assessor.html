@@ -1,0 +1,64 @@
+﻿{% extends 'base.html' %}
+
+
+{% block content %}
+	
+	<p>Выберите 2-4 темы, которые считаете близкими по смыслу к целевой теме.</p>
+	
+	<p>Целевая тема:  <br>
+				{{target_topic.top_words_list}} </p>
+	<hr>
+	{% for topic in topics %}
+		{% if topic != target_topic %}
+			<input type="checkbox" onclick="checkChanged({{topic.index_id}});">
+				{{topic.top_words_list}}  
+			</input>
+			<br>
+		{% endif %}
+	{% endfor %}
+	
+	<form method='post' id='finishForm'>
+		<input type="hidden" name="task_id" value="{{task.id}}" />
+		<input type="hidden" name="selected_topics" id="selected_topics" value="[]" />
+		<button class="btn btn-success">Next!</button>
+		<input type="hidden" name="finished" />
+		<input id="continue" type="hidden" name="continue" value="true" />
+		{% csrf_token %}
+	</form>
+	
+	<br>
+	<a onclick="finish();">Save and finish</a>  
+	
+{% endblock %}
+
+{% block javascript %}
+<script type="text/javascript">
+
+	// Enable all tooltips
+	$(document).ready(function(){
+		$('[data-toggle="tooltip"]').tooltip(); 
+	});
+	
+	var topics = {};
+	function checkChanged(topic_id) {
+		if (!topics[topic_id]) topics[topic_id] = true;
+		else topics[topic_id] = false;
+		val = "";
+		for (var i in topics) {
+			if (topics[i]) {
+				val += i + ",";
+			}
+		} 
+		if (val.length > 0)	val = val.substr(0, val.length - 1);
+		val = "[" + val + "]";
+		document.getElementById("selected_topics").value = val;
+	}
+	
+	function finish()  {
+		finishForm = document.getElementById("finishForm");
+		document.getElementById("continue").value = "false";
+		finishForm.submit();
+	}
+</script>
+{% endblock %}
+ 

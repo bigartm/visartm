@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}{{dataset.name}} | Polygonal{% endblock %}
+
+
+
+{% block content %}
+<div  style="margin-left:-25px;" id = "picture_container" width="100%" height="100%" >
+	<svg id="picture">
+			 
+	</svg>
+</div>
+{% endblock %}
+
+
+{% block right %}
+	<h4 id = "doc_title">Title</h4>
+	<i><p id = "doc_snippet"></p></i>
+	<p id = "doc_date"></p> 
+	<a id = "link">Read</a>, <a id = "orig">Original</a>
+	<hr>
+	<p id = "text"></p> 
+	
+	
+{% endblock %}
+
+{% block javascript %}
+<script src="/static/js/d3.v3.min.js"></script>  
+<script src="/static/js/d3plus.js"></script>  
+<script type="text/javascript">
+	{% autoescape off %}{{data}}{% endautoescape %}
+	
+	var api = new ArtmApi(); 
+	var svgWidth = 0.73 * window.innerWidth;
+	var svgHeight = window.innerHeight-100; 
+	document.getElementById('picture').setAttribute("width", svgWidth);
+	document.getElementById('picture').setAttribute("height", svgHeight);
+	
+	var selected_cell;
+	var baseStrokeWidth = 1;
+	var initScale = Math.min(svgWidth / root["rect"]["width"], svgHeight / root["rect"]["height"]);
+	var dragPreventer = 0;
+	//var strokeWidth = baseStrokeWidth / initScale;
+	
+	//Disable context menu on right mouse click
+	document.oncontextmenu = function (){return false};
+
+	
+	
+	var zoom = d3.behavior.zoom()
+		.scaleExtent([0.01, 1])
+		.on("zoom", zoomed)
+		.scale(initScale);
+
+	var drag = d3.behavior.drag()
+		.origin(function(d) { return d; })
+		.on("dragstart", dragstarted)
+		.on("drag", dragged)
+		.on("dragend", dragended);
+	
+	
+	var svg = d3.select("#picture")
+				.append("svg")
+				.call(zoom)
+				.on("dblclick.zoom", null);
+	
+	
+	
+	
+	var big_rect = svg.append("rect")
+		.attr("x",-10000)
+		.attr("y",-10000)
+		.attr("width",20000)
+		.attr("height",20000)
+		.attr("fill", "transparent")
+		.call(drag)
+		;
+	
+	var container = svg.append("g")
+		.attr("transform","scale(" + initScale + ")");
+		//.attr('x', 0)
+        //.attr('y', 0);
+		//.call(drag);
+	
+	var all_polygons_data = [];
+	appendPolygons([root]);
+		
+	//container.append("rect").datum({"top":100,"left":100,"width":100,"height":100}).attr("x",getX).attr("y",getY).attr("width",getWidth).attr("height",getHeight);
+	//container.append("rect").attr("x",getX).attr("y",getY).attr("width",getWidth).attr("height",getHeight);
+	
+	
+	function appendPolygons(polygons) {		    
+		//console.log("Fire click");
+		//console.log("APPEND " + polygons.length)
+		
+		if (polygons[0]["docId"]!=undefined) {
+			removeAllDocuments();
+		}
+		
+		polygons.forEach(function(item, i, arr) {
+			container 
+			.append("polygon")
+			.attr("points", item["points"])
+			.attr("fill", theme.backgroundColor)
+			.attr("stroke", theme.textColor)
+			.attr("stroke-width", baseStrokeWidth)
+			.attr("vector-effect","non-scaling-stroke")
+			.datum(item)
+			.on("click", clicked)
+			//.call(drag)
+			.on("mouseover", function(d, i) {
+				d3.select(this)
+					.transition()
+					.duration(1000)
+					.attr("fill", theme.selectionColor);
+			})
+			.on("mouseleave", function(d, i) {
+				if (this != selected_cell) {
+					d3.select(this)
+						.transition()
+						.duration(1000)
+						.attr("fill", theme.backgroundColor); 
+				}
+			})
+			;
+			
+			d3plus.textwrap()
+			.container(container.append("text").attr("pointer-events","none").attr("fill", theme.textColor).datum(item))
+			.shape("square")
+			.resize(true)
+			.size(Array(1,10000))
+			.text(item["label"])
+			.width(item["rect"]["width"])
+			.height(item["rect"]["height"])
+			.x(item["rect"]["left"])
+			.y(item["rect"]["top"])
+			.align("center")
+			.valign("middle")
+			.draw(); 
+		}) 
+	} 
+	
+	
+	function removeAllDocuments() {
+		container
+			.selectAll('*')
+			.filter(function(d){return (d["docId"]!=undefined);})
+			.remove();
+	}
+	
+	/*
+	function removeDocuments() {
+		container.selectAll("text")
+			.filter(function(d){return (d["docId"]!=undefined);})
+			.remove();
+		container.selectAll("polygon")
+			.filter(function(d){return (d["docId"]!=undefined);})
+			.remove();	
+		all_polygons_data = all_polygons_data
+			.filter(function(x){return (x["docId"] == undefined);})
+	}*/
+	
+	function getX(d,i){return d["rect"]["left"];}
+	function getY(d,i){return d["rect"]["top"];}
+	function getWidth(d,i){return d["rect"]["width"];}
+	function getHeight(d,i){return d["rect"]["height"];}
+	
+	function clicked(d, i) {  
+		if (dragPreventer == 1) {
+			dragPreventer = 0;
+			return;
+		}
+		unselect(selected_cell);
+		selected_cell = this;
+		select(this);
+		 
+		docId = d["docId"];
+		if (docId != undefined) {		
+			api.getDocumentFull(docId, function(doc){ 
+				document.getElementById("doc_title").innerHTML = doc["title"];
+				document.getElementById("doc_snippet").innerHTML = doc["snippet"]; 
+				document.getElementById("doc_date").innerHTML = doc["time"] + " " + doc["date"]; 
+				document.getElementById("link").href = "/document?model_id={{model.id}}&id=" + docId;
+				document.getElementById("orig").href = doc["url"];	
+				document.getElementById("text").innerHTML = doc["text"];				
+			}); 
+		} else {
+			api.getPolygonChildren(d["id"], appendPolygons);
+		}
+		//d3.event.sourceEvent.preventDefault();
+		//d3.event.sourceEvent.stopPropagation(); 
+	}
+	
+	function select(d) {
+		d3.select(d)
+			.transition()
+			.duration(1000)
+			.attr("fill", theme.activeColor);
+	}
+		
+	function unselect(d) {
+		d3.select(d)
+			.transition()
+			.duration(1000)
+			.attr("fill", theme.backgroundColor);
+	}	
+	 
+	function zoomed() {
+		container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+		//strokeWidth = baseStrokeWidth / d3.event.scale;
+		 
+	}
+	
+	
+	function dragstarted(d) {
+		//d3.event.sourceEvent.stopPropagation(); 
+		//d3.event.sourceEvent.preventDefault()
+	}
+
+	function dragged(d) { 
+		//dragPreventer = 1;
+		//d3.select(this).attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+		//d3.event.sourceEvent.stopPropagation(); 
+	}
+
+	function dragended(d) {
+		//alert(d3.event.x + d3.event.y);
+	}
+	
+</script>
+		
+{% endblock %}
+ 

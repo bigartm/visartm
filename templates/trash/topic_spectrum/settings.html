@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Assesment{% endblock %}
+
+
+{% block style %}
+<style>
+.links line {
+  stroke: #999;
+  stroke-opacity: 0.6;
+}
+
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+</style>
+{% endblock %}
+
+{% block content %} 
+
+	<div style="width:900px; height:500px; border-color: #000000; border-style: solid;">
+		<svg id="picture" width="900" height="500"></svg>
+	</div> 
+ 
+{% endblock %}
+ 
+
+{% block right %}
+	<form method="POST" action="/assessment/problem">
+		<div>
+			Model: 
+			<select name="model_id">
+				<option value="-1" {% if not model %}selected="selected"{% endif %}>None</option>
+				
+				{% for x in models %}
+					<option value="{{x.id}}"{% if problem.model == x %}selected="selected"{% endif %}>{{x}}</option>
+				{% endfor %}								
+			</select>
+			<button type="submit">Change model</button>
+		</div>
+		<input type="hidden" name='action' value="change_model"> </input>
+		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+		{% csrf_token %}
+	</form> 
+	
+	<form method="POST" action="/assessment/problem">
+		<button class="btn btn-primary" type="submit">Save changes</button>
+		<input type="hidden" name='action' value="change_links"> </input>
+		<input type="hidden" name='topics' id="topics_field" value=""> </input>
+		<input type="hidden" name='links' id="links_field" value=""> </input>		
+		<input type="hidden" name='problem_id' value="{{problem.id}}"> </input>
+		{% csrf_token %}
+	</form> 
+	
+	
+{% endblock %}
+
+{% block javascript %}  
+<script src="/static/js/d3.v3.min.js"></script> 
+<script src="/static/js/d3plus.js"></script>  
+<script type = "text/javascript">
+ 
+//{% for topic in topics %}
+//	$(".tpc{{forloop.counter}}").css("color", theme.palette({{forloop.counter}}));
+//{% endfor %} 
+	var radius = 25;
+
+	var topics = {% autoescape off %}{{topics}}{% endautoescape %};
+	N = topics.length;
+	
+	var svg = d3.select("#picture")
+				.append("svg");
+	
+	container = svg.append("g");
+	
+	var drag = d3.behavior.drag()
+        .on("drag", function(d) {
+            d.x += d3.event.dx;
+            d.y += d3.event.dy;
+			refresh();
+        });
+ 
+	refresh();
+	
+	function refresh() {
+		//lines
+		links = [];
+		for (i = 0; i < N; ++i) {
+			for (j =i+1; j < N; ++j) {
+				k =  (sqr(topics[i].x-topics[j].x) + sqr(topics[i].y-topics[j].y)) / (radius*radius);
+				if (k < 16) {
+					links.push({"id1":i, "id2": j, "weight": 2});
+				} else if (k < 25) {
+					links.push({"id1":i, "id2": j, "weight": 1});
+				}
+			}
+		}
+		
+		container.selectAll("line")
+			.remove();
+			 
+		container
+			.selectAll("line") 
+			.data(links) 
+			.enter()
+			.append("line")
+			.attr("x1", function(d){return topics[d.id1].x;})
+			.attr("y1", function(d){return topics[d.id1].y;})
+			.attr("x2", function(d){return topics[d.id2].x;})
+			.attr("y2", function(d){return topics[d.id2].y;})
+			.attr("fill", theme.backgroundColor	)
+			.attr("stroke", theme.textColor)
+			.attr("stroke-width", function(d){return sqr(sqr(d.weight))/5;})
+			;
+		
+		// circles
+		container
+			.selectAll("circle")
+			.remove();
+		
+		container
+			.selectAll("circle") 
+			.data(topics) 
+			.enter()
+			.append("circle") 
+			.attr("cx", function(d) {return d.x;})
+			.attr("cy", function(d) {return d.y;})
+			.attr("r", radius)
+			.attr("fill", theme.backgroundColor	)
+			.attr("stroke", theme.textColor)
+			.on("mouseover", function(d) {
+				d3.select(this)
+					.transition()
+					.duration(1000)
+					.attr("fill", theme.selectionColor);
+			})
+			.on("mouseleave", function(d) {
+				d3.select(this)
+					.transition()
+					.duration(1000)
+					.attr("fill", theme.backgroundColor); 
+			})
+			.call(drag)
+			;
+			
+		
+		// labels
+		container.selectAll("text").remove();
+		d3plus.textwrap().container(container.append("text"));
+		for(i = 0; i < N; ++i)
+		{
+			d3plus.textwrap()
+				.container(container.append("text").attr("pointer-events","none").attr("fill", theme.textColor))
+				.shape("circle")
+				.resize(true) 
+				.text(topics[i]["label"])
+				.x(topics[i].x - radius)
+				.y(topics[i].y - radius)
+				.width(2 * radius)
+				.height(2 * radius)
+				.align("center")
+				.valign("middle")
+				.draw()
+				; 
+		}
+		document.getElementById("topics_field").value = JSON.stringify(topics);
+		document.getElementById("links_field").value = JSON.stringify(links);
+	}
+	
+	function sqr(x) {return x*x;}
+	
+	
+ 
+</script>
+{% endblock %}
+
+

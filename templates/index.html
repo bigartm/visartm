@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Start page{% endblock %}
+
+{% block style %}
+	{% load extra_tags %}
+	{% autoescape off %}
+	{% meta_tags %}
+	{% endautoescape %}
+	<script language="JavaScript" src = "/static/slideshow/touch.js"></script>
+	<link rel="stylesheet" type="text/css" href="/static/slideshow/slideshow.css?version={% now 'U' %}">
+	<script src="/static/slideshow/slideshow.js?version={% now 'U' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+
+<div id = "slideshow" style="width: 100%; margin-left:-5px;"> 
+    <section class="slideshow-images js-slideshow-images ">
+        <nav>
+            <button class="slideshow-nav slideshow-nav--prev js-slideshow-previous">  </button>
+            <button class="slideshow-nav slideshow-nav--next js-slideshow-next"> </button>
+        </nav>
+        <div class="slideshow-container js-slideshow-container">
+            <div class="slideshow-slide js-slideshow-slide" label="">
+                <img class="slideshow-slide--image"  src="/static/slideshow/1.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide" label="We use BigARTM - state-of-the-art, powerful and effective topic modelling core" >
+                <img class="slideshow-slide--image"  src="/static/slideshow/2.jpeg"/>
+            </div>
+           <!-- <div class="slideshow-slide js-slideshow-slide" label="Preprocess, lemmatize and filter your documents in one click">
+                <img class="slideshow-slide--image"   src="/static/slideshow/2.jpeg"/>
+            </div>-->
+            <div class="slideshow-slide js-slideshow-slide"  label="We use d3 library, so visualizations are beautiful and fast">
+                <img class="slideshow-slide--image" src="/static/slideshow/3.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide"  label="Build temporal models">
+                <img class="slideshow-slide--image" src="/static/slideshow/4.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide"  label="Build hierarchical models">
+                <img class="slideshow-slide--image" src="/static/slideshow/5.jpeg"/>
+            </div>
+			<div class="slideshow-slide js-slideshow-slide"  label="We highlight words, so you can understand our decision">
+                <img class="slideshow-slide--image" src="/static/slideshow/6.jpeg"/>
+            </div>
+        </div>
+		
+        <aside>
+            <div class="slideshow-counter js-slideshow-counter" ></div>
+        </aside>
+    </section>
+</div> 
+ 
+ <!--
+<img src = "/static/img/BigARTM-logo.svg" height = "80">
+<img src = "/static/img/django-logo.svg" height = "40">
+<img src = "/static/img/d3-logo.svg" height = "80">
+-->
+{% endblock %}
+
+{% block right %} 
+	<h4>Welcome!</h4>
+	<p>This is interactive topic modelling service based on BigARTM.</p>
+	<p>It enables you build topics models for big document corpora and visualize them.</p> 
+
+	<hr>
+	<h4>Explore public datasets</h4>
+		
+	{% for dataset in datasets %}{% if forloop.counter > 1 %}, {% endif %}<a href = "/dataset?dataset={{dataset.text_id}}">{{dataset}}</a>{% endfor %}
+	{% if user.is_anonymous %}
+		<hr>
+		<h4>Join us!</h4>
+		<form method="get" action="/accounts/signup">
+			<input type="email" name="email" placeholder="your email"/>
+			<button type="submit">Join</button>
+		</form>
+	{% endif %}
+{% endblock %}
+
+{% block javascript %}
+
+<script language="Javascript">
+	init();
+	
+	function init() {	
+		var cont = document.getElementById("slideshow");
+		cont.style.height = (9/16)*cont.offsetWidth + "px"; 
+		var slideshowImages = Slideshow();
+		slideshowImages.init('.js-slideshow-images', true);	
+		//cont.style.visibility = "visible";
+		window.onresize = function(){ location.reload(); }
+		
+		// buttons =  document.getElementsByClassName("slideshow-nav");
+		// buttons[0].style.backgroundImage = "url('http://{{request.get_host }}/static/slideshow/arrow.svg')";
+		// buttons[1].style.backgroundImage = "url('http://{{request.get_host }}/static/slideshow/arrow.svg')";
+		
+		
+		setInterval(function(){
+			slideshowImages.goToNext("m"); 
+		}, 8000);
+	}
+	
+ 
+</script> 
+{% endblock %}

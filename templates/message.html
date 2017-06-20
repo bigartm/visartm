@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM{% endblock %}
+
+{% block content %}
+<div>
+{% autoescape off %}{{message}}{% endautoescape %}
+</div>
+{% endblock %}

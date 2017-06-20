@@ -1,0 +1,66 @@
+{% extends 'docs/docs_base.html' %}
+
+
+{% block content %}
+<h1>Visualizations</h1>
+
+<p>
+You can explore documents, topic, terms, modalities and model itself.
+</p>
+
+<p>
+Besides, you can look at differnet visualizations of model in whole.
+</p>
+
+<p>
+If you have several models, choose model to be visualized using radio-buttons at dataset page.
+</p>
+
+
+<p>
+For each model, in the right, you can see list of avalable visualizations. Click on them and see visualizations.
+</p>
+
+<hr>
+
+<h3>Visualization "Temporal cells"</h3>
+
+<img src="/static/screenshots/temporalcells.png" width="600px"/>
+<br> 
+
+<hr>
+
+<h3>Visualization "Temporal chart"</h3>
+<img src="/static/screenshots/temporalchart.png" width="600px"/>
+<br> 
+
+<hr>
+
+<h3>Visualization "Temporal dots"</h3>
+<img src="/static/screenshots/temporaldots.png" width="600px"/>
+<br> 
+
+<hr>
+
+<h3>Visualization "Circles"</h3>
+<img src="/static/screenshots/circles.png" width="600px"/>
+<br>
+It's interactive. Click on circle and it will be zoomed to fir all screen. 
+<br> 
+
+<hr>
+
+<h3>Visualization "Polygonal"</h3>
+<img src="/static/screenshots/polygonal.png" width="600px"/>
+<br> 
+
+<hr>
+
+<h3>Visualization "Foamtree"</h3>
+<img src="/static/screenshots/foamtree.jpg" width="600px"/>
+<p>
+	It uses JS library <a href="https://carrotsearch.com/foamtree/">FoamTree</a> to show hierarchical topic models. 
+	 
+</p>
+
+{% endblock %}

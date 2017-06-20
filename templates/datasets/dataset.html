@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Dataset overview{% endblock %}
+
+{% block content %}
+<h1>Dataset {{dataset.name}}</h1> 
+	<ul class="nav nav-tabs"> 
+		<li id="mode_docs"><a href="/dataset?dataset={{dataset.text_id}}">Documents</a></li> 
+		<li id="mode_terms"><a href="/dataset?dataset={{dataset.text_id}}&mode=terms">Terms</a></li>
+		<li id="mode_modalities"><a href="/dataset?dataset={{dataset.text_id}}&mode=modalities">Modalities</a></li>
+		<li id="mode_stats"><a href="/dataset?dataset={{dataset.text_id}}&mode=stats">Statistics</a></li>
+		<li id="mode_settings"><a href="/dataset?dataset={{dataset.text_id}}&mode=settings">Settings</a></li>
+		<li id="mode_assessment"><a href="/dataset?dataset={{dataset.text_id}}&mode=assessment">Assessment</a></li>
+	</ul> 
+	
+	<p></p>
+	
+{% if documents %}
+	{% if search %}
+		{% for doc in documents %}
+			<a href = "/document?id={{doc.id}}" >{{doc.title}}</a><br>
+		{% endfor %}
+	{% else %}
+		<div id="documents"></div>
+		<p><a id = "morelink" onclick = "append(100)"></a></p>
+	{% endif %}
+{% elif terms %}
+	{% for term in terms %}
+		<a href = "/term?id={{term.id}}" >{{term}}</a> ({{term.token_tf}})<br>
+	{% endfor %}
+{% elif modalities %}
+	<div class= "col-sm-7">
+	
+		<form method="post">
+			<table class = "table table-bordered table-hover">
+				<thead>
+					<tr>
+						<td>Name</td>
+						<td> Words</td> 
+						<td> Is tag</td>
+						<td> Weight<br><small>(topic naming)</small> </td>
+						<td> Weight<br><small>(spectrum)</small> </td>
+					</tr>
+				</thead>
+				<tbody>
+				{% for modality in modalities %}
+					<tr>
+						<td><a href = "/modality?id={{modality.id}}" >{{modality.name}}</a></td>
+						<td>{{modality.terms_count}}</td>
+						<td>
+							<input 
+								type="checkbox"  
+								{% if modality.is_tag %}checked="checked"{% endif %}
+								onclick="api.setParameter('Modality', {{modality.id}}, 'is_tag', 'change');"
+							/>
+						</td>
+						<td>
+							<input 
+								type="number" 
+								value="{{modality.weight_naming}}" 
+								step="0.001" 
+								min="0" 
+								max="1"
+								name="{{modality.name}}_wn"
+							></input>
+						</td>
+						<td>
+							<input 
+								type="number" 
+								value="{{modality.weight_spectrum}}" 
+								step="0.001" 
+								min="0" 
+								max="1"
+								name="{{modality.name}}_ws"
+							></input>
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table> 
+		
+			<input type="hidden" name="type" value="modalitites_weights" />
+			<input type = "hidden" name = "dataset" value = "{{dataset.text_id}}"/>
+			<div class="offset-sm-2 col-sm-10">
+				<button type="submit" class="btn btn-primary">Save</button>
+			</div> 
+			{% csrf_token %}
+		</form>
+	</div>
+	<div style='width: 350px;' class = "col-sm-2" id = "pie_modality"></div>
+{% elif stats %}
+	<h4>Word frequency</h4>
+	<div id="freq_chart"></div>		 
+	<hr>
+	{% if dataset.time_provided %}
+		<h4>Timeline</h4>
+		<div id="timeline_chart"></div>		 
+	{% endif %}
+{% elif settings %}
+	<form method = "post">
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Name</label>
+			<textarea name="name" cols="100" rows="1">{{dataset.name}}</textarea>
+		</div>
+
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Description</label>
+			<textarea name="description" cols="100" rows="5">{{dataset.description}}</textarea>
+		</div> 	
+		
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Preprocessing arguments</label>
+			<textarea name="preprocessing_params" cols="100" rows="5">{{dataset.preprocessing_params}}</textarea>
+		</div> 
+		
+		<div class="form-group row">
+			<label class="col-sm-2 col-form-label">Language</label>
+			<select name="language">
+				{% for language in settings.languages %}
+					<option {% if dataset.language == language %}selected="selected"{% endif %}>{{language}}</option>
+				{% endfor %}
+			</select>
+		</div> 
+		
+		<div class="form-group row" style="margin-left:30px;">
+			<input type="checkbox" name="is_public" {% if dataset.is_public %}checked = "checked"{% endif %}>Public</input>
+		</div>
+		
+		<input type = "hidden" name = "dataset" value = "{{dataset.text_id}}"/>
+		<div class="offset-sm-2 col-sm-10">
+			<button type="submit" class="btn btn-primary">Save</button>
+		</div> 
+		
+		<input type="hidden" name="type" value="settings" />
+ 		{% csrf_token %}
+	</form>
+{% elif assessment %}
+	{% if assessment.supervised_problems %}
+		
+		<h3>Supervised problems</h3>
+		{% for problem in assessment.supervised_problems %}
+			<p><a href = "/assessment/problem?problem_id={{problem.id}}">{{problem}}</a></p>
+		{% endfor %}
+	<hr>
+	{% endif %}
+	
+	{% if assessment.problems_to_assess %}
+		<h3>Problems to assess</h3>
+		{% for problem in assessment.problems_to_assess %}
+			<a href = "/assessment/get_task?problem_id={{problem.problem.id}}">{{problem.problem}}</a>
+			<br>
+		{% endfor %} 
+		<hr>
+	{% endif %} 
+{% endif %}
+
+{% endblock %}
+
+
+{% block right %} 
+	<h4>Overview</h4>
+	Name: {{dataset.name}}<br>
+	Description: {{dataset.description}}<br>
+	Owner: <a href = "/accounts/user/{{dataset.owner}}">{{dataset.owner}}</a><br>
+	Number of documents: {{dataset.documents_count}}<br>
+	Number of terms: {{dataset.terms_count}}<br>
+	Language: {{dataset.language}}<br>
+	Created: {{dataset.creation_time}}<br>
+	<hr>
+
+	{% if request.user == dataset.owner %}
+		
+		<a href = "/datasets/reload?dataset_id={{dataset.id}}">Reload</a><br>
+		<a href = "/datasets/delete?dataset_id={{dataset.id}}">Delete</a><br>
+		<a href = "/research/create?dataset_id={{dataset.id}}">Research</a><br>
+		<hr>
+	{% endif %}
+	
+	<h4>Downloads</h4>
+	
+	<a href = "/datasets/dump?dataset_id={{dataset.id}}">Full dump</a><br>
+	<a href = "/datasets/download_vw?dataset_id={{dataset.id}}">Vowpal wabbit</a>
+	
+	<hr>
+	{% if documents %}
+		<h4>Seacrh document</h4>
+		<form class="" role="search" method="GET" action="/dataset">
+				<input type="text" name='search' class="" placeholder = "" value="{{search_query}}"></input>
+				<input type="hidden" name='dataset' value="{{dataset.text_id}}"> </input> 
+		</form>
+		<hr>
+	{% elif terms %}
+		<h4>Seacrh term</h4>
+		<form class="" role="search" method="GET" action="/dataset">
+				<input type="text" name='search' class="" placeholder = "" value="{{search_query}}"></input>
+				<input type="hidden" name='dataset' value="{{dataset.text_id}}"> </input>
+				<input type="hidden" name='mode' value="terms"> </input>
+		</form>
+		<hr>
+	{% endif %}
+	
+	<h4>Models</h4>
+	{% for model in models %}
+		<input type="radio" name="cb_model" onClick = "useModel({{model.id}});" {% if model == active_model %}checked = "checked"{% endif %}/>
+		<a href = "/model?model={{model.id}}" onClick = "useModel({{model.id}});"> {{model}}</a>
+		<br>
+	{% endfor %}
+	{% if perms.models.add_artmmodel %}
+		<br>
+		<a href = "/models/create?dataset={{dataset.text_id}}">Create new model...</a>
+	{% endif %}
+	{% if dataset.owner == request.user %}
+		<br>
+		<a href = "/models/delete_all_models?dataset={{dataset.text_id}}">Clear</a>
+	{% endif %}
+{% endblock %}
+
+{% block javascript %}
+<script src="/static/js/d3.v3.min.js"></script>
+<script src="/static/js/c3.min.js"></script>
+<script src="/static/js/d3pie.min.js"></script>
+<style>
+	.c3 path, .c3 line {
+		fill: none;
+		stroke: #000;
+	}
+</style>
+<script type = "text/javascript">
+
+	document.getElementById("mode_{{mode}}").className = "active";
+	
+	function useModel(id) { 
+		document.cookie = "model_{{dataset.id}}=" + id;
+	}
+	
+	var api = new ArtmApi(); 
+	
+	
+	{% if documents %}
+		{% if search %}
+		{% else %}
+			busy = false;
+			counter = 0;
+			append(100);
+			
+			function append(count) {
+				if (busy) return;
+				busy = true;
+				api.getDocumentsByDataset({{dataset.id}}, counter, count, function(documents) {
+					documents.forEach(function(doc, i, arr) {
+						document.getElementById("documents").innerHTML += "<a href='/document?id=" + doc.id + "'>" + 
+							doc.title + "</a><br>";
+					});
+					document.getElementById("morelink").innerHTML = ((documents.length == count) ? "More" : "");
+					busy = false;
+				});
+				counter += count;
+			} 
+		{% endif %}
+	{% endif %}
+	
+	{% if stats %}
+	var freq_chart = c3.generate({
+		bindto: "#freq_chart",
+		data: {
+			x: 'word',
+			columns:  {% autoescape off %} {{stats.word_freq}} {% endautoescape %},
+			types: {freq: 'area'},
+			labels: false
+			
+		},
+		axis: {
+		  x: {show: true, label: 'Terms', tick:{count:1}},
+		  y: {show: true, label: {text: 'Frequency', position: 'outer-middle'}}
+		},
+		legend: {show:false},
+		point: {r:0}
+	});
+		
+		{% if dataset.time_provided %}
+			var timeline_chart = c3.generate({
+				bindto: "#timeline_chart",
+				data: {
+					x: 'date', 
+					columns: {% autoescape off %} {{stats.timeline}} {% endautoescape %},
+					//types: {count: 'timeseries'}
+				},
+				axis: {
+					x: {
+						label: "Day",
+						type: 'timeseries',
+						tick: {
+							format: '%Y-%m-%d',
+							culling: {max:5}
+						}
+					},
+					y: {label: {text: 'Documents', position: 'outer-middle'}}
+				},
+				legend: {show:false},
+				point: {r:2}
+			});
+		{% endif %}
+	
+	{% endif %}
+	
+	{% if modalities %}
+	var pie = new d3pie("pie_modality", {
+		"header": {
+			"title": {
+				"fontSize": 22,
+				"font": "verdana"
+			},
+			"subtitle": {
+				"color": "#999999",
+				"fontSize": 10,
+				"font": "verdana"
+			},
+			"titleSubtitlePadding": 12
+		},
+		"footer": {
+			"color": "#999999",
+			"fontSize": 11,
+			"font": "open sans",
+			"location": "bottom-center"
+		},
+		"size": {
+			"canvasHeight": 200,
+			"canvasWidth": 350,
+			"pieOuterRadius": "100%"
+		},
+		"data": { 
+			"content": [
+				{% for modality in modalities %}
+				{
+					"label": "{{modality.name}}",
+					"value": {{modality.terms_count}},
+					"url": "/modality?id={{modality.id}}",
+					//"color" : THEME_pieColor{{topic.i}},
+				}, 
+				{% endfor %}
+			]
+		},
+		"labels": {
+			"outer": { 
+				"pieDistance": 10,
+				"format": "label-value1"
+			},
+			"inner": {
+				"hideWhenLessThanPercentage": 5,
+			},
+			"mainLabel": {
+				"font": "verdana"
+			},
+			"percentage": {
+				"color": theme.textColor,
+				"font": "verdana",
+				"decimalPlaces": 1
+			},
+			"value": {
+				"color": theme.textColor,
+				"font": "verdana"
+			},
+			"lines": {
+				"enabled": true,
+				"color": theme.textColor
+			},
+			"truncation": {
+				"enabled": true
+			}
+		},
+		"tooltips": { 
+		},
+		"effects": {
+			"load": {
+				"effect": "default",
+				"speed":500,
+			},
+			"pullOutSegmentOnClick": {
+				"effect": "none",
+				"speed": 400,
+				"size": 8
+			}
+		},
+		"callbacks": {
+			onClickSegment : function (obj) {
+				window.location.href = obj["data"]["url"];
+			}
+		},
+	});
+	{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Create new dataset{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+	<h1>Create new dataset</h1>
+	<hr>
+	<div class="container">
+		<form method = "post" enctype="multipart/form-data">			  
+			<div class="container">
+
+			<h3>Source</h3>
+			<div class="container"> 
+				<ul class="nav nav-tabs">
+					<li class="active"><a   href="#upload" data-toggle="tab" onclick="setMode('upload')">Upload</a></li>
+					{% if DEBUG %}<li class=""><a  href="#local" data-toggle="tab" onclick="setMode('local')">Local</a></li>{% endif %}
+				</ul> 
+				<p></p>
+				<div class="tab-content">
+				
+					<div id="upload" class="tab-pane fade active in">
+						<div class="row"><p>
+							Pack everything in archive, then upload.
+						</p> </div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Archive</label>
+							
+							<div class="col-sm-1">
+								<input type="file" name="archive"/>
+							</div>
+						</div>
+					</div> 
+					<div id="local" class="tab-pane fade">
+						<div class="row"><p>
+							Please place dataset in specified format into <b>visartm/data/datasets</b> folder, then select dataset:
+						</p> </div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Folder</label>
+							<div class="col-sm-2">
+								<select class="form-control"  name="unreg_name">
+									{% for x in unreg %}
+										<option>{{x}}</option>
+									{% endfor %}								
+								</select>
+							</div>
+						</div>
+					</div> 
+					
+					
+				</div>
+				<input type="hidden" name="mode" id="mode" value="upload" />
+			</div>
+			
+			 
+			<hr>	
+			<h3>Preprocessing</h3>
+			
+			<input type="checkbox" id = "parse" name = "parse" onclick="checkboxClick('parse');"><big> Parse</big></input>
+			<div id="parse-params" style="display:none;">
+				<div class="form-group row" style="margin-left:30px;">
+					<input type="checkbox" name="store_order">Store order</input>
+				</div> 
+				<div class="form-group row" style="margin-left:30px;">
+					<input type="checkbox" name="hashtags">Hashtags</input>
+				</div> 
+				<div class="form-group row" style="margin-left:30px;">
+					<input type="checkbox" name="bigrams">Bigrams</input>
+				</div> 
+			</div> 
+			
+			<p></p>
+			
+			<input type="checkbox" id="filter" name = "filter" onclick="checkboxClick('filter');"><big> Filter</big></input>
+			<div id="filter-params" style="display:none;">
+				<div class="form-group row" style="margin-left:30px;">
+					<label class="col-sm-2 col-form-label">Lower bound</label>
+					<div class="col-sm-1">
+						<input type="number" name="lower_bound" value="0" />
+					</div>
+				</div> 
+				<div class="form-group row" style="margin-left:30px;">
+					<label class="col-sm-2 col-form-label">Upper bound</label>
+					<div class="col-sm-1">
+						<input type="number" name="upper_bound" value="1000000" />
+					</div>
+				</div> 
+				<div class="form-group row" style="margin-left:30px;">
+					<label class="col-sm-2 col-form-label">Upper bound (relative)</label>
+					<div class="col-sm-1">
+						<input type="number" name="upper_bound_relative" value="1000000" />
+					</div>
+				</div> 
+				<div class="form-group row" style="margin-left:30px;">
+					<label class="col-sm-2 col-form-label">Minimal length</label>
+					<div class="col-sm-1">
+						<input type="number" name="minimal_length" value="1" />
+					</div>
+				</div> 
+			</div>
+			
+			<p></p>
+			
+			<input type="checkbox" id="custom_vocab" name = "custom_vocab" onclick="checkboxClick('custom_vocab');">
+				<big>Use custom <b>vocab.txt</b></big>
+			</input>
+			<div id="custom_vocab-params" style="display:none;">
+				<p style="margin-left:30px;">Put <b>vocab.txt</b> in dataset folder.</p>
+			</div>
+			
+			
+			<div class="form-group row">
+			  <div class="offset-sm-2 col-sm-10">
+				<button type="submit" class="btn btn-primary">Create</button>
+			  </div>
+			</div> 
+ 			
+			{% csrf_token %}
+		</form>
+	</div>
+{% endblock %}
+
+{% block javascript %}
+<script type = "text/javascript">
+	function setMode(mode) {
+		document.getElementById("mode").value = mode;
+	}
+	
+	function checkboxClick(key) {
+		targetDiv = document.getElementById(key + "-params");
+		
+		if (document.getElementById(key).checked)
+			targetDiv.style.display = "inline";
+		else
+			targetDiv.style.display = "none";
+	}
+</script>
+{% endblock %}

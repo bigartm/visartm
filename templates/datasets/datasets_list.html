@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Datasets{% endblock %}
+
+{% block content %}
+	<h1>Datasets</h1>
+	
+		<table class = "table table-bordered table-hover">
+			<thead>
+				<tr>
+					<td>Name</td>
+					<td>Description </td>
+					<td>Documents</td>
+					<td>Terms</td>
+					<td>Modalities</td>
+					<td>Created</td>
+					<td>Owner</td>
+				</tr>
+			</thead>
+			<tbody>
+				{% for dataset in datasets %}
+				<tr>
+					<td>
+						<a href="/dataset?dataset={{dataset.text_id}}">{{ dataset.name }}</a>
+					</td>
+					<td>{{dataset.description }}</td>
+					<td>{{dataset.documents_count}}</td>
+					<td>{{dataset.terms_count}}</td>
+					<td>{{dataset.modalities_count}}</td>			
+					<td>{{dataset.creation_time}}</td>
+					<td><a href="/accounts/user/{{dataset.owner}}">{{dataset.owner}}</a></td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+{% endblock %}
+
+
+{% block right %}
+	{% if perms.datasets.add_dataset %}
+		<a href = "/datasets/create">Create new dataset...</a>
+		<br>
+		<a href="/admin/datasets/dataset/">Administration</a>
+	{% endif %}
+{% endblock %}

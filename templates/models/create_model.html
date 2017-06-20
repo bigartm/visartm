@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Create new model{% endblock %}
+{% block header %}{% endblock %}
+
+{% block content %}
+	<h1>Create new model</h1>
+	<hr>
+	<div class="container">
+		<form method = "post">
+			<h3>General settings</h3>
+			<div class="form-group row">
+				<label for="dataset" class="col-sm-2 col-form-label">Dataset</label>
+				<div class="col-sm-2">{{dataset}}</div>
+				<input type="hidden" name="dataset" value="{{dataset.text_id}}" />
+			</div> 
+	
+			<div class="form-group row">
+				<label class="col-sm-2 col-form-label">Model name</label>
+				<div class="col-sm-3">
+					<input class="form-control" name="model_name" placeholder="New model" value = ""></input>
+				</div>
+			</div> 
+	
+			<!--
+			<div class="form-group row">
+				<label  class="col-sm-2 col-form-label">Main modality</label>
+				<div class="col-sm-3">
+					<select class="form-control"  name="word_modality">
+					  {% for modality in modalities %}
+							<option>{{modality.name}}</option>
+					  {% endfor %}
+					</select>
+				</div>
+			</div> 
+			-->
+			<hr>
+			<h3>BigARTM Model</h3>
+			
+			<div class="container">
+				<ul class="nav nav-tabs">
+					<li class="active"><a   href="#bigartm-flat" data-toggle="tab" onclick="setMode('flat')">Flat</a></li>
+					<li class=""><a href="#bigartm-hier" data-toggle="tab" onclick="setMode('hier')">Hierarchical</a></li>
+					<li class=""><a href="#bigartm-script" data-toggle="tab" onclick="setMode('script')">Script</a></li> 
+					{% if DEBUG %}<li class=""><a href="#bigartm-custom" data-toggle="tab" onclick="setMode('custom')">Custom</a></li>{% endif %}
+					{% if unreg %}<li class=""><a href="#bigartm-matrices" data-toggle="tab" onclick="setMode('matrices')">From matrices</a></li>{% endif %}	
+					<li class=""><a href="#bigartm-empty" data-toggle="tab" onclick="setMode('empty')">Empty</a></li>
+				</ul>
+				<p></p>
+				<div class="tab-content">
+					<div id="bigartm-flat" class="tab-pane fade active in">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Number of topics</label>
+							<div class="col-sm-1">
+								<input type="number" name="num_topics" value="10" />
+							</div>
+						</div> 				
+					
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Number of iterations</label>
+							<div class="col-sm-1">
+								<input type="number" name="iter_count" value="10" />
+							</div>
+						</div> 
+						
+						<div class="form-group row">
+							<input type="checkbox" id="regs_cb" onchange="regsChange();"> </input>
+							<label class="col-sm-2 col-form-label">Regularizers</label>
+						</div>
+						
+						<div id="regularizers" style="display:none;">
+							<h4>Regularizers (<a href="http://docs.bigartm.org/en/master/api_references/python_interface/regularizers.html">?</a>)</h4>
+							{% for r in regularizers %}
+								<input type="checkbox" id="{{r.name}}.check" onchange="regsChange();">{{r.name}}</input><br>
+								{% for p in r.params %}
+									&emsp;{{p.name}}=<input id="{{r.name}}.{{p.name}}" value="{{p.default}}" onchange="regsChange();"/><br>
+								{% endfor %}
+							{% endfor %}
+						</div>
+						
+						<input type="hidden" name="regularizers" id="reg_ans" value="{}"	/>
+					</div>
+					
+					<div id="bigartm-hier" class="tab-pane fade">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Number of layers</label>
+							<div class="col-sm-2">
+								<select class="form-control"  name="num_layers">
+									<option>2</option>
+									<option>3</option>
+									<option>4</option>									
+								</select>
+							</div>
+						</div> 			
+						
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Number of iterations</label>
+							<div class="col-sm-1"><input type="number" name="iter_count" value="10" /></div>
+						</div>						
+						
+						<h4>Number of topics</h4>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">First layer</label>
+							<div class="col-sm-1"><input type="number" name="num_topics" value="10" /></div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Second layer</label>
+							<div class="col-sm-1"><input type="number" name="num_topics" value="30" /></div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Third layer</label>
+							<div class="col-sm-1"><input type="number" name="num_topics" value="90" /></div>
+						</div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Fourth layer</label>
+							<div class="col-sm-1"><input type="number" name="num_topics" value="200" /></div>
+						</div>			 
+					</div>
+					
+					<div id="bigartm-script" class="tab-pane fade">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Select script</label>
+							<div class="col-sm-2">
+								<select class="form-control"  name="script_name">
+									{% for script in scripts %}
+									<option>{{script}}</option>
+									{% endfor %}							
+								</select>
+							</div>
+						</div>  
+					</div> 
+					
+					<div id="bigartm-matrices" class="tab-pane fade">
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label">Select folder</label>
+							<div class="col-sm-3">
+								<select class="form-control"  name="matrices_folder">
+									{% for x in unreg %}
+									<option>{{x}}</option>
+									{% endfor %}							
+								</select>
+							</div>
+						</div>  
+					</div> 
+					
+					<div id="bigartm-custom" class="tab-pane fade">
+						<label class="col-sm-2 col-form-label">Python script</label>
+						
+						<div class="col-sm-1">
+							<input type="file" name="python_script"/>
+						</div>
+					</div> 
+					
+					<div id="bigartm-empty" class="tab-pane fade">
+						<label class="col-sm-2 col-form-label">Just press create!</label>
+						
+					</div> 
+				</div>
+				<input type="hidden" name="mode" id="mode" value="flat" />
+			</div>
+			  
+			
+			
+			<hr>
+			<h3>Postprocessing</h3>
+			
+			
+				<div class="form-group row">
+					<label class="col-sm-2 col-form-label">Threshold (documents)</label>
+					<div class="col-sm-1">
+						<input type="number" name="threshold_docs" min = "1" max="100" value="100" />
+					</div>
+				</div>
+			
+				<div class="form-group row">
+					<label class="col-sm-2 col-form-label">Threshold (hierarchical)</label>
+					<div class="col-sm-1">
+						<input type="number" name="threshold_hier" min = "1" max="100" value="100" />
+					</div>
+				</div>
+			
+			<div class="form-group row">
+			  <div class="offset-sm-2 col-sm-10">
+				<button type="submit" class="btn btn-primary">Create</button>
+			  </div>
+			</div>
+			{% csrf_token %}
+		</form>
+	</div>
+{% endblock %}
+
+{% block javascript %}
+<script type = "text/javascript">
+	function setMode(mode) {
+		document.getElementById("mode").value = mode;
+	}
+	
+	regsChange();
+	function regsChange() {  
+		if (document.getElementById("regs_cb").checked) {
+		 	document.getElementById("regularizers").style.display = 'inline'; 
+			regs = {};
+			{% for r in regularizers %}
+				if (document.getElementById("{{r.name}}.check").checked) {
+					params = {};
+					{% for p in r.params %}
+						params["{{p.name}}"] = document.getElementById("{{r.name}}.{{p.name}}").value;
+					{% endfor %}
+					regs["{{r.name}}"] = params;
+				}
+			{% endfor %}
+			
+			document.getElementById("reg_ans").value = JSON.stringify(regs);
+		} else {
+			 document.getElementById("regularizers").style.display = 'none'; 
+			 {% for r in regularizers %}
+				document.getElementById("{{r.name}}.check").checked = false; 
+			 {% endfor %}
+		}
+	}
+</script>
+{% endblock %}

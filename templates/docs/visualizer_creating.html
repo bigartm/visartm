@@ -1,0 +1,66 @@
+{% extends 'docs/docs_base.html' %}
+
+
+{% block content %}
+<h1>How to create my own visualizer?</h1>
+
+<p>General idea: you need to extract some data from model and store it as string.
+Then you create an HTML file, in which this string will be inserted. This HTML file will be shown in browser.</p>
+
+<h3>Instructions</h3>
+
+<p>1. Choose name for your visualizer (further referred to as <b><i>[name]</i></b>).<p>
+
+<p>2. Create file <b>/algo/visualizatons/<i>[name]</i>.py</b></p>
+
+<p>3. Write next code in this file:</p>
+<pre class="code">
+from models.models import Topic, TopicInTopic 
+
+def visual(vis, params):
+	return ""
+</pre> 
+
+<p>
+4. You have a python function <b>visual</b>. 
+It takes two arguments: <b>vis</b> is instance of <b>GlobalVisualization</b> class (see <b>/visual/models.py</b>), and
+<b>params</b> is list of strings. Now you will need only object <b>vis.model</b> which is instance
+of <b>ArtmModel</b> class (see <b>/models/models.py</b>).<br>
+Write here your code. It should extract information and store it in string.
+I recommend you to create python dictionary with all data, which will be used in visualization and convert it to 
+string using <b>json.dumps()</b>.
+</p>
+
+<p>5. Now create HTML file named <b>/templates/visual/<i>[name]</i>.html</b>.</p>
+
+<p>6. In this file, write frontend for your visualization. 
+Write &#123;&#123;data&#125;&#125; in the place where you want your data to be inserted. For example,
+if you dumped all data to JSON and want to load it to javascript object named <b>myObject</b>,
+write
+  
+<pre>
+&lt;script type="text/javascript"&gt;
+	myObject = &#123;&#123;data&#125;&#125;;
+&lt;/script&gt;
+</pre>
+
+<p>7. Now, if you want to run visualization, run VisARTM, and navigate to path <b>/visual/global?type=<b><i>[name]</i></b>&model=<b><i>[model_id]</i></b></b>
+<br>
+You can see examples of such links in <b>/templates/models/models.html</b>
+</p>
+
+<h3>Pro tips</h3>
+
+<p>1. What you can extract from ArtmModel object?</p>
+
+<ul>
+	<li>Get all topics on bottom level</li>
+	<pre>topics = Topic.objects.filter(model=vis.model, layer=vis.model.layers_count).order_by("spectrum_index")</pre>
+</ul>
+
+<p>2. Passing parameters: in path add after visualization name some parameters, separating them with underscore.
+Then you can acess them in <b>params</b> argument.</p>
+
+
+<p>As example, see isualization named 'list'. It's very simple. It just prints list of topics on bottom level.</p>
+{% endblock %}

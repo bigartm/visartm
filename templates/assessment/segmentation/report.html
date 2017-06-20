@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Segmentation assessment problem {% endblock %}
+
+{% block content %}
+	<h1>Report on assessors</h1> 
+	<p>Problem: {{problem}}</p>
+	
+	<!---
+	<h3>Tasks</h3>
+	<table class = "table table-bordered">
+		<thead>
+			<tr>
+				<td>id</td>
+				<td>Assessor</td>
+				<td>status</td>
+				<td>Segments</td>
+				<td>Words</td>
+			</tr>
+		</thead>
+		<tbody>
+			{% for task in tasks %}
+			<tr>
+				<td>{{task.id}}</td>
+				<td>{{task.assessor}}</td>
+				<td>{{task.status}}</td>
+				<td>{{task.segments_selected}}</td>
+				<td>{{task.words_selected}}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	-->
+	
+	<hr> 
+	<table class = "table table-bordered">
+		<thead>
+			<tr>
+				<td>Assessor</td>
+				<td>Tasks done</td>
+				<td>Tasks skipped</td>
+				<td>Current tasks</td>
+				<td>Segments selected</td>
+				<td>Words selected</td>
+				<td>Watch segments</td>
+			</tr>
+		</thead>
+		<tbody>
+			{% for x in assessors %}
+			<tr>
+				<td>{{x.user}}</td>
+				<td>{{x.done_tasks}}</td>
+				<td>{{x.skipped_tasks}}</td>
+				<td>{{x.current_tasks}}</td>
+				<td>{{x.segments_count}}</td>
+				<td>{{x.words_count}}</td>
+				<td>
+					<a href="/assessment/problem?problem_id={{problem.id}}&mode=assessor_report&assessor_id={{x.user.id}}&type=html">html</a>,
+					<a href="/assessment/problem?problem_id={{problem.id}}&mode=assessor_report&assessor_id={{x.user.id}}&type=xls">xls</a>
+				</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+	 
+{% endblock %}
+ 
+
+

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | {{account}}{% endblock %}
+
+{% block content %}
+	<h1>Account {{account.username}}</h1> 
+	<hr>
+	<p>First name: {{profile.first_name}}</p>
+	<p>Last name: {{profile.last_name}}</p>
+	<p>Assessor rating: {{profile.assessor_rating}}</p>
+	
+	<hr>
+	<h3>Permissions</h3> 
+	{% for permission in permissions %}
+		<p>{{permission.name}}: {% if permission.value %}Yes{% else %}No{% endif %}   </p>
+	{% endfor %}
+	
+	<hr>
+	<h3>Groups</h3> 
+
+	{% for group in groups %}
+		<a href="/accounts/group/{{group.id}}">{{group}}</a>
+	{% endfor %}
+
+	
+	<hr>
+	{% if models %}
+		<h3>Models</h3>
+		{% for model in models %}
+			<p> <a href="/model?model={{model.id}}">{{model.dataset}}/{{model}}</a></p>
+		{% endfor %}
+		<hr>
+	{% endif %}
+  
+	{% if public_datasets %}
+		<h3>Public datasets</h3>
+		{% for dataset in public_datasets %}
+			<p> <a href="/dataset?dataset={{dataset.text_id}}">{{dataset}}</a></p>
+		{% endfor %} 
+		<hr>
+	{% endif %}
+  
+	{% if private_datasets %}
+		<h3>Private datasets</h3>
+		{% for dataset in private_datasets %}
+			<p> <a href="/dataset?dataset={{dataset.text_id}}">{{dataset}}</a></p>
+		{% endfor %} 
+		<hr>
+	{% endif %}  
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Login{% endblock %}
+
+{% block content %}
+	<h1>Login</h1>
+	<hr>
+    <form method="post">
+		<div class="form-group row">
+		  <label for="dataset" class="col-sm-2 col-form-label">Login</label>
+		  <div class="col-sm-1">
+			<input type="text" name="username"/>
+		  </div>
+		</div> 
+		
+		<div class="form-group row">
+		  <label for="dataset" class="col-sm-2 col-form-label">Password</label>
+		  <div class="col-sm-1">
+			<input type="password" name="password"/>
+		  </div>
+		</div> 
+		
+
+		<div class="form-group row">
+		  <div class="offset-sm-2 col-sm-10">
+			<button type="submit" class="btn btn-primary">Log in</button>
+		  </div>
+		</div>
+		
+		<a href="/accounts/signup">Register</a>
+		<br>
+		<a href="/accounts/password_reset">Forgot your password?</a>
+		
+		{% csrf_token %}
+	</form>
+
+ 
+  
+</div> 
+
+{% endblock %}
