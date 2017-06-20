@@ -1,0 +1,179 @@
+﻿<!--DOCTYPE html-->
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href='/static/logo/logo.png'/>
+
+	
+	
+	<!--
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	--->
+	
+	<!--  CSS -->
+	<link href="/static/css/base.css" type="text/css" rel="stylesheet"> 
+	<link href="/static/bootstrap-3.3.7/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+	
+	<!-- JS Scripts -->
+	<!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script> -->
+	<script src="/static/js/d3.v3.min.js"></script>
+	<script src="/static/jquery-1.11.3/jquery.min.js"></script>
+	<script src="/static/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+	<script src="/static/js/base.js?version=1497990201"></script>
+	<script src="/static/js/artmonlineapi.js"></script>
+	<script src="/static/js/colors.min.js"></script>
+
+	
+	<!-- Color theme -->
+	<!--<link href="/static/themes/default.css?version=1497990201" rel="stylesheet"> -->
+	<script src="/static/themes/default.js"></script>
+	
+
+	
+	
+
+	<title>VisARTM | Documentation</title>
+</head>
+
+<body>
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">VisARTM<sup>β</sup></a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        
+        <li><a href="/datasets">Datasets</a></li>
+		<li><a href="/models">Models</a></li>
+		<li><a href="/search">Search</a></li>
+		<li><a href="/research">Research</a></li>
+		<li><a href="/assessment">Assessment</a></li>
+		<li><a href="/tools">Tools</a></li>
+		<li><a href="/settings">Settings</a></li>
+		<li><a href="/docs">Docs</a></li>
+     </ul>
+	 
+      <ul class="nav navbar-nav navbar-right"> 
+		  
+			<li><a href="/accounts/user/"></a></li>
+			<li><a href="/accounts/logout">Log out</a></li>
+		 
+      </ul>
+    </div> 
+  </div> 
+</nav>
+
+
+	<div class='container-fluid'>
+		<div class="col-sm-9">
+			<div id="visartm-content">			
+				
+<h3>Topic modelling</h3>
+
+<p><b>Text collection</b> is set of documents, which of them is multiset of terms. <b>Terms</b> are elements of <b>vocanulary</b> &mdash; finite set W.
+
+<p><b>Probabilistic topic model</b> is mathematical model that describes each document and each term
+as discrete probabilistic distribution over set of topics T.
+
+<p>To construct such distributions, one must represent matrix F of frequences of words in documents as product
+of two matrices Φ and Θ. Then, columns of Φ will be distributions of words over topics, and rows of matrix Θ
+will be distributions of documents over topics.</p>
+
+<p>One of methods to do suh decompostion is ARTM (Additive Regularization of topic models). It is implemented in BigARTM open source libraryl</p>
+
+
+<h3>VisARTM</h3>
+
+<p>VisARTM is an interface for BigARTM. It's main purpose is visualizig topic models. It is aimed for two groups
+of users: researchers who build topic models themselves and want to visualize them for research purposes and 
+those users who want construct topic models without programming.
+</p>
+
+<p>Main features of this service:
+	<ul>
+		<li>Uploading and preprocessing text collections.</li>
+		<li>Uploading prepared topic models.</li>
+		<li>Automatic building topic models with BigARTM.</li>
+		<li>Automatic topic naming.</li>
+		<li>Automatic topic arranging (so-called topic spectrum).</li>
+		<li>Visualiztion of topic models:</li>
+			<ul>
+				<li>Visualization of topic distribution in document.</li>
+				<li>Visualization of topic as ranked lists of words and documents.</li>
+				<li>Temporal visualizations.</li>
+				<li>Hierarchical visualizations.</li>
+			</ul>
+		<li>Search</li>
+		<li><a href="/assessment">Assessment framework</a></li>
+		<li><a href="/research">Automatized research framework</a></li>
+		<li><a href="/tools">Converting tools</a></li>
+		
+		
+		
+	</ul>
+
+
+
+<p>
+
+
+
+
+
+			</div>
+		</div>
+		<div class="col-sm-3">
+			<div id="visartm-right">
+				 
+<h3>VisARTM documentaion</h3>
+<ul>
+<li><a href="/docs/intro">Introduction</a></li>
+<li><a href="/docs/installation">Installation</a></li>
+<li><a href="/docs/datasets">Datasets</a></li>
+<li><a href="/docs/models">Models</a></li>
+<li><a href="/docs/visualization">Visualization</a></li>  
+<li><a href="/docs/visualizer_creating">How to create my own visualizer?</a></li>  
+<li><a href="/docs/references">References</a></li>  
+</ul>
+
+			</div>
+		</div>
+	</div>
+
+	
+	<p></p>
+	<hr>
+	<footer class="footer">
+	  <div class="container">
+		<p align="center" class="text-muted">
+			&copy; <a class="text-muted" href="https://fedimser.github.io">Dmitriy Fedoriaka</a>, 2017<br>
+			Support: <a class="text-muted" href="mailto:visartm@yandex.ru">visartm@yandex.ru</a>
+		</p>
+		 
+	  </div>
+	</footer>
+	
+
+
+</body>
+
+
+
+
+
+</html>
