@@ -133,7 +133,15 @@ for metric in metrics.metrics_list:
 			ax.set_ylim([0,1])
 			research.report_picture(width=600, name=("DDC_%s_%s" % (str(research.dataset), metric)))
 		
-		
+# Baseline - averaging on random permutations
+random_permutations = [np.random.permutation(N) for i in range(10)]
+answers_lkh.append(["Random",
+				"%.04f" % np.mean([qual.MNR(dist, perm) for perm in random_permutations]), 
+				"%.02f" % np.mean([qual.ADP(C, perm) for perm in random_permutations]), 
+				"%.02f" % np.mean([qual.AMND(C, perm) for perm in random_permutations]), 
+				"%.02f" % np.mean([qual.ADNP(C, perm) for perm in random_permutations]), 
+				""
+			])
 
 research.report("Assessment-Distance Curves")			
 ax = research.gca(figsize=(15,10))
