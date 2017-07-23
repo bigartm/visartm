@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}VisARTM | Register{% endblock %}
+
+{% block content %}
+	<p id='info'></p>
+     
+
+ 
+  
+</div> 
+{% endblock %}
+
+{% block javascript %}
+<script language="Javascript">
+	var info = document.getElementById('info'); 
+	try{
+		var params = {};
+		window.location.hash.substr(1).split("&").map(function(param){
+			var splitted = param.split("=");
+			params[splitted[0]] = splitted[1];
+		});
+		console.log(params);
+		if (params["access_token"]){
+			setCookie("vk_access_token", params["access_token"]);
+			info.innerHTML = 'Token successfully received.';
+		} else {
+			info.innerHTML = 'Error. No access_token.';
+		}
+	} catch(err) {
+		info.innerHTML = 'Error.<br>' + err;
+	}
+</script>
+{% endblock %}
+

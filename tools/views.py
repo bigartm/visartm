@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 
 from algo.tools.vkloader import download_wall
 import algo.tools.converters as conv
@@ -85,10 +85,14 @@ def uci2vw(request):
 
 def vkloader(request):
 	if request.method == 'POST':
+		access_token = get_vk_access_token(request)
+		if not access_token:
+			return HttpResponse("You have to get access token. Use this <a href='/accounts/vk_get_token'>link</a>.") 
+			
 		domain = request.POST['domain']
 		cut = int(request.POST['cut'])
 		with get_temp_folder() as folder:
-			download_wall(domain, folder, cut=cut)
+			download_wall(domain, folder, cut=cut, access_token=access_token)
 				
 			outfile = io.BytesIO()
 			with zipfile.ZipFile(outfile, 'w') as zf:
@@ -103,3 +107,10 @@ def vkloader(request):
 			return response
 		
 	return render(request, 'tools/vkloader.html')
+	
+def get_vk_access_token(request):
+	print(request.COOKIES)
+	if not 'vk_access_token' in request.COOKIES:
+		return None
+	token = request.COOKIES['vk_access_token']
+	return token

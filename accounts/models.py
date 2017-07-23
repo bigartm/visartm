@@ -5,7 +5,7 @@ class Profile(models.Model):
 	user = models.OneToOneField(User, related_name='profile')
 	first_name = models.TextField(null=True, blank=True)
 	last_name = models.TextField(null=True, blank=True)
-	assessor_rating = models.IntegerField(default = 0)
+	assessor_rating = models.IntegerField(default = 0) 
 	
 	def get_profile(user):
 		try:

@@ -43,7 +43,7 @@ function getCookie(name, default_value) {
 }
 
 function setCookie(name, value) {
-  document.cookie = name + "=" + value;
+  document.cookie = name + "=" + value + "; path=/";
 } 
 
 //D3 Tooltip

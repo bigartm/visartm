@@ -12,5 +12,8 @@ urlpatterns = [
 	url(r'password_reset_complete$', auth_views.password_reset_complete, name='password_reset_complete'),	
 	url(r'password_reset', auth_views.password_reset, name='password_reset'),	
 	url(r'^user/(?P<user_name>.+)$', accounts_views.account_view, name='account'),
-	url(r'^group/(?P<group_id>\d+)$', accounts_views.group_view, name='group')
+	url(r'^group/(?P<group_id>\d+)$', accounts_views.group_view, name='group'),
+	
+	url(r'^vk_get_token', accounts_views.vk_get_token),
+	url(r'^vk_confirm_token$', accounts_views.vk_confirm_token),
 ]

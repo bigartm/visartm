@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.template import RequestContext, Context, loader
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User, Group
 
@@ -120,6 +120,18 @@ def sendmail(request):
 	)
 	
 	return HttpResponse("Sent.")
+	
+	
+	
+def vk_get_token(request):
+	redirect_uri = settings.VK_HOST + "/accounts/vk_confirm_token"
+	url = "https://oauth.vk.com/authorize?client_id=%d&display=page&redirect_uri=%s&scope=%s&response_type=token" % \
+		  (settings.VK_CLIENT_ID, redirect_uri, settings.VK_PERMISSIONS)
+	return HttpResponseRedirect(url)
+	
+def vk_confirm_token(request):	
+	return render(request, 'accounts/vk_token_extractor.html')
+	
 		
 	
 	

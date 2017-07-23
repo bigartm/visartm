@@ -1,10 +1,9 @@
 import os
 import json
 
-
-def download_wall(domain, dataset_folder, cut=1000000):
+def download_wall(domain, dataset_folder, cut=1000000, access_token=None):
 	import vk
-	session = vk.Session()
+	session = vk.Session(access_token=access_token)
 	api = vk.API(session)
 	info = dict() 
 	docs_folder = os.path.join(dataset_folder, "documents")
@@ -43,4 +42,5 @@ def download_wall(domain, dataset_folder, cut=1000000):
 
 	 
 if __name__ == "__main__":
-	download_wall('miptstream', "D:\\visartm\\data\\datasets\\miptstream", cut=50)
+	domain = "lurkopub_alive" 
+	download_wall(domain, "D:\\visartm\\data\\datasets\\" + domain, cut=1000000)
