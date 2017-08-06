@@ -51,7 +51,9 @@ class Dataset(models.Model):
             meta_file = os.path.join(self.get_folder(), "meta", "meta.json")
             with open(meta_file) as f:
                 self.docs_info = json.load(f)
-        except BaseException:
+        except BaseException as ex:
+            self.log("WARNING! Wasn't able to load meta.json")
+            self.log(str(ex))
             self.time_provided = False
             self.docs_info = {}
 
