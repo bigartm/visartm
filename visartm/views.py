@@ -41,7 +41,7 @@ def message(request, message):
 
 def wait(request, message, begin, period="5"):
     html = (
-        "<meta http-equiv='refresh' content='%d'>%s<br>"
+        "<meta http-equiv='refresh' content='%s'>%s<br>"
         "Elapsed: %d sec.") % (period,
                                message,
                                (datetime.now() - begin).seconds)

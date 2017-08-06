@@ -4,10 +4,12 @@ import os
 
 FOLDERS_TO_CHECK = [
     'accounts',
+    # 'algo',
     'api',
     'assessment',
     'datasets',
     'research',
+    'models',
     'tools',
     'visartm',
     'visual'
