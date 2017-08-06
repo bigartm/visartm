@@ -22,7 +22,7 @@ FOLDERS_TO_CHECK = [
     'visual'
 ]
 
-FOLDERS_TO_CHECK = [os.path.join('algo','assessment')]
+FOLDERS_TO_CHECK = [os.path.join('algo','preprocessing')]
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
