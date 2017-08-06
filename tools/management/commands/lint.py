@@ -7,7 +7,8 @@ FOLDERS_TO_CHECK = [
     'api',
     'assessment',
     'datasets',
-    'tools'
+    'tools',
+    'visual'
 ]
 ALLOW_FIX = settings.DEBUG
 
