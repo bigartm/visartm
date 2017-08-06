@@ -1,0 +1,11 @@
+This is sample BigARTM dataset.
+It's purpose it to demonstrate how to provide datasets for VisARTM.
+It consists only from two documents, but provides: 
+ - raw document text;
+ - metadata;
+ - wordpos file;
+ - Vowpal Wabbit file;
+ - vocab.txt file.
+ 
+For more information onn formats, refer to VisARTM documentation.
+Don't use this dataset to create models.

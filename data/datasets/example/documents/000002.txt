@@ -1,0 +1,8 @@
+This is the second document of sample dataset.
+
+It demonstrates how to handle multiple modalities on example of 
+bigrams and N-grams.
+
+White House.
+Mickey Mouse. 
+President of the United States of America.
