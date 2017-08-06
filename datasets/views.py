@@ -415,13 +415,10 @@ def visual_document(request):
         if "hl_mode" in request.COOKIES:
             hl_mode = request.COOKIES["hl_mode"]
 
+        def make_link(text, url, cls):
+            return "<a href='%s' class='%s'>%s</a>" % (url, cls, text)
+        
         # Word highlighting.
-        def make_link(text, url, cls=None):
-            if (cls):
-                return "<a href='%s'>%s</a>" % (url, text)
-            else:
-                return "<a href='%s' class='%s'>%s</a>" % (url, cls, text)
-
         if hl_mode == "none":
             new_text = ""
             cur_pos = 0
@@ -433,7 +430,7 @@ def visual_document(request):
                 new_text += make_link(
                     text[cur_pos: cur_pos + length],
                     ("/term?ds=%d&iid=%d") % (dataset.id, term_index_id),
-                    cls="nolink")
+                    "nolink")
                 cur_pos += length
 
             if (cur_pos < text_length):
@@ -475,10 +472,8 @@ def visual_document(request):
                     cur_pos = start_pos
                 new_text += make_link(
                     text[cur_pos: cur_pos + length],
-                    ("/term?ds=%d&iid=&d" % (dataset.id, term_index_id)),
-                    cls="nolink tpc" + str(class_id))
-                new_text += text[cur_pos: cur_pos + length]
-                new_text += "</a>"
+                    ("/term?ds=%d&iid=%d" % (dataset.id, term_index_id)),
+                    "nolink tpc" + str(class_id))
                 cur_pos += length
 
             if (cur_pos < text_length):

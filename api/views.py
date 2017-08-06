@@ -81,20 +81,21 @@ def get_documents(request):
         term = Term.objects.get(id=request.GET["term_id"])
         term.count_documents_index()
         docs_index = term.documents
-        length = len(docs_index) // 6
-        if offset + count > length:
-            count = length - offset
-        for i in range(offset, offset + count):
-            doc_iid = struct.unpack('I', docs_index[6 * i: 6 * i + 4])[0]
-            document = documents.get(dataset_id=term.dataset_id,
-                                     index_id=doc_iid)
-            count = struct.unpack('H', docs_index[6 * i + 4: 6 * i + 6])[0]
-            result.append({
-                "id": document.id,
-                "title": document.title,
-                "count": count,
-                "concordance": document.get_concordance([term.index_id])
-            })
+        if (docs_index):
+            length = len(docs_index) // 6
+            if offset + count > length:
+                count = length - offset
+            for i in range(offset, offset + count):
+                doc_iid = struct.unpack('I', docs_index[6 * i: 6 * i + 4])[0]
+                document = documents.get(dataset_id=term.dataset_id,
+                                         index_id=doc_iid)
+                count = struct.unpack('H', docs_index[6 * i + 4: 6 * i + 6])[0]
+                result.append({
+                    "id": document.id,
+                    "title": document.title,
+                    "count": count,
+                    "concordance": document.get_concordance([term.index_id])
+                })
     return HttpResponse(json.dumps(result), content_type='application/json')
 
 
