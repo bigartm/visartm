@@ -15,14 +15,13 @@ FOLDERS_TO_CHECK = [
     'api',
     'assessment',
     'datasets',
-    'research',
     'models',
+    'research',
     'tools',
     'visartm',
     'visual'
 ]
 
-FOLDERS_TO_CHECK = [os.path.join('algo','preprocessing')]
 
 class Command(BaseCommand):
     def add_arguments(self, parser):

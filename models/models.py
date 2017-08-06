@@ -966,7 +966,7 @@ class ArtmModel(models.Model):
             return self.theta
 
     # Return phi transposed and normalized by modalities weights, for distance
-    # counting
+    # counting.
     def get_phi_t_norm(self, layer):
         if not hasattr(self, "phi_t_norm"):
             self.phi_t_norm = dict()
@@ -980,7 +980,7 @@ class ArtmModel(models.Model):
                     self.dataset.get_terms_weights("spectrum")
                 self.log("Normalized.")
                 sums = np.sum(phi_t_norm, axis=1)
-                if np.min(sums) < 0.999 or np.max(sums) > 1.001:
+                if np.min(sums) < 0.95 or np.max(sums) > 1.05:
                     print(sums)
                     raise RuntimeError("Phi is not stochastic!")
                 # print(sums)
