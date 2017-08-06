@@ -417,7 +417,7 @@ def visual_document(request):
 
         def make_link(text, url, cls):
             return "<a href='%s' class='%s'>%s</a>" % (url, cls, text)
-        
+
         # Word highlighting.
         if hl_mode == "none":
             new_text = ""

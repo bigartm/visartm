@@ -7,6 +7,7 @@ FOLDERS_TO_CHECK = [
     'api',
     'assessment',
     'datasets',
+    'research',
     'tools',
     'visartm',
     'visual'
