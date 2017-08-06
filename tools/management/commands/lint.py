@@ -1,10 +1,17 @@
+'''
+Checks .py source files for complience with PEP8 styleguide.
+
+If called with '--fix', will try to fix each file with violations using
+autopep8.
+'''
+
 from django.core.management.base import BaseCommand
 from django.conf import settings
 import os
 
 FOLDERS_TO_CHECK = [
     'accounts',
-    # 'algo',
+    'algo',
     'api',
     'assessment',
     'datasets',
@@ -14,11 +21,22 @@ FOLDERS_TO_CHECK = [
     'visartm',
     'visual'
 ]
-ALLOW_FIX = settings.DEBUG
 
+FOLDERS_TO_CHECK = [os.path.join('algo','arranging')]
 
 class Command(BaseCommand):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--fix',
+            action='store_true',
+            dest='fix',
+            default=False,
+            help='Automatically fix style violations.',
+        )
+
     def handle(self, *args, **options):
+        ALLOW_FIX = options['fix']
+
         def find_errors(file):
             findings = os.popen("pycodestyle %s" % (file)).read().split("\n")
             if len(findings) <= 1:
@@ -47,7 +65,7 @@ class Command(BaseCommand):
                 os.popen("autopep8 -i -a -a %s" % (file)).read()
                 errors = find_errors(file)
             if (len(errors) > 0):
-                print(file)
+                self.stdout.write(file)
                 OK = False
                 for error in errors:
-                    print("  " + error)
+                    self.stdout.write("  " + error)

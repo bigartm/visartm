@@ -4,6 +4,7 @@
 *.exe
 
 /.idea
+/algo/arranging/temp/*
 /cpp
 /data/datasets/*
 /data/research/*
