@@ -95,13 +95,13 @@ def minimize_binary_lp(A, b, c, use_pulp=False):
         ans = np.zeros(N)
 
         for line in open(sol_path, "r"):
-            l = line.split()
-            for i in range(len(l)):
-                if(l[i][0] == "x"):
-                    value = float(l[i + 1])
+            tokens = line.split()
+            for i in range(len(tokens)):
+                if(tokens[i][0] == "x"):
+                    value = float(tokens[i + 1])
                     if (value < -EPS or value > 1 + EPS):
                         return None
-                    ans[int(l[i][2:])] = value
+                    ans[int(tokens[i][2:])] = value
                     break
         os.remove(lp_path)
         os.remove(sol_path)

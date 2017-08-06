@@ -30,7 +30,10 @@ class HamiltonPath:
         self.atomic_iterations = 10000
         self.caller = caller
         self.clusters = [self.N]
-        self.DEBUG = False		# If True, will be used python implementation of annealing, which is 100 times slower, but yields graphs
+
+        # If True, will be used python implementation of annealing,
+        # which is 100 times slower, but yields graphs.
+        self.DEBUG = False
 
     def log(self, message):
         if self.caller:
@@ -43,9 +46,10 @@ class HamiltonPath:
         return ans
 
     # Set restriction on possible permutations.
-    # Allowed only those permutations, which have same clusters as _path_
-    # Cluster is substring of permutation, length of clusters given in _clusters_
-    # NOTE: this feature is not used and probably is useless
+    # Allowed only those permutations, which have same clusters as _path_.
+    # Cluster is substring of permutation,
+    # length of clusters given in _clusters_.
+    # NOTE: this feature is not used and probably is useless.
     def set_clusters(self, clusters, path):
         self.log("Custom path: " + str(path))
         self.log("Custom clusters:" + str(clusters))
@@ -190,7 +194,8 @@ class HamiltonPath:
 
         if not os.path.exists(exe_path):
             raise ImportWarning(
-                "LKH algorithm isn't installed. Install it following instructions at /algo/lkh/readme.txt")
+                ("LKH algorithm isn't installed. "
+                 "Install it following instructions at /algo/lkh/readme.txt"))
             self.log("LKH algorithm isn't installed.")
             return False
 
@@ -271,14 +276,13 @@ class HamiltonPath:
         for i in range(self.N):
             ans[i] = self.path[i]
 
-        # Extern function call
+        # Extern function call.
         arrange_lib.simanneal(
             self.N, Tmin, Tmax, steps, self.A.ctypes.data_as(
                 POINTER(c_double)), ans, len(
                 self.clusters), np.array(
                 self.clusters).ctypes.data_as(
                     POINTER(c_int)))
-        #del arrange_lib
         self.path = list(np.array(ans))
 
     def ew2(self, i):
@@ -323,7 +327,6 @@ class HamiltonPath:
                     self.chart_weight.append(quality)
 
                     T = Tmax * np.exp(Tfactor * step / steps)
-                    #self.log("I=%d, T=%f, Q=%f, acc=%d, imp=%d" % (step, T, quality, acc, imp))
                     acc = 0
                     imp = 0
 
@@ -362,23 +365,23 @@ if __name__ == '__main__':
     # hp.test()
     # hp.solve()
 
+    '''
+    hp2 = HamiltonPath(dist)
+    hp2.solve_branch()
+    print(hp2.get_path())
+    print(hp2.path_weight())
+    print(hp2.age())
 
-#	hp2 = HamiltonPath(dist)
-#	hp2.solve_branch()
-#	print (hp2.get_path())
-#	print (hp2.path_weight())
-#	print (hp2.age())
+    hp4 = HamiltonPath(dist)
+    hp4.cut_branch = 2
+    hp4.solve_branch()
+    print(hp4.get_path())
+    print(hp4.path_weight())
+    print(hp4.age())
 
-#	hp4 = HamiltonPath(dist)
-#	hp4.cut_branch = 2
-#	hp4.solve_branch()
-#	print (hp4.get_path())
-#	print (hp4.path_weight())
-#	print (hp4.age())
-#
-#	hp3 = HamiltonPath(dist)
-#	hp3.solve_nn()
-#	print (hp3.get_path())
-#	print (hp3.path_weight())
-#	print (hp3.age())
-#
+    hp3 = HamiltonPath(dist)
+    hp3.solve_nn()
+    print(hp3.get_path())
+    print(hp3.path_weight())
+    print(hp3.age())
+    '''

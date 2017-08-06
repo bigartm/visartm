@@ -112,8 +112,8 @@ def steps_optimizer():
                 best_steps = steps
                 break
         best_steps_chart.append(best_steps)
-        #plt.plot(steps_range, q)
-        #plt.plot([steps_range[0],steps_range[-1]], [best_q, best_q])
+        # plt.plot(steps_range, q)
+        # plt.plot([steps_range[0],steps_range[-1]], [best_q, best_q])
         # plt.show()
 
     plt.plot(N_range, best_steps_chart)
@@ -126,7 +126,8 @@ def steps_optimizer():
     # print(hp.path)
 
     '''
-    hp.solve_annealing(steps=1000000, Tmax=np.mean(dist)*1e6, Tmin=np.mean(dist)*1e-6)
+    hp.solve_annealing(steps=1000000, Tmax=np.mean(dist)*1e6,
+                       Tmin=np.mean(dist)*1e-6)
     plt.plot(hp.chart_iterations, hp.chart_weight)
     plt.plot([0, hp.chart_iterations[-1]], [best_q, best_q])
     plt.show()
@@ -134,7 +135,8 @@ def steps_optimizer():
     print(hp.path)
 
 
-    hp.solve_annealing_c(steps=10000000, Tmax=np.mean(dist)*1e6, Tmin=np.mean(dist)*1e-6)
+    hp.solve_annealing_c(steps=10000000, Tmax=np.mean(dist)*1e6,
+                         Tmin=np.mean(dist)*1e-6)
     print(hp.path_weight())
     print(hp.path)
     '''

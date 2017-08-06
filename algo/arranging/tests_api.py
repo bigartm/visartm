@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-import api
+import algo.arranging.api as api
 
 
 class TestArrangeTopics(unittest.TestCase):
@@ -32,6 +32,3 @@ class TestArrangeTopics(unittest.TestCase):
 
             # Check if obtained path is equal to initial (or probably reversed)
             self.assertTrue(path == answer or path == list(reversed(answer)))
-
-
-unittest.main()
