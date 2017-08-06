@@ -30,7 +30,7 @@ def download_wall(domain, dataset_folder, cut=1000000, access_token=None):
 			if id == cut:
 				break
 		offset += 100
-		print (offset)
+		#print (offset)
 		if len(posts) != 101:
 			break 
 		if id == cut:

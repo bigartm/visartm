@@ -108,8 +108,7 @@ def vkloader(request):
 		
 	return render(request, 'tools/vkloader.html')
 	
-def get_vk_access_token(request):
-	print(request.COOKIES)
+def get_vk_access_token(request): 
 	if not 'vk_access_token' in request.COOKIES:
 		return None
 	token = request.COOKIES['vk_access_token']
