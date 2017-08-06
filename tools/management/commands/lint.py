@@ -8,6 +8,7 @@ FOLDERS_TO_CHECK = [
     'assessment',
     'datasets',
     'tools',
+    'visartm',
     'visual'
 ]
 ALLOW_FIX = settings.DEBUG

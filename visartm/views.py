@@ -7,26 +7,42 @@ from django.conf import settings
 import os
 
 from datasets.models import Dataset
- 
+
+
 def start_page(request):
     return render(request, 'index.html', Context({
-		'datasets' : Dataset.objects.filter(is_public=True),
-		'no_footer' : True
-	}))
+        'datasets': Dataset.objects.filter(is_public=True),
+        'no_footer': True
+    }))
 
-def settings_page(request):  
-	themes = [f.split('.')[0] for f in os.listdir(os.path.join(settings.BASE_DIR, "static", "themes")) if ".js" in f]
-	context = Context({'themes': themes})
-	return render(request, 'settings.html', context)  
-	
-def	docs_page(request, page="intro"):
-	return render(request, 'docs/%s.html' % page)
-	
+
+def settings_page(request):
+    themes = [
+        f.split('.')[0] for f in os.listdir(
+            os.path.join(
+                settings.BASE_DIR,
+                "static",
+                "themes")) if ".js" in f]
+    context = Context({'themes': themes})
+    return render(request, 'settings.html', context)
+
+
+def docs_page(request, page="intro"):
+    return render(request, 'docs/%s.html' % page)
+
+
 def message(request, message):
-	return render(request, 'message.html', Context({'message': message}))
+    return render(
+        request,
+        'message.html',
+        Context({'message': message})
+    )
 
-def wait(request, message, begin, period = "5"):
-	message = "<meta http-equiv='refresh' content='" + period + "'>" + message + \
-		"<br>Elapsed: " + str((datetime.now() - begin).seconds) + " sec."
-	return HttpResponse(message)
-	
+
+def wait(request, message, begin, period="5"):
+    html = (
+        "<meta http-equiv='refresh' content='%d'>%s<br>"
+        "Elapsed: %d sec.") % (period,
+                               message,
+                               (datetime.now() - begin).seconds)
+    return HttpResponse(html)
