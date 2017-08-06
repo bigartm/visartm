@@ -2,7 +2,13 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 import os
 
-FOLDERS_TO_CHECK = ['accounts', 'api', 'assessment', 'tools']
+FOLDERS_TO_CHECK = [
+    'accounts',
+    'api',
+    'assessment',
+    'datasets',
+    'tools'
+]
 ALLOW_FIX = settings.DEBUG
 
 

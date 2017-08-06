@@ -11,6 +11,9 @@ from django.db import transaction
 from shutil import rmtree
 import struct
 import re
+from django.contrib import admin
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 
 
 class Dataset(models.Model):
@@ -35,11 +38,8 @@ class Dataset(models.Model):
         return self.name
 
     def reload(self):
-        # print("IN")
         self.prepare_log()
         self.log("Loading dataset " + self.text_id + "...")
-        #dataset_path = os.path.join(settings.DATA_DIR, "datasets", self.text_id)
-        #uci_folder = os.path.join(dataset_path, "UCI")
 
         Term.objects.filter(dataset=self).delete()
         Document.objects.filter(dataset=self).delete()
@@ -48,7 +48,8 @@ class Dataset(models.Model):
         ArtmModel.objects.filter(dataset=self).delete()
 
         try:
-            with open(os.path.join(self.get_folder(), "meta", "meta.json")) as f:
+            meta_file = os.path.join(self.get_folder(), "meta", "meta.json")
+            with open(meta_file) as f:
                 self.docs_info = json.load(f)
         except BaseException:
             self.time_provided = False
@@ -215,7 +216,6 @@ class Dataset(models.Model):
 
         for key, modality in modalities_index.items():
             if modality.id == word_modality_id:
-                #modality.is_word = True
                 modality.weight_spectrum = 1
                 modality.weight_naming = 1
             if 'tag' in modality.name:
@@ -295,24 +295,12 @@ class Dataset(models.Model):
         dictionary.load_text(dictionary_file_name)
         return batch_vectorizer, dictionary
 
-    # def get_tag_index(self):
-    # return np.load(os.path.join(settings.DATA_DIR, "datasets", self.text_id,
-    # "tgi.npy"))
-
     def objects_safe(request):
         if request.user.is_anonymous():
             return Dataset.objects.filter(is_public=True)
         else:
             return Dataset.objects.filter(is_public=True) |\
                 Dataset.objects.filter(is_public=False, owner=request.user)
-
-    '''
-    def check_can_load(self):
-        #if not self.uci_provided:
-        #    self.error_message = "Cannot load without UCI vocabulary and docword files."
-        #    return False
-        return True
-    '''
 
     def prepare_log(self, string=""):
         self.log_file_name = os.path.join(self.get_folder(), "log.txt")
@@ -328,7 +316,9 @@ class Dataset(models.Model):
 
     def read_log(self):
         try:
-            with open(os.path.join(settings.DATA_DIR, "datasets", self.text_id, "log.txt"), "r") as f:
+            log_file_name = os.path.join(
+                settings.DATA_DIR, "datasets", self.text_id, "log.txt")
+            with open(log_file_name, "r") as f:
                 return f.read()
         except BaseException:
             return "Datased is reloading"
@@ -407,17 +397,10 @@ class Dataset(models.Model):
         else:
             return None
 
-        if (modify or not dataset.is_public) and not dataset.owner == request.user:
+        if ((modify or not dataset.is_public)
+                and not dataset.owner == request.user):
             return None
         return dataset
-
-    '''
-    def check_access(self, user):
-        if self.is_public:
-            return True
-        else:
-            return (user == self.owner)
-    '''
 
     def get_terms_weights(self, mode):
         if not os.path.exists(os.path.join(
@@ -457,8 +440,11 @@ class Dataset(models.Model):
     def delete_unused_folders(self):
         from models.models import ArtmModel
         models_folder = os.path.join(self.get_folder(), "models")
-        legit_models = set(
-            [model.text_id for model in ArtmModel.objects.filter(dataset=self)])
+        legit_models = set([
+            model.text_id
+            for model
+            in ArtmModel.objects.filter(dataset=self)
+        ])
         for folder in os.listdir(models_folder):
             if folder not in legit_models:
                 folder_to_remove = os.path.join(models_folder, folder)
@@ -477,10 +463,6 @@ class Dataset(models.Model):
                 i += 1
             np.save(path, ans)
             return ans
-
-
-from django.db.models.signals import pre_delete
-from django.dispatch import receiver
 
 
 @receiver(pre_delete, sender=Dataset, dispatch_uid='dataset_delete_signal')
@@ -581,7 +563,7 @@ class Document(models.Model):
         self.word_index = bytes()
         self.text = ""
 
-        # try load text and wordpos
+        # Try load text and wordpos
         text_found = False
         text_file = os.path.join(
             self.dataset.get_folder(), "documents", self.text_id)
@@ -601,9 +583,9 @@ class Document(models.Model):
                             continue
                         key = parsed[2]
                         if key in self.dataset.terms_index:
-                            term_index_id = self.dataset.terms_index[key].index_id
+                            term_iid = self.dataset.terms_index[key].index_id
                             word_index_list.append(
-                                (int(parsed[0]), -int(parsed[1]), term_index_id))
+                                (int(parsed[0]), -int(parsed[1]), term_iid))
                 word_index_list.sort()
                 self.word_index = bytes()
                 for pos, length, tid in word_index_list:
@@ -630,8 +612,10 @@ class Document(models.Model):
                     self.terms_count += count
                     bow.add_term(term_index_id, count)
                     if not text_found:
-                        self.word_index += struct.pack('I', len(self.text)) + struct.pack(
-                            'B', len(parsed_term[0])) + struct.pack('I', term_index_id)
+                        self.word_index += \
+                            struct.pack('I', len(self.text)) + \
+                            struct.pack('B', len(parsed_term[0])) + \
+                            struct.pack('I', term_index_id)
                 except BaseException:
                     pass
             if not text_found:
@@ -643,9 +627,9 @@ class Document(models.Model):
         if request.user.is_anonymous():
             return Document.objects.filter(dataset__is_public=True)
         else:
-            return Document.objects.filter(dataset__is_public=True) | \
-                Document.objects.filter(
-                    dataset__is_public=False, dataset__owner=request.user)
+            return (Document.objects.filter(dataset__is_public=True) |
+                    Document.objects.filter(
+                    dataset__is_public=False, dataset__owner=request.user))
 
     def count_term(self, iid):
         bow = self.bag_of_words
@@ -698,7 +682,7 @@ class Document(models.Model):
             ret.append({"name": tag_names[tag_id], "string": tag_string})
         return ret
 
-    # Returns set of index_id's of words in this document which are modlitiees
+    # Returns set of index_id's of words in this document which are modlities.
     def get_tags_ids(self):
         tag_ids = set()
         ret = set()
@@ -731,8 +715,10 @@ class Document(models.Model):
                 bow_send += str(rest) + " terms, which occured " + \
                     str(cut_bow) + " times or less, aren't shown."
                 break
-            bow_send += prfx + str(iid) + "'>" + Term.objects.filter(
-                dataset=self.dataset, index_id=iid)[0].text + "</a>: " + str(cnt) + "<br>"
+            bow_send += prfx + str(iid) + "'>" + \
+                Term.objects.filter(dataset=self.dataset,
+                                    index_id=iid)[0].text + \
+                "</a>: " + str(cnt) + "<br>"
             rest -= 1
 
         return bow_send
@@ -740,8 +726,8 @@ class Document(models.Model):
     def get_text(self):
         return self.text
 
-    # returns positions of terms as list of triples: (position, length,
-    # term.index_id)
+    # Returns positions of terms as list of triples:
+    #     (position, length, term.index_id).
     def get_word_index(self, no_overlap=True):
         wi = self.word_index
         if wi is None:
@@ -791,7 +777,6 @@ class Document(models.Model):
                 suf = "."
                 fi = sentence.find("<b>") - 60
                 li = sentence.find("</b>") + 60
-                #li = sentence.rfind("</b>") + 60
                 if fi < 0:
                     fi = 0
                 else:
@@ -820,7 +805,6 @@ class Modality(models.Model):
     dataset = models.ForeignKey(Dataset, null=False)
     terms_count = models.IntegerField(null=False, default=0)
     index_id = models.IntegerField(null=False, default=0)
-    #is_word = models.BooleanField(null = False, default = False)
     is_tag = models.BooleanField(null=False, default=False)
 
     weight_naming = models.FloatField(null=False, default=0)
@@ -879,17 +863,17 @@ class Term(models.Model):
         self.count_documents_index()
         for i in range(len(self.documents) // 6):
             doc_iid = struct.unpack('I', self.documents[6 * i: 6 * i + 4])[0]
-            yield Document.objects.get(dataset_id=self.dataset_id, index_id=doc_iid)
+            yield Document.objects.get(dataset_id=self.dataset_id,
+                                       index_id=doc_iid)
 
     def objects_safe(request):
         if request.user.is_anonymous():
             return Term.objects.filter(dataset__is_public=True)
-        return Term.objects.filter(dataset__is_public=True) | \
-            Term.objects.filter(dataset__is_public=False,
-                                dataset__owner=request.user)
+        return (Term.objects.filter(dataset__is_public=True) |
+                Term.objects.filter(dataset__is_public=False,
+                                    dataset__owner=request.user))
 
 
-from django.contrib import admin
 admin.site.register(Dataset)
 admin.site.register(Document)
 admin.site.register(Modality)
