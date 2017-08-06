@@ -24,6 +24,7 @@ EMAIL_USE_TLS = True
 
 
 INSTALLED_APPS = [
+    'test_without_migrations',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

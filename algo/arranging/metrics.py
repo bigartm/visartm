@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.stats import entropy
 
 
 # Euclidean (L1) distance.
@@ -25,6 +24,7 @@ def hellinger(p, q):
 
 # Jensen-Shannon Divergence.
 def jsd(P, Q):
+    from scipy.stats import entropy
     return entropy(0.5 * (P + Q)) - 0.5 * (entropy(P) + entropy(Q))
 
 
