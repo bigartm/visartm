@@ -15,6 +15,7 @@
 !/data/datasets/example/vocab.txt
 !/data/datasets/example/wordpos
 !/data/datasets/example/documents
+!/data/datasets/example/meta
 /temp
 /doc
 /visartm-env

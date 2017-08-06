@@ -1,0 +1,14 @@
+{
+    "000001.txt": {
+        "time": 1393870847, 
+        "url": "https://fedimser.github.io",
+        "title": "First sample document",
+        "snippet": "Document description"
+    },
+    "000002.txt": {
+        "time": 1393870857, 
+        "url": "https://fedimser.github.io",
+        "title": "Second sample document",
+        "snippet": "Document description"
+    }
+}
