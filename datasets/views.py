@@ -214,22 +214,39 @@ def visual_dataset(request):
             terms = terms.order_by("-token_tf")[:250]
         context['terms'] = terms
     elif mode == 'stats':
-        from math import log
         terms = Term.objects.filter(dataset=dataset).order_by("-token_tf")
-        word = ['word']
-        freq = ['freq']
-        x = 0
-        last_y = -1
-        for term in terms:
-            y = term.token_tf
-            if y != last_y:
-                word.append(x)
-                freq.append(y)
-                last_y = y
-            x += 1
-        word.append(x)
-        freq.append(y)
-        context['stats'] = {'word_freq': [word, freq]}
+        count_values = []
+        freq_values = []
+        term_freq_dict = {}
+
+        # Amount of terms in dataset can be very big, so the plot cannot be
+        # drawn without aggregation to blocks
+        prev_freq = None
+        for count, term in enumerate(terms):
+            freq = term.token_tf
+
+            if freq != prev_freq:
+                prev_freq = freq
+                prev_count = count
+                count_values.append(count)
+                freq_values.append(freq)
+                freq_block = []
+                term_freq_dict[freq] = freq_block
+
+            # TODO transfer magic to constants/configuration
+            if len(freq_block) < 100:
+                freq_block.append(term.text)
+                if len(freq_block) >= 100:
+                    freq_block.append('...')
+
+        # Workaround: use area-step mode as bar mode with configurable bar widths
+        context['stats'] = {
+            'term_freq': [
+                ['count', 0] + [x for x in count_values[1:] for _ in (0, 1)] + [count],
+                ['freq'] + [x for x in freq_values for _ in (0, 1)]
+            ],
+            'term_freq_dict': term_freq_dict
+        }
 
         if dataset.time_provided:
             import itertools

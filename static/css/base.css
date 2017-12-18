@@ -74,3 +74,9 @@ div.d3tooltip {
 {
     background-color: #eeeeee;  
 }
+
+#freq_chart .c3-tooltip-container {
+    width: 400px;
+    font-size: 10px;
+    background-color: #fff;
+}
