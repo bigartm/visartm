@@ -334,7 +334,7 @@ def visual_topic(request):
             modality = Modality.objects.get(
                 dataset=model.dataset, name=request.GET["modality"])
             top_terms = top_terms.filter(term__modality=modality)
-        top_terms = top_terms.order_by("-weight")
+        top_terms = top_terms.order_by("-weight_normed")
         context['top_terms'] = top_terms
     elif mode == 'topics':
         context['topics'] = TopicInTopic.objects.filter(parent=topic)

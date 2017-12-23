@@ -815,6 +815,10 @@ class ArtmModel(models.Model):
                 self.log(
                     ("Building topics spectrum for layer %d, "
                      "mode=%s, metric=%s...") % (layer_id, mode, metric))
+                     
+                # Default - no arranging.
+                idx = np.array(range(layer_size))
+                    
                 if mode == "alphabet":
                     # Topics are sorted by alphabet.
                     titles = [
@@ -826,10 +830,7 @@ class ArtmModel(models.Model):
                     # nearby (by solving Travelling Salesman Problem).
                     from algo.arranging.base import get_arrangement_permutation
                     idx = get_arrangement_permutation(
-                        self.topic_distances[layer_id], mode, model=self)
-                else:
-                    # No arranging.
-                    idx = np.array(range(layer_size))
+                        self.topic_distances[layer_id], mode, model=self)    
 
                 for i in range(self.get_layer_size(layer_id)):
                     topic = self.topics_index[layer_id][idx[i]]
@@ -1211,6 +1212,7 @@ class TopicInTerm(models.Model):
     topic = models.ForeignKey(Topic, null=False)
     term = models.ForeignKey(Term, null=False)
     weight = models.FloatField()
+    weight_normed = models.FloatField(default=0)
 
     def __str__(self):
         return str(self.term) + " " + str(self.topic) + \
