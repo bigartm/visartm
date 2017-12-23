@@ -1205,14 +1205,13 @@ class TopTerm(models.Model):
     topic = models.ForeignKey(Topic)
     term = models.ForeignKey(Term)
     weight = models.FloatField(default=0)
-
+    weight_normed = models.FloatField(default=0)
 
 class TopicInTerm(models.Model):
     model = models.ForeignKey(ArtmModel, null=False)
     topic = models.ForeignKey(Topic, null=False)
     term = models.ForeignKey(Term, null=False)
     weight = models.FloatField()
-    weight_normed = models.FloatField(default=0)
 
     def __str__(self):
         return str(self.term) + " " + str(self.topic) + \
