@@ -801,7 +801,7 @@ class ArtmModel(models.Model):
 
         if mode == "default":
             if self.layers_count == 1:
-                mode = "hamilton"
+                mode = "index"
             else:
                 mode = "hierarchical"
 
@@ -816,16 +816,20 @@ class ArtmModel(models.Model):
                     ("Building topics spectrum for layer %d, "
                      "mode=%s, metric=%s...") % (layer_id, mode, metric))
                 if mode == "alphabet":
+                    # Topics are sorted by alphabet.
                     titles = [
                         self.topics_index[layer_id][topic_id].title
                         for topic_id in range(0, layer_size)]
                     idx = np.argsort(titles)
-                elif mode == "index":
-                    idx = np.array(range(layer_size))
-                else:
+                elif mode == "hamilton":
+                    # Topics are arranged so semantically close topics are nearby
+                    # (by solving Travelling Salesman Problem).
                     from algo.arranging.base import get_arrangement_permutation
                     idx = get_arrangement_permutation(
                         self.topic_distances[layer_id], mode, model=self)
+                else:
+                    # No arranging.
+                    idx = np.array(range(layer_size)) 
 
                 for i in range(self.get_layer_size(layer_id)):
                     topic = self.topics_index[layer_id][idx[i]]
@@ -1200,7 +1204,6 @@ class TopTerm(models.Model):
     topic = models.ForeignKey(Topic)
     term = models.ForeignKey(Term)
     weight = models.FloatField(default=0)
-    weight_normed = models.FloatField(default=0)
 
 
 class TopicInTerm(models.Model):
