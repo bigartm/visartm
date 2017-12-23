@@ -258,25 +258,33 @@
 			} 
 		{% endif %}
 	{% endif %}
-	
+
 	{% if stats %}
 	var freq_chart = c3.generate({
 		bindto: "#freq_chart",
 		data: {
-			x: 'word',
-			columns:  {% autoescape off %} {{stats.word_freq}} {% endautoescape %},
-			types: {freq: 'area'},
+			x: 'count',
+			columns: {{ stats.term_freq|safe }},
+			types: { freq: 'area-step' },
 			labels: false
-			
 		},
 		axis: {
-		  x: {show: true, label: 'Terms', tick:{count:1}},
-		  y: {show: true, label: {text: 'Frequency', position: 'outer-middle'}}
+			x: {show: true, label: 'Terms', tick: { count: 1 } },
+			y: {show: true, label: {text: 'Frequency', position: 'outer-middle' } }
 		},
-		legend: {show:false},
-		point: {r:0}
+		tooltip: {
+			contents: (function() {
+				console.log("test");
+				var termFreqDict = {{ stats.term_freq_dict|safe }};
+				return function(d, defaultTitleFormat, defaultValueFormat, color) {
+					return "Freq:" + d[0].value + ", Terms: "+
+						termFreqDict[d[0].value].join(', ');
+				}})()
+		},
+		legend: { show: false },
+		point: { r: 0 }
 	});
-		
+
 		{% if dataset.time_provided %}
 			var timeline_chart = c3.generate({
 				bindto: "#timeline_chart",
