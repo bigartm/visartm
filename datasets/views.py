@@ -239,10 +239,12 @@ def visual_dataset(request):
                 if len(freq_block) >= 100:
                     freq_block.append('...')
 
-        # Workaround: use area-step mode as bar mode with configurable bar widths
+        # Workaround: use area-step mode as bar mode with
+        # configurable bar widths.
         context['stats'] = {
             'term_freq': [
-                ['count', 0] + [x for x in count_values[1:] for _ in (0, 1)] + [count],
+                ['count', 0] +
+                [x for x in count_values[1:] for _ in (0, 1)] + [count],
                 ['freq'] + [x for x in freq_values for _ in (0, 1)]
             ],
             'term_freq_dict': term_freq_dict
