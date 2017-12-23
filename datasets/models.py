@@ -92,7 +92,7 @@ class Dataset(models.Model):
         self.creation_time = datetime.now()
         self.status = 0
         self.save()
-        
+
         # Counting weights for terms.
         self.log("Counting weights for terms.")
         self.reset_terms_weights()
@@ -408,12 +408,12 @@ class Dataset(models.Model):
             return None
         return dataset
 
-        
-    # Returns array of terms weights. 
-    # Note. Each modality has two weights: for distance counting (spectrum) and for
-    # top terms ranking (naming). In some procedures those weights are used. To speed 
-    # up those procedures, we count all weights for terms once in reset_terms_weights
-    # and store in file. This function just read corresonding array from file.
+    # Returns array of terms weights.
+    # Note. Each modality has two weights: for distance counting (spectrum)
+    # and for top terms ranking (naming). In some procedures those weights are
+    # used. To speed up those procedures, we count all weights for terms once
+    # in reset_terms_weights and store in file. This function just read
+    # corresonding array from file.
     def get_terms_weights(self, mode):
         if not os.path.exists(os.path.join(
                 self.get_folder(), "terms_weights")):
@@ -425,7 +425,7 @@ class Dataset(models.Model):
         elif mode == "naming":
             return np.load(os.path.join(self.get_folder(),
                                         "terms_weights", "naming.npy"))
-    
+
     # Counts weights for terms and stores them in file.
     def reset_terms_weights(self):
         folder = os.path.join(self.get_folder(), "terms_weights")

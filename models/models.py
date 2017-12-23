@@ -822,14 +822,14 @@ class ArtmModel(models.Model):
                         for topic_id in range(0, layer_size)]
                     idx = np.argsort(titles)
                 elif mode == "hamilton":
-                    # Topics are arranged so semantically close topics are nearby
-                    # (by solving Travelling Salesman Problem).
+                    # Topics are arranged so semantically close topics are
+                    # nearby (by solving Travelling Salesman Problem).
                     from algo.arranging.base import get_arrangement_permutation
                     idx = get_arrangement_permutation(
                         self.topic_distances[layer_id], mode, model=self)
                 else:
                     # No arranging.
-                    idx = np.array(range(layer_size)) 
+                    idx = np.array(range(layer_size))
 
                 for i in range(self.get_layer_size(layer_id)):
                     topic = self.topics_index[layer_id][idx[i]]
