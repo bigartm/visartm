@@ -7,7 +7,6 @@ from django.conf import settings
 import json
 import numpy as np
 import pandas as pd
-import artm
 import re
 from shutil import rmtree
 from django.db import transaction
@@ -152,6 +151,8 @@ class ArtmModel(models.Model):
             self.save()
 
     def create_simple(self, iter_count, regularizers={}):
+        import artm
+
         self.log("Creating simple model...")
         layers_count = self.layers_count
         num_topics = [int(x) for x in self.topics_count.split()]
@@ -815,10 +816,10 @@ class ArtmModel(models.Model):
                 self.log(
                     ("Building topics spectrum for layer %d, "
                      "mode=%s, metric=%s...") % (layer_id, mode, metric))
-                     
+
                 # Default - no arranging.
                 idx = np.array(range(layer_size))
-                    
+
                 if mode == "alphabet":
                     # Topics are sorted by alphabet.
                     titles = [
@@ -830,7 +831,7 @@ class ArtmModel(models.Model):
                     # nearby (by solving Travelling Salesman Problem).
                     from algo.arranging.base import get_arrangement_permutation
                     idx = get_arrangement_permutation(
-                        self.topic_distances[layer_id], mode, model=self)    
+                        self.topic_distances[layer_id], mode, model=self)
 
                 for i in range(self.get_layer_size(layer_id)):
                     topic = self.topics_index[layer_id][idx[i]]
@@ -1206,6 +1207,7 @@ class TopTerm(models.Model):
     term = models.ForeignKey(Term)
     weight = models.FloatField(default=0)
     weight_normed = models.FloatField(default=0)
+
 
 class TopicInTerm(models.Model):
     model = models.ForeignKey(ArtmModel, null=False)

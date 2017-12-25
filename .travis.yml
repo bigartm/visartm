@@ -1,0 +1,7 @@
+language: python
+python:
+  - 3.6
+script:
+  - check_results=$(python manage.py lint)
+  - echo "$check_results" >&2
+  - if [[ $check_results ]]; then exit 1; fi
