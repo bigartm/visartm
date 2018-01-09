@@ -45,24 +45,6 @@ class HamiltonPath:
             ans += self.A[self.path[i]][self.path[i + 1]]
         return ans
 
-    # Set restriction on possible permutations.
-    # Allowed only those permutations, which have same clusters as _path_.
-    # Cluster is substring of permutation,
-    # length of clusters given in _clusters_.
-    # NOTE: this feature is not used and probably is useless.
-    def set_clusters(self, clusters, path):
-        self.log("Custom path: " + str(path))
-        self.log("Custom clusters:" + str(clusters))
-
-        if len(path) != self.N:
-            raise ValueError("Invalid initial path")
-
-        if np.sum(clusters) != self.N:
-            raise ValueError("Invalid clusters lengthes")
-
-        self.path = path
-        self.clusters = clusters
-
     def solve_stupid_brute_force(self):
         """Solves TSP exactly by checking all pathes (O(N!*N))."""
         ans = self.path_weight()
@@ -131,7 +113,7 @@ class HamiltonPath:
         self.elapsed = time.time() - start_time
 
     def solve_nn(self):
-        """Solves TSP exactly approximately by greedy algorithm (O(N^2))."""
+        """Solves TSP approximately by greedy algorithm (O(N^2))."""
         start_time = time.time()
         self.best_weight = self.path_weight()
         self.cur_path = [0 for i in range(0, self.N)]
@@ -355,36 +337,3 @@ class HamiltonPath:
         self.log("Time=%fs" % run_time)
         self.log("Speed=%d steps per second" % int(steps / (run_time + 1e-10)))
         return self.path
-
-
-if __name__ == '__main__':
-    N = 100
-    dist = np.zeros((N, N))
-    for i in range(0, N):
-        for j in range(i + 1, N):
-            dist[i][j] = dist[j][i] = random.randint(0, 100)
-
-    hp = HamiltonPath(dist)
-    # hp.test()
-    # hp.solve()
-
-    '''
-    hp2 = HamiltonPath(dist)
-    hp2.solve_branch()
-    print(hp2.get_path())
-    print(hp2.path_weight())
-    print(hp2.age())
-
-    hp4 = HamiltonPath(dist)
-    hp4.cut_branch = 2
-    hp4.solve_branch()
-    print(hp4.get_path())
-    print(hp4.path_weight())
-    print(hp4.age())
-
-    hp3 = HamiltonPath(dist)
-    hp3.solve_nn()
-    print(hp3.get_path())
-    print(hp3.path_weight())
-    print(hp3.age())
-    '''
