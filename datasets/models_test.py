@@ -41,7 +41,7 @@ class TestBagOfWords(unittest.TestCase):
         bow.add_term(2,257)
         term2_bytes = b'\x02\x00\x00\x00\x01\x01\x00'
         self.assertEqual(bow.to_bytes(self.terms_index), 
-                         term2_bytes + term9_bytes)
+                         term2_bytes + term9_bytes + b'z')
         
         
         
