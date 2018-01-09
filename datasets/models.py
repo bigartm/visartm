@@ -5,7 +5,6 @@ from django.conf import settings
 import json
 import logging
 from datetime import datetime
-import artm
 import numpy as np
 from django.db import transaction
 from shutil import rmtree
@@ -128,6 +127,8 @@ class Dataset(models.Model):
         self.log("Filtering done.")
 
     def create_batches(self):
+        import artm
+
         self.log("Creating ARTM batches...")
         batches_folder = os.path.join(self.get_folder(), "batches")
         if os.path.exists(batches_folder):
@@ -149,6 +150,8 @@ class Dataset(models.Model):
 
     @transaction.atomic
     def gather_dictionary(self, custom_vocab=False):
+        import artm
+
         self.log("Creating ARTM dictionary...")
         dictionary = artm.Dictionary(name="dictionary")
         batches_folder = os.path.join(self.get_folder(), "batches")
@@ -290,6 +293,8 @@ class Dataset(models.Model):
         os.remove(zip_file_name)
 
     def get_batches(self):
+        import artm
+
         dataset_path = os.path.join(
             settings.DATA_DIR, "datasets", self.text_id)
         batches_folder = os.path.join(dataset_path, "batches")
