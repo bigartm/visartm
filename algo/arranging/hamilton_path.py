@@ -29,7 +29,6 @@ class HamiltonPath:
         self.cut_branch = self.N
         self.atomic_iterations = 10000
         self.caller = caller
-        self.clusters = [self.N]
 
         # If True, will be used python implementation of annealing,
         # which is 100 times slower, but yields graphs.
