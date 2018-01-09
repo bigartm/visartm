@@ -1,3 +1,11 @@
+"""Contains several algorithms for solving Minimal Hamiltonian Path problem:
+
+- Simulated annealing: python and C;
+- Lin-Kernigan-Helsgaun algorithm (only adapter for external C code);
+- Brute force (trivial and slightly optimized);
+- Greedy algorithm.
+"""
+
 from itertools import permutations
 import random
 import time
@@ -54,6 +62,7 @@ class HamiltonPath:
                 self.path = i
 
     def solve_branch_rec(self, last, count):
+        """Helper recursive function for solve_branch()."""
         if count == self.N:
             if self.cur_weight < self.best_weight:
                 self.best_weight = self.cur_weight
@@ -78,6 +87,7 @@ class HamiltonPath:
                     break
 
     def count_priority(self):
+        """Helper function for solve_branch()."""
         self.priority = []
         for i in range(0, self.N):
             p = []
@@ -161,6 +171,7 @@ class HamiltonPath:
         return self.solve_annealing()
 
     def solve_lkh(self):
+        """Solves TSP approximately by calling LKH algorithm."""
         try:
             lkh_path = os.path.join(settings.BASE_DIR, "algo", "lkh")
         except BaseException:
@@ -225,6 +236,7 @@ class HamiltonPath:
         return self.path
 
     def solve_annealing_c(self, steps, Tmin, Tmax):
+        """Solves TSP approximately by simulated annealing (calling C code)."""
         try:
             c_path = os.path.join(settings.BASE_DIR, "algo", "clib")
         except BaseException:
@@ -270,6 +282,9 @@ class HamiltonPath:
         self.path = list(np.array(ans))
 
     def ew2(self, i):
+        """Change of "energy", if vertex i is removed.
+        Helper function for solve_annealing().
+        """
         ans = 0
         if i > 0:
             ans += self.A[self.path[i - 1], self.path[i]]
@@ -278,6 +293,7 @@ class HamiltonPath:
         return ans
 
     def solve_annealing(self, steps="auto"):
+        """Solves TSP approximately by simulated annealing."""
         T0 = np.mean(self.A)
         Tmin = 1e-5 * T0
         Tmax = 1e5 * T0
