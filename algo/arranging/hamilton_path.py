@@ -64,6 +64,7 @@ class HamiltonPath:
         self.clusters = clusters
 
     def solve_stupid_brute_force(self):
+        """Solves TSP exactly by checking all pathes (O(N!*N))."""
         ans = self.path_weight()
         for i in permutations(range(self.N)):
             w = self.path_weight(i)
@@ -112,6 +113,7 @@ class HamiltonPath:
             self.priority.append(p)
 
     def solve_branch(self, cut=1000000):
+        """Solves TSP exactly by branch-and bound algorithm (O(N!) worst)."""
         if (self.N > 40):
             raise ValueError("N is too big.")
         start_time = time.time()
@@ -129,6 +131,7 @@ class HamiltonPath:
         self.elapsed = time.time() - start_time
 
     def solve_nn(self):
+        """Solves TSP exactly approximately by greedy algorithm (O(N^2))."""
         start_time = time.time()
         self.best_weight = self.path_weight()
         self.cur_path = [0 for i in range(0, self.N)]
