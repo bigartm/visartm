@@ -899,6 +899,7 @@ admin.site.register(Term)
 
 
 class BagOfWords():
+    """Helper class to pack bags of words into binary"""
     def __init__(self):
         self.bow = dict()
 

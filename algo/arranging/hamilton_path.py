@@ -1,3 +1,11 @@
+"""Contains several algorithms for solving Minimal Hamiltonian Path problem:
+
+- Simulated annealing: python and C;
+- Lin-Kernigan-Helsgaun algorithm (only adapter for external C code);
+- Brute force (trivial and slightly optimized);
+- Greedy algorithm.
+"""
+
 from itertools import permutations
 import random
 import time
@@ -29,7 +37,6 @@ class HamiltonPath:
         self.cut_branch = self.N
         self.atomic_iterations = 10000
         self.caller = caller
-        self.clusters = [self.N]
 
         # If True, will be used python implementation of annealing,
         # which is 100 times slower, but yields graphs.
@@ -45,25 +52,8 @@ class HamiltonPath:
             ans += self.A[self.path[i]][self.path[i + 1]]
         return ans
 
-    # Set restriction on possible permutations.
-    # Allowed only those permutations, which have same clusters as _path_.
-    # Cluster is substring of permutation,
-    # length of clusters given in _clusters_.
-    # NOTE: this feature is not used and probably is useless.
-    def set_clusters(self, clusters, path):
-        self.log("Custom path: " + str(path))
-        self.log("Custom clusters:" + str(clusters))
-
-        if len(path) != self.N:
-            raise ValueError("Invalid initial path")
-
-        if np.sum(clusters) != self.N:
-            raise ValueError("Invalid clusters lengthes")
-
-        self.path = path
-        self.clusters = clusters
-
     def solve_stupid_brute_force(self):
+        """Solves TSP exactly by checking all pathes (O(N!*N))."""
         ans = self.path_weight()
         for i in permutations(range(self.N)):
             w = self.path_weight(i)
@@ -72,6 +62,7 @@ class HamiltonPath:
                 self.path = i
 
     def solve_branch_rec(self, last, count):
+        """Helper recursive function for solve_branch()."""
         if count == self.N:
             if self.cur_weight < self.best_weight:
                 self.best_weight = self.cur_weight
@@ -96,6 +87,7 @@ class HamiltonPath:
                     break
 
     def count_priority(self):
+        """Helper function for solve_branch()."""
         self.priority = []
         for i in range(0, self.N):
             p = []
@@ -112,6 +104,7 @@ class HamiltonPath:
             self.priority.append(p)
 
     def solve_branch(self, cut=1000000):
+        """Solves TSP exactly by branch-and bound algorithm (O(N!) worst)."""
         if (self.N > 40):
             raise ValueError("N is too big.")
         start_time = time.time()
@@ -129,6 +122,7 @@ class HamiltonPath:
         self.elapsed = time.time() - start_time
 
     def solve_nn(self):
+        """Solves TSP approximately by greedy algorithm (O(N^2))."""
         start_time = time.time()
         self.best_weight = self.path_weight()
         self.cur_path = [0 for i in range(0, self.N)]
@@ -177,6 +171,7 @@ class HamiltonPath:
         return self.solve_annealing()
 
     def solve_lkh(self):
+        """Solves TSP approximately by calling LKH algorithm."""
         try:
             lkh_path = os.path.join(settings.BASE_DIR, "algo", "lkh")
         except BaseException:
@@ -241,6 +236,7 @@ class HamiltonPath:
         return self.path
 
     def solve_annealing_c(self, steps, Tmin, Tmax):
+        """Solves TSP approximately by simulated annealing (calling C code)."""
         try:
             c_path = os.path.join(settings.BASE_DIR, "algo", "clib")
         except BaseException:
@@ -286,6 +282,9 @@ class HamiltonPath:
         self.path = list(np.array(ans))
 
     def ew2(self, i):
+        """Change of "energy", if vertex i is removed.
+        Helper function for solve_annealing().
+        """
         ans = 0
         if i > 0:
             ans += self.A[self.path[i - 1], self.path[i]]
@@ -294,6 +293,7 @@ class HamiltonPath:
         return ans
 
     def solve_annealing(self, steps="auto"):
+        """Solves TSP approximately by simulated annealing."""
         T0 = np.mean(self.A)
         Tmin = 1e-5 * T0
         Tmax = 1e5 * T0
@@ -352,36 +352,3 @@ class HamiltonPath:
         self.log("Time=%fs" % run_time)
         self.log("Speed=%d steps per second" % int(steps / (run_time + 1e-10)))
         return self.path
-
-
-if __name__ == '__main__':
-    N = 100
-    dist = np.zeros((N, N))
-    for i in range(0, N):
-        for j in range(i + 1, N):
-            dist[i][j] = dist[j][i] = random.randint(0, 100)
-
-    hp = HamiltonPath(dist)
-    # hp.test()
-    # hp.solve()
-
-    '''
-    hp2 = HamiltonPath(dist)
-    hp2.solve_branch()
-    print(hp2.get_path())
-    print(hp2.path_weight())
-    print(hp2.age())
-
-    hp4 = HamiltonPath(dist)
-    hp4.cut_branch = 2
-    hp4.solve_branch()
-    print(hp4.get_path())
-    print(hp4.path_weight())
-    print(hp4.age())
-
-    hp3 = HamiltonPath(dist)
-    hp3.solve_nn()
-    print(hp3.get_path())
-    print(hp3.path_weight())
-    print(hp3.age())
-    '''
