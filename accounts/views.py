@@ -75,11 +75,10 @@ def signup(request):
             request, ("Your passwords don't match."
                       "<br><a href='/accounts/signup'>Try again</a>"))
 
-    
     if registration_closed():
         return general_views.message(
             request, ("Registration is disabled on this server."))
-                          
+
     try:
         user = User.objects.create_user(username, email, password)
 
@@ -163,7 +162,8 @@ def vk_get_token(request):
 
 def vk_confirm_token(request):
     return render(request, 'accounts/vk_token_extractor.html')
-    
+
+
 def registration_closed():
     try:
         if settings.REGISTRATION_CLOSED:

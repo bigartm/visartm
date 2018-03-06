@@ -10,6 +10,7 @@ from datetime import datetime
 import os
 import zipfile
 import io
+from django.contrib.auth.decorators import login_required
 
 
 @contextmanager
@@ -26,6 +27,7 @@ def tools_list(request):
     return render(request, 'tools/tools_list.html')
 
 
+@login_required
 def vw2uci(request):
     if request.method == 'POST':
         with get_temp_folder() as folder:
@@ -59,6 +61,7 @@ class Logger:
         print(s)
 
 
+@login_required
 def uci2vw(request):
     if request.method == 'POST':
         with get_temp_folder() as folder:
@@ -94,6 +97,7 @@ def uci2vw(request):
     return render(request, 'tools/uci2vw.html')
 
 
+@login_required
 def vkloader(request):
     if request.method == 'POST':
         access_token = get_vk_access_token(request)
