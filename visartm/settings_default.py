@@ -13,6 +13,7 @@ ALLOWED_HOSTS = ["127.0.0.1"]
 
 THREADING = True
 
+REGISTRATION_CLOSED = False
 
 DEFAULT_FROM_EMAIL = 'visartm@yandex.ru'
 SERVER_EMAIL = 'visartm@yandex.ru'
