@@ -8,7 +8,7 @@
 <p>You can deploy VisARTM locally on your computer. It supports any OS: Windows, Linux or MacOS. Please follow next steps.</p> 
 
 <ol>
-<li>Make sure you have installed python 3. We recommend to use <a href="https://www.continuum.io/downloads">Anaconda</a>.</li>
+<li>Make sure you have installed <b>Python 3</b>. We recommend to use <a href="https://www.continuum.io/downloads">Anaconda</a>.</li>
 
 
 <li>Make sure you have installed <a href="http://bigartm.readthedocs.io/en/master/installation/index.html">BigARTM</a>.</li>
@@ -33,12 +33,28 @@ Install all required dependencies, including django:
 cd visartm
 pip install -r requirements.txt
 </pre> 
+
+If you intend to use PostgreSQL as a DBMS for VisARTM, you should also install <b>psycopg2</b>:
+<pre class="code">
+pip install psycopg2
+</pre>
 </li>
 
 
 
 <li>
-Now link database created in step 4 with VisARTM. For that, open file <b>visartm/settings.py</b> and find lines like these:
+Now link database created in step 4 with VisARTM. For that, open file <b>visartm/settings_default.py</b> and find lines like these:
+<pre class="code">
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'visartm.sqlite',
+    }
+}
+</pre>
+
+If you intend to use PostgreSQL, those lines should be replaced with something of the like:
+
 <pre class="code">
 DATABASES = {
 	'default': {
@@ -53,8 +69,7 @@ DATABASES = {
 </pre> 
 
 Modify values as follows. NAME is name of database. USER is name of user of database. 
-PASSWORD is his password. If you use PostgreSQL, you don't need to change ENGINE. 
-If you are running database server locally, you don't need to modify HOST value.
+PASSWORD is his password. If you are running database server locally, you don't need to modify HOST value.
 </li>
 
 <li>
@@ -66,7 +81,7 @@ python manage.py migrate
 </li>
 
 <li>
-Create superuser for the service. Django will ask you for username and passwrod. Please remember them, you will need them to use service.
+Create superuser for the service. Django will ask you to provide your username and password. Please remember them, you will then need them to use the service.
 <pre class="code">
 python manage.py createsuperuser
 </pre>
@@ -84,7 +99,7 @@ Open web browser (Google Chrome is recommended) and navigate to http://127.0.0.1
 </li>
 </ol>
 
-Now you can use VisARTM. But additional actions are required to enable advanced options (topic spectrum building and some visualizations).
+Now you can use VisARTM. However, additional actions are required to enable advanced options (topic spectrum building and some visualizations).
 
 <ol>
 <li>
